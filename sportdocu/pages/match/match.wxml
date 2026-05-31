@@ -1,0 +1,4 @@
+<!--match.wxml-->
+<view class="page">
+  <text class="empty-tip">赛况页面</text>
+</view>

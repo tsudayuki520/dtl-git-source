@@ -1,0 +1,23 @@
+<!--notice.wxml-->
+<scroll-view class="page" scroll-y>
+  <!-- 顶部栏：未读筛选开关 -->
+  <view class="top-bar">
+    <text class="top-title">消息通知</text>
+    <view class="switch-wrap" bindtap="toggleUnread">
+      <text class="switch-label">{{onlyUnread ? '未读' : '全部'}}</text>
+      <switch checked="{{onlyUnread}}" color="#2196F3" />
+    </view>
+  </view>
+
+  <!-- 通知列表 -->
+  <view class="notice-list">
+    <view class="notice-card {{item.isRead === 1 ? 'read' : ''}}" wx:for="{{notices}}" wx:key="id" bindtap="goToNoticeDetail" data-id="{{item.id}}">
+      <view class="notice-top">
+        <text class="notice-title">{{item.title}}</text>
+        <view class="unread-dot" wx:if="{{item.isRead === 0}}"></view>
+      </view>
+      <text class="notice-time">{{item.createTime}}</text>
+    </view>
+    <view class="empty-tip" wx:if="{{notices.length === 0}}">暂无通知</view>
+  </view>
+</scroll-view>

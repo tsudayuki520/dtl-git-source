@@ -1,0 +1,4 @@
+<!--profile.wxml-->
+<view class="page">
+  <text class="empty-tip">我的页面</text>
+</view>

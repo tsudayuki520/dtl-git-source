@@ -1,0 +1,35 @@
+<!--search.wxml-->
+<view class="page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-wrap">
+      <image class="search-icon" src="/images/search.png" mode="aspectFit" />
+      <input class="search-input" placeholder="搜索运动会" placeholder-style="color:#bbb;" value="{{keyword}}" confirm-type="search" bindconfirm="onSearch" />
+    </view>
+  </view>
+
+  <!-- 结果提示 -->
+  <view class="result-tip" wx:if="{{keyword}}">
+    <text>搜索"{{keyword}}"，找到 {{results.length}} 条结果</text>
+  </view>
+
+  <!-- 结果列表 -->
+  <view class="result-list">
+    <view class="meeting-card" wx:for="{{results}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}">
+      <view class="meeting-header">
+        <text class="meeting-name">{{item.name}}</text>
+        <text class="meeting-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
+      </view>
+      <view class="meeting-info">
+        <text class="info-item">主办：{{item.organizer}}</text>
+      </view>
+      <view class="meeting-info">
+        <text class="info-item">地点：{{item.venue}}</text>
+      </view>
+      <view class="meeting-info">
+        <text class="info-item">比赛日期：{{item.competitionDate}}</text>
+      </view>
+    </view>
+    <view class="empty-tip" wx:if="{{keyword && results.length === 0}}">未找到相关运动会</view>
+  </view>
+</view>

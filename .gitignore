@@ -1,0 +1,17 @@
+# 编译产物
+SportBackend/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 敏感配置（包含数据库密码、微信密钥）
+SportBackend/src/main/resources/application.yml
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Claude 本地配置
+.claude/

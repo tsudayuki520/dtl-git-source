@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.UserMapper">
+
+    <select id="selectByOpenid" resultType="User">
+        SELECT * FROM user WHERE openid = #{openid}
+    </select>
+
+    <select id="selectById" resultType="User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (openid, union_id, nickname, avatar_url, phone, session_key)
+        VALUES (#{openid}, #{unionId}, #{nickname}, #{avatarUrl}, #{phone}, #{sessionKey})
+    </insert>
+
+    <update id="updateById">
+        UPDATE user
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="sessionKey != null">session_key = #{sessionKey},</if>
+            <if test="unionId != null">union_id = #{unionId},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

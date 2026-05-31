@@ -1,0 +1,9 @@
+/* match.wxss */
+.page {
+  padding: 40rpx;
+}
+.empty-tip {
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+}

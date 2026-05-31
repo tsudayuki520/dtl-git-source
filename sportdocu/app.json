@@ -1,0 +1,54 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/match/match",
+    "pages/referee/referee",
+    "pages/profile/profile",
+    "pages/search/search",
+    "pages/detail/detail",
+    "pages/notice/notice",
+    "pages/notice-detail/notice-detail",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "运动会管理",
+    "navigationBarBackgroundColor": "#ffffff"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#2196F3",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home_active.png"
+      },
+      {
+        "pagePath": "pages/match/match",
+        "text": "赛况",
+        "iconPath": "images/match.png",
+        "selectedIconPath": "images/match_active.png"
+      },
+      {
+        "pagePath": "pages/referee/referee",
+        "text": "裁判员",
+        "iconPath": "images/referee.png",
+        "selectedIconPath": "images/referee_active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile_active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

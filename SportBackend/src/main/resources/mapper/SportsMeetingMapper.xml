@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.SportsMeetingMapper">
+
+    <select id="selectAll" resultType="com.dlust.sportbackend.entity.SportsMeeting">
+        SELECT id, name, status, organizer, contact_phone, venue,
+               registration_start, registration_end, competition_date,
+               schedule_id, sign_sheet_id, player_list_id, event_id,
+               result_id, notice_id, appeal_id, create_time, update_time
+        FROM sports_meeting
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultType="com.dlust.sportbackend.entity.SportsMeeting">
+        SELECT id, name, status, organizer, contact_phone, venue,
+               registration_start, registration_end, competition_date,
+               schedule_id, sign_sheet_id, player_list_id, event_id,
+               result_id, notice_id, appeal_id, create_time, update_time
+        FROM sports_meeting
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.dlust.sportbackend.entity.SportsMeeting" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sports_meeting (name, status, organizer, contact_phone, venue,
+                                    registration_start, registration_end, competition_date,
+                                    schedule_id, sign_sheet_id, player_list_id, event_id,
+                                    result_id, notice_id, appeal_id)
+        VALUES (#{name}, #{status}, #{organizer}, #{contactPhone}, #{venue},
+                #{registrationStart}, #{registrationEnd}, #{competitionDate},
+                #{scheduleId}, #{signSheetId}, #{playerListId}, #{eventId},
+                #{resultId}, #{noticeId}, #{appealId})
+    </insert>
+
+    <update id="updateById" parameterType="com.dlust.sportbackend.entity.SportsMeeting">
+        UPDATE sports_meeting
+        SET name = #{name},
+            status = #{status},
+            organizer = #{organizer},
+            contact_phone = #{contactPhone},
+            venue = #{venue},
+            registration_start = #{registrationStart},
+            registration_end = #{registrationEnd},
+            competition_date = #{competitionDate},
+            schedule_id = #{scheduleId},
+            sign_sheet_id = #{signSheetId},
+            player_list_id = #{playerListId},
+            event_id = #{eventId},
+            result_id = #{resultId},
+            notice_id = #{noticeId},
+            appeal_id = #{appealId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sports_meeting WHERE id = #{id}
+    </delete>
+
+    <select id="selectByKeyword" resultType="com.dlust.sportbackend.entity.SportsMeeting">
+        SELECT id, name, status, organizer, contact_phone, venue,
+               registration_start, registration_end, competition_date,
+               schedule_id, sign_sheet_id, player_list_id, event_id,
+               result_id, notice_id, appeal_id, create_time, update_time
+        FROM sports_meeting
+        WHERE name LIKE CONCAT('%', #{keyword}, '%')
+           OR organizer LIKE CONCAT('%', #{keyword}, '%')
+           OR venue LIKE CONCAT('%', #{keyword}, '%')
+           OR competition_date LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

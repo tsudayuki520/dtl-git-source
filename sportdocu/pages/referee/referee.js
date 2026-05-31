@@ -1,0 +1,4 @@
+// referee.js
+Page({
+  data: {},
+})

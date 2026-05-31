@@ -1,0 +1,34 @@
+<!--detail.wxml-->
+<scroll-view class="detail-page" scroll-y>
+  <view class="detail-card" wx:if="{{meeting.id}}">
+    <!-- 名称和状态 -->
+    <view class="detail-header">
+      <text class="detail-name">{{meeting.name}}</text>
+      <text class="detail-status" style="background-color: {{statusColor[meeting.status]}}">{{statusMap[meeting.status]}}</text>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="info-group">
+      <view class="info-row">
+        <text class="info-label">主办单位</text>
+        <text class="info-value">{{meeting.organizer}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">联系电话</text>
+        <text class="info-value">{{meeting.contactPhone}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">比赛地址</text>
+        <text class="info-value">{{meeting.venue}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">比赛日期</text>
+        <text class="info-value">{{meeting.competitionDate}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">报名时间</text>
+        <text class="info-value">{{meeting.registrationStart}} 至 {{meeting.registrationEnd}}</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>

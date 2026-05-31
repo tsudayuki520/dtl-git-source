@@ -1,0 +1,9 @@
+<!--notice-detail.wxml-->
+<scroll-view class="page" scroll-y>
+  <view class="detail-card" wx:if="{{notice.id}}">
+    <text class="detail-title">{{notice.title}}</text>
+    <text class="detail-time">{{notice.createTime}}</text>
+    <view class="divider"></view>
+    <text class="detail-content">{{notice.content}}</text>
+  </view>
+</scroll-view>

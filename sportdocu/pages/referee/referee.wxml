@@ -1,0 +1,4 @@
+<!--referee.wxml-->
+<view class="page">
+  <text class="empty-tip">裁判员页面</text>
+</view>

@@ -1,0 +1,75 @@
+/**notice.wxss**/
+page {
+  background-color: #f5f5f5;
+}
+.page {
+  height: 100vh;
+}
+
+/* 顶部栏 */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #eee;
+}
+.top-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+}
+.switch-wrap {
+  display: flex;
+  align-items: center;
+}
+.switch-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-right: 8rpx;
+}
+
+/* 通知列表 */
+.notice-list {
+  padding: 16rpx 24rpx;
+}
+.notice-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+.notice-card.read {
+  opacity: 0.6;
+}
+.notice-top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.notice-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+  flex: 1;
+}
+.unread-dot {
+  width: 16rpx;
+  height: 16rpx;
+  background-color: #F44336;
+  border-radius: 50%;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+.notice-time {
+  font-size: 24rpx;
+  color: #999;
+}
+.empty-tip {
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+  padding: 40rpx 0;
+}

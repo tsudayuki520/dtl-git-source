@@ -1,0 +1,4 @@
+// profile.js
+Page({
+  data: {},
+})

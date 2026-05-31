@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.UserNoticeMapper">
+
+    <select id="selectByUserId" resultType="com.dlust.sportbackend.entity.NoticeVO">
+        SELECT n.id, n.title, n.content, n.create_time, n.update_time,
+               IF(un.is_read IS NULL, 0, un.is_read) AS is_read
+        FROM notice n
+        LEFT JOIN user_notice un ON n.id = un.notice_id AND un.user_id = #{userId}
+        ORDER BY n.create_time DESC
+    </select>
+
+    <select id="selectUnreadByUserId" resultType="com.dlust.sportbackend.entity.NoticeVO">
+        SELECT n.id, n.title, n.content, n.create_time, n.update_time,
+               IF(un.is_read IS NULL, 0, un.is_read) AS is_read
+        FROM notice n
+        LEFT JOIN user_notice un ON n.id = un.notice_id AND un.user_id = #{userId}
+        WHERE un.is_read IS NULL OR un.is_read = 0
+        ORDER BY n.create_time DESC
+    </select>
+
+    <insert id="markAsRead">
+        INSERT INTO user_notice (notice_id, user_id, is_read, read_time)
+        VALUES (#{noticeId}, #{userId}, 1, NOW())
+        ON DUPLICATE KEY UPDATE is_read = 1, read_time = NOW()
+    </insert>
+
+    <select id="countUnread" resultType="int">
+        SELECT COUNT(*) FROM notice n
+        LEFT JOIN user_notice un ON n.id = un.notice_id AND un.user_id = #{userId}
+        WHERE un.is_read IS NULL OR un.is_read = 0
+    </select>
+
+</mapper>
