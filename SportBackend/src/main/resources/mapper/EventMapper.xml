@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.EventMapper">
+
+    <select id="selectByScheduleId" resultType="Event">
+        SELECT * FROM event
+        WHERE schedule_id = #{scheduleId} AND is_deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectByScheduleIdAndGroupType" resultType="Event">
+        SELECT * FROM event
+        WHERE schedule_id = #{scheduleId} AND group_type = #{groupType} AND is_deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectById" resultType="Event">
+        SELECT * FROM event WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO event (sports_meeting_id, schedule_id, name, group_type, status)
+        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{groupType}, #{status})
+    </insert>
+
+    <update id="updateById">
+        UPDATE event
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="groupType != null">group_type = #{groupType},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <update id="softDeleteById">
+        UPDATE event SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+</mapper>

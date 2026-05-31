@@ -25,11 +25,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/auth/login",      // 登录接口不需要 token
-                        "/api/banner/list",     // 公开接口
-                        "/api/banner/sync"      // 管理接口（后续可加管理员校验）
+                .addPathPatterns(
+                        "/api/notice/**",       // 通知模块需要 userId
+                        "/api/auth/phone",      // 绑定手机号需要登录
+                        "/api/auth/info"        // 获取用户信息需要登录
                 );
     }
 }

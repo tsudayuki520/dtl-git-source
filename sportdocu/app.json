@@ -6,6 +6,8 @@
     "pages/profile/profile",
     "pages/search/search",
     "pages/detail/detail",
+    "pages/schedule/schedule",
+    "pages/event/event",
     "pages/notice/notice",
     "pages/notice-detail/notice-detail",
     "pages/logs/logs"

@@ -1,0 +1,31 @@
+<!--event.wxml - 比赛项目列表-->
+<scroll-view class="event-page" scroll-y>
+  <!-- 组别筛选 Tab -->
+  <view class="group-tabs">
+    <view
+      wx:for="{{groupTypes}}"
+      wx:key="index"
+      class="group-tab {{currentGroup === index ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="switchGroup"
+    >
+      {{item}}
+    </view>
+  </view>
+
+  <!-- 项目列表 -->
+  <view class="event-card" wx:for="{{events}}" wx:key="id">
+    <view class="event-header">
+      <text class="event-name">{{item.name}}</text>
+      <text class="event-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
+    </view>
+    <view class="event-footer">
+      <text class="event-group">{{item.groupType}}</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-tip" wx:if="{{events.length === 0}}">
+    <text>暂无项目信息</text>
+  </view>
+</scroll-view>

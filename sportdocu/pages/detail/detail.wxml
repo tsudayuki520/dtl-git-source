@@ -1,13 +1,12 @@
 <!--detail.wxml-->
 <scroll-view class="detail-page" scroll-y>
+  <!-- 运动会基本信息 -->
   <view class="detail-card" wx:if="{{meeting.id}}">
-    <!-- 名称和状态 -->
     <view class="detail-header">
       <text class="detail-name">{{meeting.name}}</text>
       <text class="detail-status" style="background-color: {{statusColor[meeting.status]}}">{{statusMap[meeting.status]}}</text>
     </view>
 
-    <!-- 基本信息 -->
     <view class="info-group">
       <view class="info-row">
         <text class="info-label">主办单位</text>
@@ -29,6 +28,15 @@
         <text class="info-label">报名时间</text>
         <text class="info-value">{{meeting.registrationStart}} 至 {{meeting.registrationEnd}}</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 功能模块 -->
+  <view class="section-title">功能模块</view>
+  <view class="module-grid">
+    <view class="module-item" bindtap="goToSchedule">
+      <view class="module-icon icon-schedule"></view>
+      <text class="module-text">赛程</text>
     </view>
   </view>
 </scroll-view>

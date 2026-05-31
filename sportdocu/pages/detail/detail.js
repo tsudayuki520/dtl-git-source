@@ -10,6 +10,7 @@ Page({
 
   onLoad(options) {
     if (options.id) {
+      this.setData({ meetingId: options.id })
       this.loadDetail(options.id)
     }
   },
@@ -26,6 +27,12 @@ Page({
       fail: (err) => {
         console.error('获取运动会详情失败', err)
       }
+    })
+  },
+
+  goToSchedule() {
+    wx.navigateTo({
+      url: '/pages/schedule/schedule?sportsMeetingId=' + this.data.meetingId
     })
   },
 })
