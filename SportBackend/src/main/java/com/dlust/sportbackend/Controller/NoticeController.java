@@ -16,6 +16,22 @@ public class NoticeController {
     private NoticeService noticeService;
 
     /**
+     * 获取全局公告（首页用，无需登录）
+     */
+    @GetMapping("/global")
+    public Result<List<Notice>> getGlobal() {
+        return Result.success(noticeService.getGlobal());
+    }
+
+    /**
+     * 获取某运动会的赛事通知（公开接口）
+     */
+    @GetMapping("/sports-meeting")
+    public Result<List<Notice>> getBySportsMeeting(@RequestParam Long sportsMeetingId) {
+        return Result.success(noticeService.getBySportsMeetingId(sportsMeetingId));
+    }
+
+    /**
      * 获取通知列表（带已读状态）
      * userId 从 token 中获取
      */

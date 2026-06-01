@@ -4,6 +4,7 @@ import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Banner;
 import com.dlust.sportbackend.Service.BannerService;
 import com.dlust.sportbackend.util.OBSUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/banner")
 public class BannerController {
@@ -20,6 +22,7 @@ public class BannerController {
 
     @GetMapping("/list")
     public Result<List<Banner>> getBannerList() {
+        log.info("登录接口被调用");
         List<Banner> banners = bannerService.getActiveBanners();
         return Result.success(banners);
     }

@@ -37,14 +37,18 @@ Page({
   },
 
   loadNotices() {
-    // 需要身份认证，用 auth.request 自动带 token
-    auth.request({
-      url: '/api/notice/list',
+    // 全局公告，公开接口不需要 token
+    wx.request({
+      url: auth.BASE_URL + '/api/notice/global',
       method: 'GET',
-    }).then(data => {
-      this.setData({ notices: data })
-    }).catch(err => {
-      console.error('获取通知失败', err)
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          this.setData({ notices: res.data.data })
+        }
+      },
+      fail: (err) => {
+        console.error('获取公告失败', err)
+      }
     })
   },
 

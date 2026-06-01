@@ -19,6 +19,16 @@ public class NoticeServiceImpl implements NoticeService {
     private UserNoticeMapper userNoticeMapper;
 
     @Override
+    public List<Notice> getGlobal() {
+        return noticeMapper.selectGlobal();
+    }
+
+    @Override
+    public List<Notice> getBySportsMeetingId(Long sportsMeetingId) {
+        return noticeMapper.selectBySportsMeetingId(sportsMeetingId);
+    }
+
+    @Override
     public List<Notice> getAll() {
         return noticeMapper.selectAll();
     }

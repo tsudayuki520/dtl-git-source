@@ -5,6 +5,8 @@ import com.dlust.sportbackend.entity.NoticeVO;
 import java.util.List;
 
 public interface NoticeService {
+    List<Notice> getGlobal();
+    List<Notice> getBySportsMeetingId(Long sportsMeetingId);
     List<Notice> getAll();
     List<NoticeVO> getByUserId(Long userId);
     List<NoticeVO> getUnreadByUserId(Long userId);

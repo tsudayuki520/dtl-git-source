@@ -3,6 +3,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.EventMapper">
 
+    <select id="selectBySportsMeetingId" resultType="Event">
+        SELECT id, name, category, gender, group_type FROM event
+        WHERE sports_meeting_id = #{sportsMeetingId} AND is_deleted = 0
+        ORDER BY category, group_type, name
+    </select>
+
     <select id="selectByScheduleId" resultType="Event">
         SELECT * FROM event
         WHERE schedule_id = #{scheduleId} AND is_deleted = 0
@@ -20,14 +26,16 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO event (sports_meeting_id, schedule_id, name, group_type, status)
-        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{groupType}, #{status})
+        INSERT INTO event (sports_meeting_id, schedule_id, name, category, gender, group_type, status)
+        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{category}, #{gender}, #{groupType}, #{status})
     </insert>
 
     <update id="updateById">
         UPDATE event
         <set>
             <if test="name != null">name = #{name},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="gender != null">gender = #{gender},</if>
             <if test="groupType != null">group_type = #{groupType},</if>
             <if test="status != null">status = #{status},</if>
         </set>

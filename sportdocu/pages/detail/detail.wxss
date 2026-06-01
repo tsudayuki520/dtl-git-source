@@ -8,6 +8,7 @@ page {
   box-sizing: border-box;
 }
 
+/* 基本信息卡片 */
 .detail-card {
   background-color: #ffffff;
   border-radius: 16rpx;
@@ -67,7 +68,48 @@ page {
   color: #333;
 }
 
-/* 功能模块区域 */
+/* 报名时间卡片 */
+.time-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  margin-top: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.time-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.time-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.time-date {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.time-arrow {
+  font-size: 36rpx;
+  color: #4CAF50;
+  padding: 0 24rpx;
+  flex-shrink: 0;
+}
+
+/* 分区标题 */
 .section-title {
   font-size: 30rpx;
   font-weight: bold;
@@ -75,6 +117,7 @@ page {
   margin: 32rpx 0 16rpx 8rpx;
 }
 
+/* 功能模块区域 */
 .module-grid {
   display: flex;
   flex-wrap: wrap;
@@ -113,12 +156,182 @@ page {
 .icon-schedule {
   background-color: #e3f2fd;
 }
-
 .icon-schedule::after {
   content: "📋";
+}
+
+.icon-sign {
+  background-color: #fff3e0;
+}
+.icon-sign::after {
+  content: "📝";
+}
+
+.icon-player {
+  background-color: #e8f5e9;
+}
+.icon-player::after {
+  content: "👥";
 }
 
 .module-text {
   font-size: 24rpx;
   color: #333;
+}
+
+/* 比赛项目分类 */
+.category-label {
+  font-size: 26rpx;
+  color: #2196F3;
+  font-weight: bold;
+  margin: 20rpx 0 12rpx 8rpx;
+  padding-left: 16rpx;
+  border-left: 6rpx solid #2196F3;
+}
+
+/* 比赛项目网格 */
+.event-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.event-tag {
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  padding: 14rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.event-name {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.event-info {
+  font-size: 20rpx;
+  color: #2196F3;
+  margin-top: 4rpx;
+}
+
+/* 赛事通知 */
+.notice-list {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 8rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.notice-item:last-child {
+  border-bottom: none;
+}
+
+.notice-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background-color: #FF9800;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.notice-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.notice-title {
+  font-size: 28rpx;
+  color: #333;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.notice-time {
+  font-size: 22rpx;
+  color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+/* 固定底部横幅 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx 44rpx;
+  background-color: #ffffff;
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.bottom-bar-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-right: 24rpx;
+  overflow: hidden;
+}
+
+.bottom-bar-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bottom-bar-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.register-btn {
+  background-color: #4CAF50;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: bold;
+  padding: 20rpx 48rpx;
+  border-radius: 44rpx;
+  white-space: nowrap;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.register-btn:active {
+  opacity: 0.8;
+}
+
+.register-btn.disabled {
+  background-color: #cccccc;
+  color: #ffffff;
 }

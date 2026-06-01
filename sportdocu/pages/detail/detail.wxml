@@ -1,5 +1,5 @@
 <!--detail.wxml-->
-<scroll-view class="detail-page" scroll-y>
+<scroll-view class="detail-page" scroll-y enhanced show-scrollbar="{{false}}">
   <!-- 运动会基本信息 -->
   <view class="detail-card" wx:if="{{meeting.id}}">
     <view class="detail-header">
@@ -24,9 +24,20 @@
         <text class="info-label">比赛日期</text>
         <text class="info-value">{{meeting.competitionDate}}</text>
       </view>
-      <view class="info-row">
-        <text class="info-label">报名时间</text>
-        <text class="info-value">{{meeting.registrationStart}} 至 {{meeting.registrationEnd}}</text>
+    </view>
+  </view>
+
+  <!-- 报名时间卡片 -->
+  <view class="time-card" wx:if="{{meeting.registrationStart}}">
+    <view class="time-card-row">
+      <view class="time-block">
+        <text class="time-label">报名开始</text>
+        <text class="time-date">{{meeting.registrationStart}}</text>
+      </view>
+      <view class="time-arrow">→</view>
+      <view class="time-block">
+        <text class="time-label">报名截止</text>
+        <text class="time-date">{{meeting.registrationEnd}}</text>
       </view>
     </view>
   </view>
@@ -38,5 +49,53 @@
       <view class="module-icon icon-schedule"></view>
       <text class="module-text">赛程</text>
     </view>
+    <view class="module-item" bindtap="goToSignSheet">
+      <view class="module-icon icon-sign"></view>
+      <text class="module-text">签名表</text>
+    </view>
+    <view class="module-item" bindtap="goToPlayerList">
+      <view class="module-icon icon-player"></view>
+      <text class="module-text">选手名单</text>
+    </view>
   </view>
+
+  <!-- 比赛项目 -->
+  <view class="section-title">比赛项目</view>
+  <view wx:for="{{eventCategories}}" wx:key="category">
+    <view class="category-label">{{item.category}}</view>
+    <view class="event-grid">
+      <view class="event-tag" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
+          <text class="event-name">{{evt.name}}</text>
+          <text class="event-info">{{evt.groupType}} · {{evt.gender}}</text>
+        </view>
+    </view>
+  </view>
+
+  <!-- 赛事通知 -->
+  <view class="section-title">赛事通知</view>
+  <view class="notice-list" wx:if="{{notices.length > 0}}">
+    <view class="notice-item" wx:for="{{notices}}" wx:key="id" bindtap="goToNoticeDetail" data-id="{{item.id}}">
+      <view class="notice-dot"></view>
+      <view class="notice-content">
+        <text class="notice-title">{{item.title}}</text>
+        <text class="notice-time">{{item.createTime}}</text>
+      </view>
+    </view>
+  </view>
+  <view class="empty-tip" wx:else>暂无赛事通知</view>
+
+  <!-- 底部留白，防止横幅遮挡 -->
+  <view style="height: 160rpx;"></view>
 </scroll-view>
+
+<!-- 固定底部横幅 -->
+<view class="bottom-bar">
+  <view class="bottom-bar-info">
+    <text class="bottom-bar-name">{{meeting.name}}</text>
+    <text class="bottom-bar-hint" wx:if="{{meeting.status === 0}}">报名进行中，快来参加吧</text>
+    <text class="bottom-bar-hint" wx:elif="{{meeting.status === 1}}">比赛进行中</text>
+    <text class="bottom-bar-hint" wx:else>比赛已结束</text>
+  </view>
+  <view class="register-btn" wx:if="{{meeting.status === 0}}" bindtap="goToRegister">报名参赛</view>
+  <view class="register-btn disabled" wx:else>已截止</view>
+</view>

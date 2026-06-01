@@ -19,6 +19,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<Event> getBySportsMeetingId(Long sportsMeetingId) {
+        return eventMapper.selectBySportsMeetingId(sportsMeetingId);
+    }
+
+    @Override
     public List<Event> getByScheduleIdAndGroupType(Long scheduleId, String groupType) {
         return eventMapper.selectByScheduleIdAndGroupType(scheduleId, groupType);
     }

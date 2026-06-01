@@ -6,6 +6,8 @@ import com.dlust.sportbackend.entity.User;
 import com.dlust.sportbackend.util.JwtUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     @Autowired
     private UserService userService;
 
@@ -39,6 +42,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody Map<String, String> body) {
+        log.info("登录接口被调用");
         String code = body.get("code");
         if (code == null || code.isEmpty()) {
             return Result.error(400, "code 不能为空");
@@ -89,6 +93,7 @@ public class AuthController {
     @PostMapping("/phone")
     public Result<String> bindPhone(@RequestBody Map<String, String> body,
                                      @RequestAttribute("userId") Long userId) {
+        log.info("手机号接口被调用");
         String code = body.get("code");
         if (code == null || code.isEmpty()) {
             return Result.error(400, "code 不能为空");
@@ -127,6 +132,7 @@ public class AuthController {
      */
     @GetMapping("/info")
     public Result<User> getUserInfo(@RequestAttribute("userId") Long userId) {
+        log.info("获取用户信息接口被调用");
         User user = userService.getById(userId);
         if (user == null) {
             return Result.error(404, "用户不存在");

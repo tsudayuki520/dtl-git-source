@@ -8,6 +8,10 @@ import java.util.List;
 @Mapper
 public interface NoticeMapper {
 
+    List<Notice> selectGlobal();
+
+    List<Notice> selectBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
+
     List<Notice> selectAll();
 
     Notice selectById(@Param("id") Long id);

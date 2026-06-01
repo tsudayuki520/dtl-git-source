@@ -15,12 +15,19 @@ public class EventController {
     private EventService eventService;
 
     @GetMapping("/list")
-    public Result<List<Event>> getList(@RequestParam Long scheduleId,
+    public Result<List<Event>> getList(@RequestParam(required = false) Long scheduleId,
+                                        @RequestParam(required = false) Long sportsMeetingId,
                                         @RequestParam(required = false) String groupType) {
-        if (groupType != null && !groupType.isEmpty()) {
-            return Result.success(eventService.getByScheduleIdAndGroupType(scheduleId, groupType));
+        if (scheduleId != null) {
+            if (groupType != null && !groupType.isEmpty()) {
+                return Result.success(eventService.getByScheduleIdAndGroupType(scheduleId, groupType));
+            }
+            return Result.success(eventService.getByScheduleId(scheduleId));
         }
-        return Result.success(eventService.getByScheduleId(scheduleId));
+        if (sportsMeetingId != null) {
+            return Result.success(eventService.getBySportsMeetingId(sportsMeetingId));
+        }
+        return Result.error(400, "请传入 scheduleId 或 sportsMeetingId");
     }
 
     @GetMapping("/{id}")
