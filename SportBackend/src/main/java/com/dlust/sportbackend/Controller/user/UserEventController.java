@@ -1,15 +1,18 @@
-package com.dlust.sportbackend.Controller;
+package com.dlust.sportbackend.Controller.user;
 
 import com.dlust.sportbackend.Service.EventService;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Event;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/event")
-public class EventController {
+public class UserEventController {
 
     @Autowired
     private EventService eventService;
@@ -18,6 +21,7 @@ public class EventController {
     public Result<List<Event>> getList(@RequestParam(required = false) Long scheduleId,
                                         @RequestParam(required = false) Long sportsMeetingId,
                                         @RequestParam(required = false) String groupType) {
+        log.info("获取项目列表: scheduleId={}, sportsMeetingId={}, groupType={}", scheduleId, sportsMeetingId, groupType);
         if (scheduleId != null) {
             if (groupType != null && !groupType.isEmpty()) {
                 return Result.success(eventService.getByScheduleIdAndGroupType(scheduleId, groupType));
@@ -32,28 +36,11 @@ public class EventController {
 
     @GetMapping("/{id}")
     public Result<Event> getById(@PathVariable Long id) {
+        log.info("获取项目详情: id={}", id);
         Event event = eventService.getById(id);
         if (event == null) {
             return Result.error(404, "项目不存在");
         }
         return Result.success(event);
-    }
-
-    @PostMapping("/add")
-    public Result<String> add(@RequestBody Event event) {
-        eventService.add(event);
-        return Result.success("添加成功");
-    }
-
-    @PutMapping("/update")
-    public Result<String> update(@RequestBody Event event) {
-        eventService.update(event);
-        return Result.success("更新成功");
-    }
-
-    @DeleteMapping("/{id}")
-    public Result<String> delete(@PathVariable Long id) {
-        eventService.delete(id);
-        return Result.success("删除成功");
     }
 }

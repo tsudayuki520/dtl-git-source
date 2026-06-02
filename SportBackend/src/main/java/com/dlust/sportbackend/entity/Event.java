@@ -13,6 +13,8 @@ public class Event {
     private String gender;      // 性别限制：男、女、不限
     private String groupType;   // 组别：学生组、教工组
     private Integer status;     // 0-进行中，1-已结束
+    private Integer allowRegister; // 1-支持报名，0-不支持（仅晋级）
+    private Integer registerLimit; // 报名上限，0表示不限
     private Integer isDeleted;  // 0-正常，1-已删除
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

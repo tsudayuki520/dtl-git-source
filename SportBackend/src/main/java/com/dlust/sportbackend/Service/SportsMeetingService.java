@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface SportsMeetingService {
     List<SportsMeeting> getAll();
+    List<SportsMeeting> getByStatus(Integer status);
     List<SportsMeeting> search(String keyword);
     SportsMeeting getById(Long id);
     void add(SportsMeeting sportsMeeting);

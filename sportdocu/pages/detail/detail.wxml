@@ -57,6 +57,14 @@
       <view class="module-icon icon-player"></view>
       <text class="module-text">选手名单</text>
     </view>
+    <view class="module-item" bindtap="goToResult">
+      <view class="module-icon icon-result"></view>
+      <text class="module-text">成绩公告</text>
+    </view>
+    <view class="module-item" bindtap="goToAppeal">
+      <view class="module-icon icon-appeal"></view>
+      <text class="module-text">申述</text>
+    </view>
   </view>
 
   <!-- 比赛项目 -->
@@ -66,7 +74,10 @@
     <view class="event-grid">
       <view class="event-tag" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
           <text class="event-name">{{evt.name}}</text>
-          <text class="event-info">{{evt.groupType}} · {{evt.gender}}</text>
+          <view class="event-meta">
+            <text class="event-info">{{evt.groupType}} · {{evt.gender}}</text>
+            <text class="event-badge {{evt.allowRegister ? 'badge-open' : 'badge-advance'}}">{{evt.allowRegister ? '可报名' : '仅晋级'}}</text>
+          </view>
         </view>
     </view>
   </view>

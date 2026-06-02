@@ -1,9 +1,140 @@
 /* match.wxss */
-.page {
-  padding: 40rpx;
+page {
+  background-color: #f5f5f5;
 }
-.empty-tip {
-  text-align: center;
+
+.match-page {
+  padding: 20rpx 24rpx;
+}
+
+.match-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 标题行 */
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 32rpx;
+}
+
+.match-header:active {
+  background-color: #f9f9f9;
+}
+
+.match-header-left {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.match-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+}
+
+.match-meta {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 8rpx;
+}
+
+.match-meta-item {
+  font-size: 22rpx;
   color: #999;
+}
+
+.match-arrow {
+  font-size: 24rpx;
+  color: #999;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.match-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* 展开区域 */
+.match-expand {
+  border-top: 1rpx solid #f0f0f0;
+  padding: 20rpx 32rpx 28rpx;
+}
+
+.expand-title {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+
+/* 横向滑动项目 */
+.event-scroll {
+  white-space: nowrap;
+}
+
+.event-scroll-inner {
+  display: inline-flex;
+  gap: 16rpx;
+}
+
+.event-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  min-width: 160rpx;
+}
+
+.event-card-name {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.event-card-info {
+  font-size: 20rpx;
+  color: #2196F3;
+  margin-bottom: 4rpx;
+}
+
+.event-card-cat {
+  font-size: 18rpx;
+  color: #999;
+  background-color: #e8e8e8;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+}
+
+.expand-empty {
+  text-align: center;
+  padding: 20rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}
+
+/* 空状态 */
+.empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 160rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
   font-size: 28rpx;
+  color: #999;
 }

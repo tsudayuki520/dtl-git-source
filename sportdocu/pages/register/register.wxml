@@ -1,0 +1,31 @@
+<!--register.wxml-->
+<view class="register-page">
+
+  <view class="register-title">选择报名项目：</view>
+
+  <view wx:for="{{categoryGroups}}" wx:key="category">
+    <view class="category-label">{{item.category}}</view>
+    <view class="event-list">
+      <view class="event-item" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
+        <view class="event-detail">
+          <text class="event-name">{{evt.name}}</text>
+          <text class="event-meta">{{evt.groupType}} · {{evt.gender}}</text>
+          <text class="event-count">已报名 {{evt.registeredCount}} / {{evt.registerLimit > 0 ? evt.registerLimit + '人' : '不限'}}</text>
+        </view>
+        <view class="register-btn {{evt.registerLimit > 0 && evt.registeredCount >= evt.registerLimit ? 'full' : ''}}"
+              bindtap="{{evt.registerLimit > 0 && evt.registeredCount >= evt.registerLimit ? '' : 'goToRegister'}}"
+              data-id="{{evt.id}}"
+              data-name="{{evt.name}}"
+              data-gender="{{evt.gender}}"
+              data-group-type="{{evt.groupType}}">
+          {{evt.registerLimit > 0 && evt.registeredCount >= evt.registerLimit ? '已满' : '报名'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-tip" wx:if="{{!categoryGroups || categoryGroups.length === 0}}">
+    暂无可报名项目
+  </view>
+
+</view>

@@ -3,33 +3,36 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.SportsMeetingMapper">
 
+    <sql id="allColumns">
+        id, name, status, organizer, contact_phone, venue,
+        registration_start, registration_end, competition_date,
+        create_time, update_time
+    </sql>
+
     <select id="selectAll" resultType="com.dlust.sportbackend.entity.SportsMeeting">
-        SELECT id, name, status, organizer, contact_phone, venue,
-               registration_start, registration_end, competition_date,
-               schedule_id, sign_sheet_id, player_list_id, event_id,
-               result_id, notice_id, appeal_id, create_time, update_time
+        SELECT <include refid="allColumns"/>
         FROM sports_meeting
         ORDER BY create_time DESC
     </select>
 
+    <select id="selectByStatus" resultType="com.dlust.sportbackend.entity.SportsMeeting">
+        SELECT <include refid="allColumns"/>
+        FROM sports_meeting
+        WHERE status = #{status}
+        ORDER BY create_time DESC
+    </select>
+
     <select id="selectById" resultType="com.dlust.sportbackend.entity.SportsMeeting">
-        SELECT id, name, status, organizer, contact_phone, venue,
-               registration_start, registration_end, competition_date,
-               schedule_id, sign_sheet_id, player_list_id, event_id,
-               result_id, notice_id, appeal_id, create_time, update_time
+        SELECT <include refid="allColumns"/>
         FROM sports_meeting
         WHERE id = #{id}
     </select>
 
     <insert id="insert" parameterType="com.dlust.sportbackend.entity.SportsMeeting" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sports_meeting (name, status, organizer, contact_phone, venue,
-                                    registration_start, registration_end, competition_date,
-                                    schedule_id, sign_sheet_id, player_list_id, event_id,
-                                    result_id, notice_id, appeal_id)
+                                    registration_start, registration_end, competition_date)
         VALUES (#{name}, #{status}, #{organizer}, #{contactPhone}, #{venue},
-                #{registrationStart}, #{registrationEnd}, #{competitionDate},
-                #{scheduleId}, #{signSheetId}, #{playerListId}, #{eventId},
-                #{resultId}, #{noticeId}, #{appealId})
+                #{registrationStart}, #{registrationEnd}, #{competitionDate})
     </insert>
 
     <update id="updateById" parameterType="com.dlust.sportbackend.entity.SportsMeeting">
@@ -41,14 +44,7 @@
             venue = #{venue},
             registration_start = #{registrationStart},
             registration_end = #{registrationEnd},
-            competition_date = #{competitionDate},
-            schedule_id = #{scheduleId},
-            sign_sheet_id = #{signSheetId},
-            player_list_id = #{playerListId},
-            event_id = #{eventId},
-            result_id = #{resultId},
-            notice_id = #{noticeId},
-            appeal_id = #{appealId}
+            competition_date = #{competitionDate}
         WHERE id = #{id}
     </update>
 
@@ -57,10 +53,7 @@
     </delete>
 
     <select id="selectByKeyword" resultType="com.dlust.sportbackend.entity.SportsMeeting">
-        SELECT id, name, status, organizer, contact_phone, venue,
-               registration_start, registration_end, competition_date,
-               schedule_id, sign_sheet_id, player_list_id, event_id,
-               result_id, notice_id, appeal_id, create_time, update_time
+        SELECT <include refid="allColumns"/>
         FROM sports_meeting
         WHERE name LIKE CONCAT('%', #{keyword}, '%')
            OR organizer LIKE CONCAT('%', #{keyword}, '%')

@@ -1,9 +1,115 @@
 /* profile.wxss */
-.page {
-  padding: 40rpx;
+page {
+  background-color: #f5f5f5;
 }
-.empty-tip {
+
+.profile-page {
+  padding: 40rpx 24rpx;
+}
+
+/* 未登录提示 */
+.login-tip {
   text-align: center;
+  padding: 200rpx 0;
+}
+
+.login-text {
+  font-size: 32rpx;
   color: #999;
+}
+
+/* 头像区域 */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+.avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 4rpx solid #e0e0e0;
+}
+
+.avatar-edit {
+  font-size: 22rpx;
+  color: #2196F3;
+  margin-top: 8rpx;
+}
+
+.nickname-area {
+  margin-top: 20rpx;
+}
+
+.nickname-input {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  padding: 8rpx 32rpx;
+  border-bottom: 2rpx solid #e0e0e0;
+}
+
+/* 信息卡片 */
+.info-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin-top: 32rpx;
+  padding: 8rpx 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
   font-size: 28rpx;
+  color: #999;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 退出登录 */
+.logout-btn {
+  margin-top: 60rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #ff4d4f;
+  padding: 24rpx 0;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.logout-btn:active {
+  opacity: 0.7;
 }

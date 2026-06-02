@@ -19,6 +19,11 @@ public class SportsMeetingServiceImpl implements SportsMeetingService {
     }
 
     @Override
+    public List<SportsMeeting> getByStatus(Integer status) {
+        return sportsMeetingMapper.selectByStatus(status);
+    }
+
+    @Override
     public List<SportsMeeting> search(String keyword) {
         return sportsMeetingMapper.selectByKeyword(keyword);
     }

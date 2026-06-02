@@ -10,6 +10,8 @@ public interface SportsMeetingMapper {
 
     List<SportsMeeting> selectAll();
 
+    List<SportsMeeting> selectByStatus(@Param("status") Integer status);
+
     List<SportsMeeting> selectByKeyword(@Param("keyword") String keyword);
 
     SportsMeeting selectById(@Param("id") Long id);

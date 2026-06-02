@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS event (
     category          VARCHAR(20)                        NOT NULL DEFAULT '径赛' COMMENT '项目分类：田赛、径赛、趣味赛',
     gender            VARCHAR(10)                        NOT NULL DEFAULT '不限' COMMENT '性别限制：男、女、不限',
     group_type        VARCHAR(20)                        NOT NULL DEFAULT '学生组' COMMENT '组别：学生组、教工组',
+    allow_register    TINYINT                            NOT NULL DEFAULT 1 COMMENT '是否支持报名：1-支持报名，0-不支持（仅晋级）',
+    register_limit    INT                                NOT NULL DEFAULT 0 COMMENT '报名上限，0表示不限',
     status            TINYINT  DEFAULT 0                 NULL COMMENT '状态：0-进行中，1-已结束',
     is_deleted        TINYINT  DEFAULT 0                 NULL COMMENT '软删除：0-正常，1-已删除',
     create_time       DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',

@@ -13,4 +13,8 @@ public interface UserService {
     User getById(Long id);
 
     void updatePhone(Long userId, String phone);
+
+    void updateAvatar(Long userId, String avatarUrl);
+
+    void updateNickname(Long userId, String nickname);
 }

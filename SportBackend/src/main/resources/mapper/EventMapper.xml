@@ -4,7 +4,7 @@
 <mapper namespace="com.dlust.sportbackend.Mapper.EventMapper">
 
     <select id="selectBySportsMeetingId" resultType="Event">
-        SELECT id, name, category, gender, group_type FROM event
+        SELECT id, name, category, gender, group_type, allow_register, register_limit, status FROM event
         WHERE sports_meeting_id = #{sportsMeetingId} AND is_deleted = 0
         ORDER BY category, group_type, name
     </select>
@@ -26,8 +26,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO event (sports_meeting_id, schedule_id, name, category, gender, group_type, status)
-        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{category}, #{gender}, #{groupType}, #{status})
+        INSERT INTO event (sports_meeting_id, schedule_id, name, category, gender, group_type, allow_register, register_limit, status)
+        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{category}, #{gender}, #{groupType}, #{allowRegister}, #{registerLimit}, #{status})
     </insert>
 
     <update id="updateById">
@@ -37,6 +37,8 @@
             <if test="category != null">category = #{category},</if>
             <if test="gender != null">gender = #{gender},</if>
             <if test="groupType != null">group_type = #{groupType},</if>
+            <if test="allowRegister != null">allow_register = #{allowRegister},</if>
+            <if test="registerLimit != null">register_limit = #{registerLimit},</if>
             <if test="status != null">status = #{status},</if>
         </set>
         WHERE id = #{id} AND is_deleted = 0

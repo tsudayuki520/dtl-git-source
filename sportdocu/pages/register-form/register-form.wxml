@@ -1,0 +1,44 @@
+<!--register-form.wxml-->
+<view class="form-page">
+
+  <!-- 项目信息 -->
+  <view class="event-info">
+    <text class="event-info-name">{{eventName}}</text>
+    <text class="event-info-meta">{{eventGroupType}} · {{eventGender}}</text>
+  </view>
+
+  <!-- 报名表单 -->
+  <view class="form-card">
+    <view class="form-item">
+      <text class="form-label">学号/工号</text>
+      <input class="form-input" placeholder="请输入学号或工号" value="{{form.userCode}}" bindinput="onInputCode" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">姓名</text>
+      <input class="form-input" placeholder="请输入姓名" value="{{form.name}}" bindinput="onInputName" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">性别</text>
+      <radio-group class="radio-group" bindchange="onGenderChange">
+        <label class="radio-label"><radio value="男" checked="{{form.gender === '男'}}" />男</label>
+        <label class="radio-label"><radio value="女" checked="{{form.gender === '女'}}" />女</label>
+      </radio-group>
+    </view>
+    <view class="form-item">
+      <text class="form-label">电话号码</text>
+      <input class="form-input" type="number" placeholder="请输入电话号码" value="{{form.phone}}" bindinput="onInputPhone" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">学院</text>
+      <input class="form-input" placeholder="请输入学院" value="{{form.college}}" bindinput="onInputCollege" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">专业</text>
+      <input class="form-input" placeholder="请输入专业" value="{{form.major}}" bindinput="onInputMajor" />
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-btn" bindtap="submit">确认报名</view>
+
+</view>

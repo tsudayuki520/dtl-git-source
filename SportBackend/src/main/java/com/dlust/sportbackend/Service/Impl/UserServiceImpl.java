@@ -41,4 +41,22 @@ public class UserServiceImpl implements UserService {
             userMapper.updateById(user);
         }
     }
+
+    @Override
+    public void updateAvatar(Long userId, String avatarUrl) {
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            user.setAvatarUrl(avatarUrl);
+            userMapper.updateById(user);
+        }
+    }
+
+    @Override
+    public void updateNickname(Long userId, String nickname) {
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            user.setNickname(nickname);
+            userMapper.updateById(user);
+        }
+    }
 }

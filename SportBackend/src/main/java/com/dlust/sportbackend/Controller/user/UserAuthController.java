@@ -1,4 +1,4 @@
-package com.dlust.sportbackend.Controller;
+package com.dlust.sportbackend.Controller.user;
 
 import com.dlust.sportbackend.Service.UserService;
 import com.dlust.sportbackend.common.Result;
@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,9 +22,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class UserAuthController {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger log = LoggerFactory.getLogger(UserAuthController.class);
     @Autowired
     private UserService userService;
 
@@ -37,8 +38,6 @@ public class AuthController {
 
     /**
      * 小程序登录：用 code 换取 openid，自动注册/登录用户，返回 token
-     * POST /api/auth/login
-     * Body: { "code": "xxx" }
      */
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody Map<String, String> body) {
@@ -48,7 +47,6 @@ public class AuthController {
             return Result.error(400, "code 不能为空");
         }
 
-        // 调用微信接口，用 code 换取 openid + session_key
         String wxUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=" + appId
                 + "&secret=" + appSecret
                 + "&js_code=" + code
@@ -65,10 +63,7 @@ public class AuthController {
             String openid = json.get("openid").asText();
             String sessionKey = json.get("session_key").asText();
 
-            // 登录或注册
             User user = userService.loginByOpenid(openid, sessionKey);
-
-            // 生成 token
             String token = JwtUtil.generateToken(user.getId());
 
             Map<String, Object> data = new HashMap<>();
@@ -85,10 +80,7 @@ public class AuthController {
     }
 
     /**
-     * 绑定手机号：用 getPhoneNumber 返回的 code 换取手机号
-     * POST /api/auth/phone
-     * Header: Authorization: Bearer <token>
-     * Body: { "code": "xxx" }
+     * 绑定手机号
      */
     @PostMapping("/phone")
     public Result<String> bindPhone(@RequestBody Map<String, String> body,
@@ -99,7 +91,6 @@ public class AuthController {
             return Result.error(400, "code 不能为空");
         }
 
-        // 获取接口调用凭证 access_token
         String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="
                 + appId + "&secret=" + appSecret;
         try {
@@ -107,7 +98,6 @@ public class AuthController {
             JsonNode tokenJson = objectMapper.readTree(tokenResult);
             String accessToken = tokenJson.get("access_token").asText();
 
-            // 用 code 换取手机号
             String phoneUrl = "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=" + accessToken;
             String phoneBody = "{\"code\":\"" + code + "\"}";
             String phoneResult = httpPost(phoneUrl, phoneBody);
@@ -128,7 +118,6 @@ public class AuthController {
 
     /**
      * 获取当前用户信息
-     * GET /api/auth/info
      */
     @GetMapping("/info")
     public Result<User> getUserInfo(@RequestAttribute("userId") Long userId) {
@@ -138,6 +127,48 @@ public class AuthController {
             return Result.error(404, "用户不存在");
         }
         return Result.success(user);
+    }
+
+    /**
+     * 上传头像到 OBS 并更新 user 表
+     */
+    @PostMapping("/avatar")
+    public Result<String> uploadAvatar(@RequestAttribute("userId") Long userId,
+                                        @RequestParam("file") MultipartFile file) {
+        log.info("上传头像: userId={}", userId);
+        if (file.isEmpty()) {
+            return Result.error(400, "文件不能为空");
+        }
+        try {
+            String originalName = file.getOriginalFilename();
+            String ext = originalName != null && originalName.contains(".")
+                    ? originalName.substring(originalName.lastIndexOf("."))
+                    : ".png";
+            String objectKey = "user_images/" + userId + "_" + System.currentTimeMillis() + ext;
+            String url = com.dlust.sportbackend.util.OBSUtil.uploadFile(objectKey, file.getInputStream());
+            if (url == null) {
+                return Result.error(500, "上传失败");
+            }
+            userService.updateAvatar(userId, url);
+            return Result.success(url);
+        } catch (Exception e) {
+            return Result.error(500, "上传异常: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新昵称
+     */
+    @PutMapping("/nickname")
+    public Result<String> updateNickname(@RequestAttribute("userId") Long userId,
+                                          @RequestBody Map<String, String> body) {
+        log.info("更新昵称: userId={}", userId);
+        String nickname = body.get("nickname");
+        if (nickname == null || nickname.trim().isEmpty()) {
+            return Result.error(400, "昵称不能为空");
+        }
+        userService.updateNickname(userId, nickname.trim());
+        return Result.success("更新成功");
     }
 
     private String httpGet(String urlStr) throws Exception {

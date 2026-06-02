@@ -30,7 +30,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/notice/unread-count",  // 未读数量需要 userId
                         "/api/notice/*/read",        // 标记已读需要 userId
                         "/api/auth/phone",           // 绑定手机号需要登录
-                        "/api/auth/info"             // 获取用户信息需要登录
+                        "/api/auth/info",            // 获取用户信息需要登录
+                        "/api/auth/avatar",          // 上传头像需要登录
+                        "/api/auth/nickname"         // 更新昵称需要登录
                 );
     }
 }

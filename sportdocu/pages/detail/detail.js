@@ -47,7 +47,7 @@ Page({
           events.forEach(e => {
             const cat = e.category || '径赛'
             if (!map[cat]) map[cat] = []
-            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupType: e.groupType })
+            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupType: e.groupType, allowRegister: e.allowRegister })
           })
           const eventCategories = categoryOrder
             .filter(cat => map[cat])
@@ -90,6 +90,14 @@ Page({
     wx.showToast({ title: '选手名单功能开发中', icon: 'none' })
   },
 
+  goToResult() {
+    wx.showToast({ title: '成绩公告功能开发中', icon: 'none' })
+  },
+
+  goToAppeal() {
+    wx.showToast({ title: '申述功能开发中', icon: 'none' })
+  },
+
   goToNoticeDetail(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({
@@ -98,6 +106,8 @@ Page({
   },
 
   goToRegister() {
-    wx.showToast({ title: '报名功能开发中', icon: 'none' })
+    wx.navigateTo({
+      url: '/pages/register/register?sportsMeetingId=' + this.data.meetingId
+    })
   },
 })

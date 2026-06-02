@@ -22,13 +22,6 @@ public class SportsMeeting {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate competitionDate;
-    private Long scheduleId;
-    private Long signSheetId;
-    private Long playerListId;
-    private Long eventId;
-    private Long resultId;
-    private Long noticeId;
-    private Long appealId;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }
