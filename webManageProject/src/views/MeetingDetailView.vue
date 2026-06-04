@@ -32,9 +32,10 @@ async function fetchMeeting() {
 }
 
 const meetingStatusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '报名中', color: '#1890ff' },
-  1: { label: '进行中', color: '#52c41a' },
-  2: { label: '已结束', color: '#ff4d4f' },
+  0: { label: '筹备中', color: '#909399' },
+  1: { label: '报名中', color: '#1890ff' },
+  2: { label: '进行中', color: '#52c41a' },
+  3: { label: '已结束', color: '#ff4d4f' },
 }
 
 function formatDate(d: string) {

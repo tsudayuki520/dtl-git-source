@@ -5,8 +5,8 @@ Page({
   data: {
     keyword: '',
     results: [],
-    statusMap: { 0: '报名中', 1: '进行中', 2: '已结束' },
-    statusColor: { 0: '#4CAF50', 1: '#2196F3', 2: '#999999' },
+    statusMap: { 0: '筹备中', 1: '报名中', 2: '进行中', 3: '已结束' },
+    statusColor: { 0: '#909399', 1: '#4CAF50', 2: '#2196F3', 3: '#999999' },
   },
 
   onLoad(options) {

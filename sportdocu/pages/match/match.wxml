@@ -30,7 +30,7 @@
         </scroll-view>
 
         <view class="expand-empty" wx:if="{{!item.events || item.events.length === 0}}">
-          <text>加载中...</text>
+          <text>暂无正在进行中的项目</text>
         </view>
       </view>
     </view>

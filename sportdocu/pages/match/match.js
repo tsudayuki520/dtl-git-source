@@ -5,8 +5,8 @@ Page({
   data: {
     meetings: [],
     expandedId: null,
-    statusMap: { 0: '报名中', 1: '进行中', 2: '已结束' },
-    statusColor: { 0: '#4CAF50', 1: '#2196F3', 2: '#999999' },
+    statusMap: { 0: '筹备中', 1: '报名中', 2: '进行中', 3: '已结束' },
+    statusColor: { 0: '#909399', 1: '#4CAF50', 2: '#2196F3', 3: '#999999' },
   },
 
   onShow() {
@@ -16,7 +16,7 @@ Page({
   loadOngoing() {
     this.setData({ expandedId: null })
     wx.request({
-      url: auth.BASE_URL + '/api/sports-meeting/list?status=1',
+      url: auth.BASE_URL + '/api/sports-meeting/list?status=2',
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {

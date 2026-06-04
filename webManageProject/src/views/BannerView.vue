@@ -97,7 +97,6 @@ onMounted(fetchBanners)
     </div>
 
     <el-table v-loading="loading" :data="banners" stripe border size="small">
-      <el-table-column prop="id" label="ID" width="60" />
       <el-table-column label="图片" width="140">
         <template #default="{ row }">
           <el-image v-if="row.imageUrl" :src="row.imageUrl" style="width:100px;height:56px" fit="cover" :preview-src-list="[row.imageUrl]" preview-teleported />

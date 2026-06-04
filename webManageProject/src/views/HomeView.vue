@@ -13,9 +13,10 @@ const dialogTitle = ref('新增运动会')
 const statusFilter = ref<number | undefined>(undefined)
 
 const statusMap: Record<number, { label: string; color: string; borderColor: string }> = {
-  0: { label: '报名中', color: '#e6f7ff', borderColor: '#1890ff' },
-  1: { label: '进行中', color: '#f6ffed', borderColor: '#52c41a' },
-  2: { label: '已结束', color: '#fff0f0', borderColor: '#ff4d4f' },
+  0: { label: '筹备中', color: '#f0f0f0', borderColor: '#909399' },
+  1: { label: '报名中', color: '#e6f7ff', borderColor: '#1890ff' },
+  2: { label: '进行中', color: '#f6ffed', borderColor: '#52c41a' },
+  3: { label: '已结束', color: '#fff0f0', borderColor: '#ff4d4f' },
 }
 
 const form = ref<Partial<SportsMeeting>>({
@@ -111,9 +112,10 @@ onMounted(fetchMeetings)
     <div class="toolbar">
       <div class="toolbar-left">
         <el-select v-model="statusFilter" placeholder="全部状态" clearable style="width: 130px" @change="fetchMeetings">
-          <el-option label="报名中" :value="0" />
-          <el-option label="进行中" :value="1" />
-          <el-option label="已结束" :value="2" />
+          <el-option label="筹备中" :value="0" />
+          <el-option label="报名中" :value="1" />
+          <el-option label="进行中" :value="2" />
+          <el-option label="已结束" :value="3" />
         </el-select>
       </div>
       <el-button type="primary" @click="openAdd">+ 新增运动会</el-button>
@@ -179,9 +181,10 @@ onMounted(fetchMeetings)
         </el-form-item>
         <el-form-item label="状态" v-if="form.id">
           <el-select v-model="form.status">
-            <el-option label="报名中" :value="0" />
-            <el-option label="进行中" :value="1" />
-            <el-option label="已结束" :value="2" />
+            <el-option label="筹备中" :value="0" />
+            <el-option label="报名中" :value="1" />
+            <el-option label="进行中" :value="2" />
+            <el-option label="已结束" :value="3" />
           </el-select>
         </el-form-item>
       </el-form>

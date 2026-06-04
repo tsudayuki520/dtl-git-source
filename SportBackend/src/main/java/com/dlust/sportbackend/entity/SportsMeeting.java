@@ -14,10 +14,10 @@ public class SportsMeeting {
     private String contactPhone;
     private String venue;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime registrationStart;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime registrationEnd;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
