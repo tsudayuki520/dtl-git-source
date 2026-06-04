@@ -1,0 +1,49 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Layout',
+    component: () => import('@/layouts/DefaultLayout.vue'),
+    redirect: '/home',
+    children: [
+      {
+        path: 'home',
+        name: 'Home',
+        component: () => import('@/views/HomeView.vue'),
+        meta: { title: '首页 - 运动会列表' },
+      },
+      {
+        path: 'meeting/:id',
+        name: 'MeetingDetail',
+        component: () => import('@/views/MeetingDetailView.vue'),
+        meta: { title: '运动会管理' },
+      },
+      {
+        path: 'banner',
+        name: 'Banner',
+        component: () => import('@/views/BannerView.vue'),
+        meta: { title: '轮播图管理' },
+      },
+      {
+        path: 'global-notice',
+        name: 'GlobalNotice',
+        component: () => import('@/views/GlobalNoticeView.vue'),
+        meta: { title: '全局通知管理' },
+      },
+    ],
+  },
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+})
+
+router.beforeEach((to, _from, next) => {
+  document.title = (to.meta.title as string) || '后台管理系统'
+  next()
+})
+
+export default router

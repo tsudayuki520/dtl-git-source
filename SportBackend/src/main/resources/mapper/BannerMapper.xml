@@ -15,4 +15,30 @@
         VALUES (#{imageUrl}, #{title}, #{sortOrder}, #{status})
     </insert>
 
+    <select id="selectAll" resultType="com.dlust.sportbackend.entity.Banner">
+        SELECT id, image_url, title, sort_order, status, create_time, update_time
+        FROM banner
+        ORDER BY sort_order ASC
+    </select>
+
+    <select id="selectById" resultType="com.dlust.sportbackend.entity.Banner">
+        SELECT id, image_url, title, sort_order, status, create_time, update_time
+        FROM banner WHERE id = #{id}
+    </select>
+
+    <update id="updateById" parameterType="com.dlust.sportbackend.entity.Banner">
+        UPDATE banner
+        <set>
+            <if test="imageUrl != null">image_url = #{imageUrl},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM banner WHERE id = #{id}
+    </delete>
+
 </mapper>

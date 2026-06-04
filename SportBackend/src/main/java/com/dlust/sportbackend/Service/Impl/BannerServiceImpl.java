@@ -19,6 +19,11 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    public Banner getById(Long id) {
+        return bannerMapper.selectById(id);
+    }
+
+    @Override
     public void addBanner(String imageUrl, String title, Integer sortOrder) {
         Banner banner = new Banner();
         banner.setImageUrl(imageUrl);
@@ -26,5 +31,20 @@ public class BannerServiceImpl implements BannerService {
         banner.setSortOrder(sortOrder);
         banner.setStatus(1);
         bannerMapper.insertBanner(banner);
+    }
+
+    @Override
+    public List<Banner> getAll() {
+        return bannerMapper.selectAll();
+    }
+
+    @Override
+    public void update(Banner banner) {
+        bannerMapper.updateById(banner);
+    }
+
+    @Override
+    public void delete(Long id) {
+        bannerMapper.deleteById(id);
     }
 }

@@ -8,5 +8,13 @@ import java.util.List;
 public interface BannerMapper {
     List<Banner> selectActiveBanners();
 
+    List<Banner> selectAll();
+
+    Banner selectById(Long id);
+
     void insertBanner(Banner banner);
+
+    void updateById(Banner banner);
+
+    void deleteById(Long id);
 }

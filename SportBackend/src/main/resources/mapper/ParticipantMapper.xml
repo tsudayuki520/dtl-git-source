@@ -12,9 +12,32 @@
         WHERE user_code = #{userCode} AND sports_meeting_id = #{sportsMeetingId}
     </select>
 
+    <select id="selectBySportsMeetingId" resultType="Participant">
+        SELECT * FROM participant
+        WHERE sports_meeting_id = #{sportsMeetingId}
+        ORDER BY create_time DESC
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO participant (sports_meeting_id, user_code, name, phone, gender, college, major)
         VALUES (#{sportsMeetingId}, #{userCode}, #{name}, #{phone}, #{gender}, #{college}, #{major})
     </insert>
+
+    <update id="updateById">
+        UPDATE participant
+        <set>
+            <if test="userCode != null">user_code = #{userCode},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="college != null">college = #{college},</if>
+            <if test="major != null">major = #{major},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM participant WHERE id = #{id}
+    </delete>
 
 </mapper>
