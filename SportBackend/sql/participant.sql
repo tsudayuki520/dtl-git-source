@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS participant (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '参赛人员ID',
     sports_meeting_id BIGINT       NOT NULL COMMENT '所属运动会ID',
+    team_id           BIGINT       DEFAULT NULL COMMENT '代表队ID（关联team表）',
     user_code         VARCHAR(30)  NOT NULL COMMENT '学号/工号',
     name              VARCHAR(50)  NOT NULL COMMENT '姓名',
     phone             VARCHAR(20)  NOT NULL COMMENT '电话号码',

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMeetingDetail } from '@/api/meeting'
 import type { SportsMeeting } from '@/api/meeting'
 import { getEventList, addEvent, updateEvent, deleteEvent } from '@/api/event'
 import type { Event } from '@/api/event'
-import { getParticipantList, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
+import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getScheduleList, addSchedule, updateSchedule, deleteSchedule } from '@/api/schedule'
 import type { Schedule } from '@/api/schedule'
@@ -14,12 +14,15 @@ import { getNoticeList, addNotice, updateNotice, deleteNotice } from '@/api/noti
 import type { Notice } from '@/api/notice'
 import { getRegistrationList, updateRegistration, deleteRegistration } from '@/api/registration'
 import type { RegistrationVO } from '@/api/registration'
+import { getTeamList, addTeam, updateTeam, deleteTeam } from '@/api/team'
+import type { Team } from '@/api/team'
+import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType } from '@/api/groupType'
+import type { GroupType } from '@/api/groupType'
 
 const route = useRoute()
-const router = useRouter()
 const meetingId = Number(route.params.id)
 const meeting = ref<SportsMeeting | null>(null)
-const activeTab = ref('event')
+const activeTab = ref('schedule')
 
 // ============ 运动会信息 ============
 async function fetchMeeting() {
@@ -42,12 +45,25 @@ function formatDate(d: string) {
   return d ? d.substring(0, 10) : ''
 }
 
-// ============ 比赛项目 ============
+// ============ 赛程轮次 (含比赛项目) ============
+const schedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
-const eventFilterCategory = ref('')
-const eventFilterGender = ref('')
+const scheduleDialogVisible = ref(false)
+const scheduleForm = ref<Partial<Schedule>>({})
 const eventDialogVisible = ref(false)
 const eventForm = ref<Partial<Event>>({})
+const expandedSchedules = ref<number[]>([])
+const scheduleStatusMap: Record<number, string> = { 0: '进行中', 1: '已结束' }
+
+async function fetchSchedules() {
+  try {
+    const res: any = await getScheduleList(meetingId)
+    schedules.value = res.data || res || []
+    if (schedules.value.length > 0 && expandedSchedules.value.length === 0) {
+      expandedSchedules.value = [schedules.value[0].id]
+    }
+  } catch { /* ignore */ }
+}
 
 async function fetchEvents() {
   try {
@@ -56,17 +72,50 @@ async function fetchEvents() {
   } catch { /* ignore */ }
 }
 
-const filteredEvents = ref<Event[]>([])
-watch([events, eventFilterCategory, eventFilterGender], () => {
-  filteredEvents.value = events.value.filter((e) => {
-    if (eventFilterCategory.value && e.category !== eventFilterCategory.value) return false
-    if (eventFilterGender.value && e.gender !== eventFilterGender.value) return false
-    return true
-  })
-}, { immediate: true })
+function getEventsBySchedule(scheduleId: number) {
+  return events.value.filter(e => e.scheduleId === scheduleId)
+}
 
-function openEventAdd() {
-  eventForm.value = { sportsMeetingId: meetingId, scheduleId: 0, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
+function openScheduleAdd() {
+  scheduleForm.value = { sportsMeetingId: meetingId, name: '', status: 0 }
+  scheduleDialogVisible.value = true
+}
+function openScheduleEdit(row: Schedule) {
+  scheduleForm.value = { ...row }
+  scheduleDialogVisible.value = true
+}
+async function handleScheduleSubmit() {
+  try {
+    if (scheduleForm.value.id) {
+      await updateSchedule(scheduleForm.value)
+    } else {
+      await addSchedule(scheduleForm.value)
+    }
+    ElMessage.success('操作成功')
+    scheduleDialogVisible.value = false
+    fetchSchedules()
+  } catch { ElMessage.error('操作失败') }
+}
+async function handleScheduleDelete(id: number) {
+  try {
+    const count = getEventsBySchedule(id).length
+    const msg = count > 0
+      ? `该轮次下有 ${count} 个项目，确定删除？`
+      : '确定删除该轮次？'
+    await ElMessageBox.confirm(msg, '提示', { type: 'warning' })
+    await deleteSchedule(id)
+    ElMessage.success('删除成功')
+    fetchSchedules()
+    fetchEvents()
+  } catch { /* cancel */ }
+}
+
+function openEventAdd(scheduleId?: number) {
+  if (schedules.value.length === 0) {
+    ElMessage.warning('请先创建轮次，再添加项目')
+    return
+  }
+  eventForm.value = { sportsMeetingId: meetingId, scheduleId, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
   eventDialogVisible.value = true
 }
 function openEventEdit(row: Event) {
@@ -94,6 +143,156 @@ async function handleEventDelete(id: number) {
   } catch { /* cancel */ }
 }
 
+// ============ 组别管理 (含代表队) ============
+const groupTypes = ref<GroupType[]>([])
+const teams = ref<Team[]>([])
+const gtDialogVisible = ref(false)
+const gtForm = ref<Partial<GroupType>>({})
+const teamDialogVisible = ref(false)
+const teamForm = ref<Partial<Team>>({})
+const expandedGroupTypes = ref<number[]>([])
+
+async function fetchGroupTypes() {
+  try {
+    const res: any = await getGroupTypeList(meetingId)
+    groupTypes.value = res.data || res || []
+    if (groupTypes.value.length > 0 && expandedGroupTypes.value.length === 0) {
+      expandedGroupTypes.value = [groupTypes.value[0].id]
+    }
+  } catch { /* ignore */ }
+}
+
+async function fetchTeams() {
+  try {
+    const res: any = await getTeamList({ sportsMeetingId: meetingId })
+    teams.value = res.data || res || []
+  } catch { /* ignore */ }
+}
+
+function getTeamsByGroupType(groupTypeId: number) {
+  return teams.value.filter(t => t.groupTypeId === groupTypeId)
+}
+
+function openGtAdd() {
+  gtForm.value = { sportsMeetingId: meetingId, name: '' }
+  gtDialogVisible.value = true
+}
+function openGtEdit(row: GroupType) {
+  gtForm.value = { ...row }
+  gtDialogVisible.value = true
+}
+async function handleGtSubmit() {
+  try {
+    if (gtForm.value.id) {
+      await updateGroupType(gtForm.value)
+    } else {
+      await addGroupType(gtForm.value)
+    }
+    ElMessage.success('操作成功')
+    gtDialogVisible.value = false
+    fetchGroupTypes()
+  } catch { ElMessage.error('操作失败') }
+}
+async function handleGtDelete(id: number) {
+  try {
+    const count = getTeamsByGroupType(id).length
+    const msg = count > 0
+      ? `该组别下有 ${count} 个代表队，确定删除？`
+      : '确定删除该组别？'
+    await ElMessageBox.confirm(msg, '提示', { type: 'warning' })
+    await deleteGroupType(id)
+    ElMessage.success('删除成功')
+    fetchGroupTypes()
+    fetchTeams()
+  } catch { /* cancel */ }
+}
+
+function openTeamAdd(groupTypeId: number) {
+  teamForm.value = { sportsMeetingId: meetingId, groupTypeId, name: '', leader: '', coach: '', totalScore: 0 }
+  teamDialogVisible.value = true
+}
+function openTeamEdit(row: Team) {
+  teamForm.value = { ...row }
+  teamDialogVisible.value = true
+}
+async function handleTeamSubmit() {
+  try {
+    if (teamForm.value.id) {
+      await updateTeam(teamForm.value)
+    } else {
+      await addTeam(teamForm.value)
+    }
+    ElMessage.success('操作成功')
+    teamDialogVisible.value = false
+    fetchTeams()
+  } catch { ElMessage.error('操作失败') }
+}
+async function handleTeamDelete(id: number) {
+  try {
+    await ElMessageBox.confirm('确定删除该代表队？', '提示', { type: 'warning' })
+    await deleteTeam(id)
+    ElMessage.success('删除成功')
+    fetchTeams()
+  } catch { /* cancel */ }
+}
+
+// ============ 代表队 - 参赛人员分配 ============
+const expandedTeams = ref<number[]>([])
+const teamParticipants = ref<Record<number, Participant[]>>({})
+const assignDialogVisible = ref(false)
+const assignTeamId = ref<number>(0)
+const assignTeamName = ref('')
+const assignSelectedIds = ref<number[]>([])
+
+async function fetchTeamParticipants(teamId: number) {
+  try {
+    const res: any = await getParticipantListByTeam(teamId)
+    teamParticipants.value[teamId] = res.data || res || []
+  } catch { /* ignore */ }
+}
+
+function onTeamExpand(teamId: number) {
+  if (!expandedTeams.value.includes(teamId)) {
+    expandedTeams.value.push(teamId)
+    fetchTeamParticipants(teamId)
+  } else {
+    expandedTeams.value = expandedTeams.value.filter(id => id !== teamId)
+  }
+}
+
+function getTeamParticipants(teamId: number): Participant[] {
+  return teamParticipants.value[teamId] || []
+}
+
+function openAssignDialog(team: Team) {
+  assignTeamId.value = team.id
+  assignTeamName.value = team.name
+  assignSelectedIds.value = []
+  assignDialogVisible.value = true
+}
+
+async function handleAssignSubmit() {
+  try {
+    for (const pid of assignSelectedIds.value) {
+      await updateParticipant({ id: pid, teamId: assignTeamId.value })
+    }
+    ElMessage.success('分配成功')
+    assignDialogVisible.value = false
+    fetchTeamParticipants(assignTeamId.value)
+    fetchParticipants()
+  } catch { ElMessage.error('分配失败') }
+}
+
+async function handleRemoveFromTeam(participantId: number, teamId: number) {
+  try {
+    await ElMessageBox.confirm('确定将该人员移出代表队？', '提示', { type: 'warning' })
+    await updateParticipant({ id: participantId, teamId: null })
+    ElMessage.success('移出成功')
+    fetchTeamParticipants(teamId)
+    fetchParticipants()
+  } catch { /* cancel */ }
+}
+
 // ============ 参赛人员 ============
 const participants = ref<Participant[]>([])
 const participantSearch = ref('')
@@ -106,6 +305,18 @@ async function fetchParticipants() {
     participants.value = res.data || res || []
   } catch { /* ignore */ }
 }
+
+// 可分配的人员：该运动会下所有未分配代表队的人员
+const assignableParticipants = ref<Participant[]>([])
+watch([participants, assignDialogVisible], () => {
+  if (assignDialogVisible.value) {
+    const assignedIds = new Set<number>()
+    Object.values(teamParticipants.value).forEach(list => {
+      list.forEach(p => { if (p.teamId) assignedIds.add(p.id) })
+    })
+    assignableParticipants.value = participants.value.filter(p => !assignedIds.has(p.id))
+  }
+})
 
 const filteredParticipants = ref<Participant[]>([])
 watch([participants, participantSearch], () => {
@@ -144,49 +355,6 @@ async function handleParticipantDelete(id: number) {
     fetchParticipants()
   } catch { /* cancel */ }
 }
-
-// ============ 赛程轮次 ============
-const schedules = ref<Schedule[]>([])
-const scheduleDialogVisible = ref(false)
-const scheduleForm = ref<Partial<Schedule>>({})
-
-async function fetchSchedules() {
-  try {
-    const res: any = await getScheduleList(meetingId)
-    schedules.value = res.data || res || []
-  } catch { /* ignore */ }
-}
-
-function openScheduleAdd() {
-  scheduleForm.value = { sportsMeetingId: meetingId, name: '', status: 0 }
-  scheduleDialogVisible.value = true
-}
-function openScheduleEdit(row: Schedule) {
-  scheduleForm.value = { ...row }
-  scheduleDialogVisible.value = true
-}
-async function handleScheduleSubmit() {
-  try {
-    if (scheduleForm.value.id) {
-      await updateSchedule(scheduleForm.value)
-    } else {
-      await addSchedule(scheduleForm.value)
-    }
-    ElMessage.success('操作成功')
-    scheduleDialogVisible.value = false
-    fetchSchedules()
-  } catch { ElMessage.error('操作失败') }
-}
-async function handleScheduleDelete(id: number) {
-  try {
-    await ElMessageBox.confirm('确定删除该轮次？', '提示', { type: 'warning' })
-    await deleteSchedule(id)
-    ElMessage.success('删除成功')
-    fetchSchedules()
-  } catch { /* cancel */ }
-}
-
-const scheduleStatusMap: Record<number, string> = { 0: '进行中', 1: '已结束' }
 
 // ============ 公告通知 ============
 const notices = ref<Notice[]>([])
@@ -231,7 +399,6 @@ async function handleNoticeDelete(id: number) {
 
 // ============ 报名记录 ============
 const registrations = ref<RegistrationVO[]>([])
-const regFilterEvent = ref('')
 const regFilterStatus = ref<number | undefined>(undefined)
 
 async function fetchRegistrations() {
@@ -242,10 +409,9 @@ async function fetchRegistrations() {
 }
 
 const filteredRegistrations = ref<RegistrationVO[]>([])
-watch([registrations, regFilterEvent, regFilterStatus], () => {
+watch([registrations, regFilterStatus], () => {
   filteredRegistrations.value = registrations.value.filter((r) => {
-    if (regFilterEvent.value && r.eventName !== regFilterEvent.value) return false
-    if (regFilterStatus.value !== undefined && regFilterStatus.value !== '' && r.status !== regFilterStatus.value) return false
+    if (regFilterStatus.value !== undefined && regFilterStatus.value !== null && r.status !== regFilterStatus.value) return false
     return true
   })
 }, { immediate: true })
@@ -275,16 +441,17 @@ const loadedTabs = new Set<string>()
 function onTabChange(tab: string) {
   if (loadedTabs.has(tab)) return
   loadedTabs.add(tab)
-  if (tab === 'event') fetchEvents()
+  if (tab === 'schedule') { fetchSchedules(); fetchEvents() }
+  else if (tab === 'groupType') { fetchGroupTypes(); fetchTeams(); fetchParticipants() }
   else if (tab === 'participant') fetchParticipants()
-  else if (tab === 'schedule') fetchSchedules()
   else if (tab === 'notice') fetchNotices()
   else if (tab === 'registration') fetchRegistrations()
 }
 
 onMounted(() => {
   fetchMeeting()
-  loadedTabs.add('event')
+  loadedTabs.add('schedule')
+  fetchSchedules()
   fetchEvents()
 })
 </script>
@@ -314,41 +481,117 @@ onMounted(() => {
     <!-- Tab 管理区 -->
     <el-tabs v-model="activeTab" @tab-change="onTabChange" class="main-tabs">
 
-      <!-- ======== 比赛项目 ======== -->
-      <el-tab-pane label="比赛项目" name="event">
+      <!-- ======== 赛程轮次 (含比赛项目) ======== -->
+      <el-tab-pane label="赛程轮次" name="schedule">
         <div class="tab-toolbar">
-          <div class="tab-toolbar-left">
-            <el-select v-model="eventFilterCategory" placeholder="类别" clearable style="width:100px">
-              <el-option label="径赛" value="径赛" />
-              <el-option label="田赛" value="田赛" />
-              <el-option label="趣味赛" value="趣味赛" />
-            </el-select>
-            <el-select v-model="eventFilterGender" placeholder="性别" clearable style="width:100px">
-              <el-option label="男" value="男" />
-              <el-option label="女" value="女" />
-              <el-option label="不限" value="不限" />
-            </el-select>
-          </div>
-          <el-button type="primary" size="small" @click="openEventAdd">+ 新增项目</el-button>
+          <span class="toolbar-hint">展开轮次查看并管理其下的比赛项目</span>
+          <el-button type="primary" size="small" @click="openScheduleAdd">+ 新增轮次</el-button>
         </div>
-        <el-table :data="filteredEvents" stripe border size="small">
-          <el-table-column prop="name" label="项目名称" />
-          <el-table-column prop="category" label="类别" width="80" />
-          <el-table-column prop="gender" label="性别" width="70" />
-          <el-table-column prop="groupType" label="组别" width="80" />
-          <el-table-column label="开放报名" width="80">
-            <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
-          </el-table-column>
-          <el-table-column label="人数上限" width="80">
-            <template #default="{ row }">{{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="120" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" size="small" @click="openEventEdit(row)">编辑</el-button>
-              <el-button link type="danger" size="small" @click="handleEventDelete(row.id)">删除</el-button>
+        <el-empty v-if="schedules.length === 0" description="暂无赛程轮次，请先创建" />
+        <el-collapse v-else v-model="expandedSchedules" class="nested-collapse">
+          <el-collapse-item v-for="sch in schedules" :key="sch.id" :name="sch.id">
+            <template #title>
+              <div class="collapse-title">
+                <span class="collapse-title-name">{{ sch.name }}</span>
+                <el-tag :type="sch.status === 0 ? 'primary' : 'info'" size="small">{{ scheduleStatusMap[sch.status] }}</el-tag>
+                <span class="collapse-count">{{ getEventsBySchedule(sch.id).length }} 个项目</span>
+                <div class="collapse-title-actions" @click.stop>
+                  <el-button link type="primary" size="small" @click="openScheduleEdit(sch)">编辑</el-button>
+                  <el-button link type="danger" size="small" @click="handleScheduleDelete(sch.id)">删除</el-button>
+                </div>
+              </div>
             </template>
-          </el-table-column>
-        </el-table>
+            <div class="nested-section">
+              <div class="tab-toolbar">
+                <div></div>
+                <el-button type="primary" size="small" @click="openEventAdd(sch.id)">+ 新增项目</el-button>
+              </div>
+              <el-table v-if="getEventsBySchedule(sch.id).length > 0" :data="getEventsBySchedule(sch.id)" stripe border size="small">
+                <el-table-column prop="name" label="项目名称" />
+                <el-table-column prop="category" label="类别" width="80" />
+                <el-table-column prop="gender" label="性别" width="70" />
+                <el-table-column prop="groupType" label="组别" width="80" />
+                <el-table-column label="开放报名" width="80">
+                  <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
+                </el-table-column>
+                <el-table-column label="人数上限" width="80">
+                  <template #default="{ row }">{{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" fixed="right">
+                  <template #default="{ row }">
+                    <el-button link type="primary" size="small" @click="openEventEdit(row)">编辑</el-button>
+                    <el-button link type="danger" size="small" @click="handleEventDelete(row.id)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-empty v-else description="暂无项目，点击上方按钮添加" :image-size="60" />
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </el-tab-pane>
+
+      <!-- ======== 组别管理 (含代表队) ======== -->
+      <el-tab-pane label="组别管理" name="groupType">
+        <div class="tab-toolbar">
+          <span class="toolbar-hint">展开组别查看并管理其下的代表队</span>
+          <el-button type="primary" size="small" @click="openGtAdd">+ 新增组别</el-button>
+        </div>
+        <el-empty v-if="groupTypes.length === 0" description="暂无组别，请先创建" />
+        <el-collapse v-else v-model="expandedGroupTypes" class="nested-collapse">
+          <el-collapse-item v-for="gt in groupTypes" :key="gt.id" :name="gt.id">
+            <template #title>
+              <div class="collapse-title">
+                <span class="collapse-title-name">{{ gt.name }}</span>
+                <span class="collapse-count">{{ getTeamsByGroupType(gt.id).length }} 个代表队</span>
+                <div class="collapse-title-actions" @click.stop>
+                  <el-button link type="primary" size="small" @click="openGtEdit(gt)">编辑</el-button>
+                  <el-button link type="danger" size="small" @click="handleGtDelete(gt.id)">删除</el-button>
+                </div>
+              </div>
+            </template>
+            <div class="nested-section">
+              <div class="tab-toolbar">
+                <div></div>
+                <el-button type="primary" size="small" @click="openTeamAdd(gt.id)">+ 新增代表队</el-button>
+              </div>
+              <el-empty v-if="getTeamsByGroupType(gt.id).length === 0" description="暂无代表队，点击上方按钮添加" :image-size="60" />
+              <div v-else class="team-list">
+                <div v-for="team in getTeamsByGroupType(gt.id)" :key="team.id" class="team-item">
+                  <div class="team-header" @click="onTeamExpand(team.id)">
+                    <div class="team-header-left">
+                      <el-icon :size="14" class="team-expand-icon" :class="{ 'is-expanded': expandedTeams.includes(team.id) }">
+                        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M340.864 149.312a64 64 0 0 0 0 90.496L597.76 496.512l-256.896 256.704a64 64 0 1 0 90.496 90.496l302.08-302.08a64 64 0 0 0 0-90.496l-302.08-302.08a64 64 0 0 0-90.496 0z" fill="currentColor"/></svg>
+                      </el-icon>
+                      <span class="team-name">{{ team.name }}</span>
+                      <el-tag type="info" size="small">{{ getTeamParticipants(team.id).length }} 人</el-tag>
+                    </div>
+                    <div class="team-header-actions" @click.stop>
+                      <el-button link type="success" size="small" @click="openAssignDialog(team)">分配人员</el-button>
+                      <el-button link type="primary" size="small" @click="openTeamEdit(team)">编辑</el-button>
+                      <el-button link type="danger" size="small" @click="handleTeamDelete(team.id)">删除</el-button>
+                    </div>
+                  </div>
+                  <div v-if="expandedTeams.includes(team.id)" class="team-participants">
+                    <el-table v-if="getTeamParticipants(team.id).length > 0" :data="getTeamParticipants(team.id)" stripe border size="small">
+                      <el-table-column prop="userCode" label="学号/工号" width="120" />
+                      <el-table-column prop="name" label="姓名" width="100" />
+                      <el-table-column prop="gender" label="性别" width="60" />
+                      <el-table-column prop="phone" label="电话" width="130" />
+                      <el-table-column prop="college" label="学院" />
+                      <el-table-column prop="major" label="专业" />
+                      <el-table-column label="操作" width="80" fixed="right">
+                        <template #default="{ row }">
+                          <el-button link type="danger" size="small" @click="handleRemoveFromTeam(row.id, team.id)">移出</el-button>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                    <el-empty v-else description="暂无人员，点击上方「分配人员」添加" :image-size="50" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
       </el-tab-pane>
 
       <!-- ======== 参赛人员 ======== -->
@@ -368,28 +611,6 @@ onMounted(() => {
             <template #default="{ row }">
               <el-button link type="primary" size="small" @click="openParticipantEdit(row)">编辑</el-button>
               <el-button link type="danger" size="small" @click="handleParticipantDelete(row.id)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-tab-pane>
-
-      <!-- ======== 赛程轮次 ======== -->
-      <el-tab-pane label="赛程轮次" name="schedule">
-        <div class="tab-toolbar">
-          <div></div>
-          <el-button type="primary" size="small" @click="openScheduleAdd">+ 新增轮次</el-button>
-        </div>
-        <el-table :data="schedules" stripe border size="small">
-          <el-table-column prop="name" label="轮次名称" />
-          <el-table-column label="状态" width="100">
-            <template #default="{ row }">
-              <el-tag :type="row.status === 0 ? 'primary' : 'info'" size="small">{{ scheduleStatusMap[row.status] }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" size="small" @click="openScheduleEdit(row)">编辑</el-button>
-              <el-button link type="danger" size="small" @click="handleScheduleDelete(row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -459,14 +680,33 @@ onMounted(() => {
       </el-tab-pane>
     </el-tabs>
 
+    <!-- ======== 弹窗：赛程轮次 ======== -->
+    <el-dialog v-model="scheduleDialogVisible" :title="scheduleForm.id ? '编辑轮次' : '新增轮次'" width="400px" destroy-on-close>
+      <el-form :model="scheduleForm" label-width="80px">
+        <el-form-item label="轮次名称" required>
+          <el-input v-model="scheduleForm.name" placeholder="如：预赛、半决赛、决赛" />
+        </el-form-item>
+        <el-form-item label="状态" v-if="scheduleForm.id">
+          <el-select v-model="scheduleForm.status" style="width:100%">
+            <el-option label="进行中" :value="0" />
+            <el-option label="已结束" :value="1" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="scheduleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleScheduleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- ======== 弹窗：比赛项目 ======== -->
     <el-dialog v-model="eventDialogVisible" :title="eventForm.id ? '编辑项目' : '新增项目'" width="480px" destroy-on-close>
       <el-form :model="eventForm" label-width="90px">
         <el-form-item label="项目名称" required>
           <el-input v-model="eventForm.name" />
         </el-form-item>
-        <el-form-item label="所属轮次">
-          <el-select v-model="eventForm.scheduleId" placeholder="选择轮次" style="width:100%">
+        <el-form-item label="所属轮次" required>
+          <el-select v-model="eventForm.scheduleId" placeholder="请选择轮次" style="width:100%">
             <el-option v-for="s in schedules" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
@@ -504,6 +744,41 @@ onMounted(() => {
       </template>
     </el-dialog>
 
+    <!-- ======== 弹窗：组别 ======== -->
+    <el-dialog v-model="gtDialogVisible" :title="gtForm.id ? '编辑组别' : '新增组别'" width="400px" destroy-on-close>
+      <el-form :model="gtForm" label-width="80px">
+        <el-form-item label="组别名称" required>
+          <el-input v-model="gtForm.name" placeholder="如：学生组、教职工组" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="gtDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleGtSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ======== 弹窗：代表队 ======== -->
+    <el-dialog v-model="teamDialogVisible" :title="teamForm.id ? '编辑代表队' : '新增代表队'" width="480px" destroy-on-close>
+      <el-form :model="teamForm" label-width="80px">
+        <el-form-item label="队名" required>
+          <el-input v-model="teamForm.name" placeholder="如：计算机学院代表队" />
+        </el-form-item>
+        <el-form-item label="领队人">
+          <el-input v-model="teamForm.leader" />
+        </el-form-item>
+        <el-form-item label="教练员">
+          <el-input v-model="teamForm.coach" />
+        </el-form-item>
+        <el-form-item label="总分">
+          <el-input-number v-model="teamForm.totalScore" :precision="2" :min="0" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="teamDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleTeamSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- ======== 弹窗：参赛人员 ======== -->
     <el-dialog v-model="participantDialogVisible" :title="participantForm.id ? '编辑人员' : '新增人员'" width="480px" destroy-on-close>
       <el-form :model="participantForm" label-width="90px">
@@ -535,22 +810,23 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <!-- ======== 弹窗：赛程轮次 ======== -->
-    <el-dialog v-model="scheduleDialogVisible" :title="scheduleForm.id ? '编辑轮次' : '新增轮次'" width="400px" destroy-on-close>
-      <el-form :model="scheduleForm" label-width="80px">
-        <el-form-item label="轮次名称" required>
-          <el-input v-model="scheduleForm.name" placeholder="如：预赛、半决赛、决赛" />
-        </el-form-item>
-        <el-form-item label="状态" v-if="scheduleForm.id">
-          <el-select v-model="scheduleForm.status" style="width:100%">
-            <el-option label="进行中" :value="0" />
-            <el-option label="已结束" :value="1" />
-          </el-select>
-        </el-form-item>
-      </el-form>
+    <!-- ======== 弹窗：分配人员到代表队 ======== -->
+    <el-dialog v-model="assignDialogVisible" :title="`为「${assignTeamName}」分配人员`" width="560px" destroy-on-close>
+      <p style="color:#999;font-size:13px;margin-bottom:12px">仅显示该运动会下未分配代表队的人员</p>
+      <el-table :data="assignableParticipants" stripe border size="small" max-height="400"
+        @selection-change="(rows: any[]) => assignSelectedIds = rows.map(r => r.id)">
+        <el-table-column type="selection" width="45" />
+        <el-table-column prop="userCode" label="学号/工号" width="120" />
+        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="gender" label="性别" width="60" />
+        <el-table-column prop="college" label="学院" />
+        <el-table-column prop="major" label="专业" />
+      </el-table>
       <template #footer>
-        <el-button @click="scheduleDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleScheduleSubmit">确定</el-button>
+        <el-button @click="assignDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="assignSelectedIds.length === 0" @click="handleAssignSubmit">
+          确认分配 ({{ assignSelectedIds.length }} 人)
+        </el-button>
       </template>
     </el-dialog>
 
@@ -615,5 +891,103 @@ onMounted(() => {
 .tab-toolbar-left {
   display: flex;
   gap: 8px;
+}
+.toolbar-hint {
+  color: #999;
+  font-size: 13px;
+  line-height: 32px;
+}
+
+/* 嵌套折叠面板样式 */
+.nested-collapse {
+  border: none;
+}
+.nested-collapse :deep(.el-collapse-item__header) {
+  background: #f5f7fa;
+  border-radius: 6px;
+  padding: 0 16px;
+  margin-bottom: 8px;
+  border: 1px solid #ebeef5;
+  height: 44px;
+  line-height: 44px;
+}
+.nested-collapse :deep(.el-collapse-item__wrap) {
+  border: none;
+  margin-bottom: 12px;
+}
+.nested-collapse :deep(.el-collapse-item__content) {
+  padding: 0;
+}
+.collapse-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.collapse-title-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.collapse-count {
+  font-size: 12px;
+  color: #909399;
+}
+.collapse-title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.nested-section {
+  padding: 0 8px 8px;
+}
+
+/* 代表队列表样式 */
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.team-item {
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.team-header:hover {
+  background: #ecf0f5;
+}
+.team-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.team-expand-icon {
+  transition: transform 0.2s;
+  color: #909399;
+}
+.team-expand-icon.is-expanded {
+  transform: rotate(90deg);
+}
+.team-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.team-header-actions {
+  display: flex;
+  gap: 4px;
+}
+.team-participants {
+  padding: 8px 12px 12px;
+  border-top: 1px solid #ebeef5;
+  background: #fff;
 }
 </style>

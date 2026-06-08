@@ -20,6 +20,11 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
+    public List<Participant> getByTeamId(Long teamId) {
+        return participantMapper.selectByTeamId(teamId);
+    }
+
+    @Override
     public Participant getById(Long id) {
         return participantMapper.selectById(id);
     }

@@ -16,6 +16,8 @@ public interface ParticipantMapper {
 
     List<Participant> selectBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
 
+    List<Participant> selectByTeamId(@Param("teamId") Long teamId);
+
     void insert(Participant participant);
 
     void updateById(Participant participant);

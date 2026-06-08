@@ -23,6 +23,12 @@ public class AdminParticipantController {
         return Result.success(participantService.getBySportsMeetingId(sportsMeetingId));
     }
 
+    @GetMapping("/listByTeam")
+    public Result<List<Participant>> listByTeam(@RequestParam Long teamId) {
+        log.info("查询代表队参赛人员: teamId={}", teamId);
+        return Result.success(participantService.getByTeamId(teamId));
+    }
+
     @PostMapping("/add")
     public Result<String> add(@RequestBody Participant participant) {
         log.info("添加参赛人员: name={}", participant.getName());

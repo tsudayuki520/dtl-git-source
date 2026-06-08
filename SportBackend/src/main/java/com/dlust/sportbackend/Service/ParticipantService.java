@@ -7,6 +7,8 @@ public interface ParticipantService {
 
     List<Participant> getBySportsMeetingId(Long sportsMeetingId);
 
+    List<Participant> getByTeamId(Long teamId);
+
     Participant getById(Long id);
 
     void add(Participant participant);

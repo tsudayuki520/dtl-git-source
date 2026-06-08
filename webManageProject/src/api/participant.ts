@@ -3,6 +3,7 @@ import request from '@/utils/request'
 export interface Participant {
   id: number
   sportsMeetingId: number
+  teamId: number | null
   userCode: string
   name: string
   phone: string
@@ -13,6 +14,10 @@ export interface Participant {
 
 export function getParticipantList(sportsMeetingId: number) {
   return request.get('/admin/participant/list', { params: { sportsMeetingId } })
+}
+
+export function getParticipantListByTeam(teamId: number) {
+  return request.get('/admin/participant/listByTeam', { params: { teamId } })
 }
 
 export function addParticipant(data: Partial<Participant>) {
