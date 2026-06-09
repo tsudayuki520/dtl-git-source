@@ -7,6 +7,8 @@ public interface RegistrationService {
 
     List<RegistrationVO> getBySportsMeetingId(Long sportsMeetingId);
 
+    List<RegistrationVO> getByEventId(Long eventId);
+
     void update(Long id, Integer status);
 
     void delete(Long id);

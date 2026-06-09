@@ -14,6 +14,10 @@ export function getRegistrationList(sportsMeetingId: number) {
   return request.get('/admin/registration/list', { params: { sportsMeetingId } })
 }
 
+export function getRegistrationListByEvent(eventId: number) {
+  return request.get('/admin/registration/listByEvent', { params: { eventId } })
+}
+
 export function updateRegistration(id: number, status: number) {
   return request.put('/admin/registration/update', { id, status })
 }

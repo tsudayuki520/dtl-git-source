@@ -24,6 +24,12 @@ public class AdminRegistrationController {
         return Result.success(registrationService.getBySportsMeetingId(sportsMeetingId));
     }
 
+    @GetMapping("/listByEvent")
+    public Result<List<RegistrationVO>> listByEvent(@RequestParam Long eventId) {
+        log.info("按项目查询报名记录: eventId={}", eventId);
+        return Result.success(registrationService.getByEventId(eventId));
+    }
+
     @PutMapping("/update")
     public Result<String> update(@RequestBody Map<String, Object> params) {
         Long id = Long.valueOf(params.get("id").toString());

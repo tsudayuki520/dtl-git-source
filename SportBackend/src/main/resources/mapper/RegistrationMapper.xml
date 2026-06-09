@@ -37,6 +37,17 @@
         ORDER BY r.create_time DESC
     </select>
 
+    <select id="selectVOByEventId" resultType="RegistrationVO">
+        SELECT r.id, r.participant_id, r.event_id, r.status, r.create_time, r.update_time,
+               p.name AS participant_name,
+               e.name AS event_name
+        FROM registration r
+        LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN event e ON r.event_id = e.id
+        WHERE r.event_id = #{eventId}
+        ORDER BY r.create_time DESC
+    </select>
+
     <update id="updateStatus">
         UPDATE registration SET status = #{status} WHERE id = #{id}
     </update>

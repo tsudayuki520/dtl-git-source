@@ -1,19 +1,18 @@
 package com.dlust.sportbackend.entity;
 
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class Participant {
+public class Team {
     private Long id;
     private Long sportsMeetingId;
-    private Long teamId;           // 代表队ID（关联team表）
-    private String userCode;
+    private Long groupTypeId;
     private String name;
-    private String phone;
-    private String gender;
-    private String college;
-    private String major;
+    private String leader;
+    private String coach;
+    private BigDecimal totalScore;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

@@ -3,37 +3,41 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.NoticeMapper">
 
-    <!-- 全局公告：sports_meeting_id IS NULL -->
+    <sql id="noticeColumns">
+        id, title, content, file_url, file_name, sports_meeting_id, create_time, update_time
+    </sql>
+
     <select id="selectGlobal" resultType="com.dlust.sportbackend.entity.Notice">
-        SELECT id, title, content, sports_meeting_id, create_time, update_time
+        SELECT <include refid="noticeColumns"/>
         FROM notice
         WHERE sports_meeting_id IS NULL
         ORDER BY create_time DESC
     </select>
 
-    <!-- 某运动会的赛事通知 -->
     <select id="selectBySportsMeetingId" resultType="com.dlust.sportbackend.entity.Notice">
-        SELECT id, title, content, sports_meeting_id, create_time, update_time
+        SELECT <include refid="noticeColumns"/>
         FROM notice
         WHERE sports_meeting_id = #{sportsMeetingId}
         ORDER BY create_time DESC
     </select>
 
     <select id="selectById" resultType="com.dlust.sportbackend.entity.Notice">
-        SELECT id, title, content, sports_meeting_id, create_time, update_time
+        SELECT <include refid="noticeColumns"/>
         FROM notice
         WHERE id = #{id}
     </select>
 
     <insert id="insert" parameterType="com.dlust.sportbackend.entity.Notice" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO notice (title, content, sports_meeting_id)
-        VALUES (#{title}, #{content}, #{sportsMeetingId})
+        INSERT INTO notice (title, content, file_url, file_name, sports_meeting_id)
+        VALUES (#{title}, #{content}, #{fileUrl}, #{fileName}, #{sportsMeetingId})
     </insert>
 
     <update id="updateById" parameterType="com.dlust.sportbackend.entity.Notice">
         UPDATE notice
         SET title = #{title},
             content = #{content},
+            file_url = #{fileUrl},
+            file_name = #{fileName},
             sports_meeting_id = #{sportsMeetingId}
         WHERE id = #{id}
     </update>

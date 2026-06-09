@@ -20,6 +20,11 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
+    public List<RegistrationVO> getByEventId(Long eventId) {
+        return registrationMapper.selectVOByEventId(eventId);
+    }
+
+    @Override
     public void update(Long id, Integer status) {
         registrationMapper.updateStatus(id, status);
     }

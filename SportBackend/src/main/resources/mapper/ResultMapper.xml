@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.ResultMapper">
+
+    <select id="selectVOBySportsMeetingId" resultType="ResultVO">
+        SELECT r.id, r.sports_meeting_id, r.event_id, r.participant_id, r.score,
+               r.create_time, r.update_time,
+               p.name AS participant_name,
+               e.name AS event_name
+        FROM result r
+        LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN event e ON r.event_id = e.id
+        WHERE r.sports_meeting_id = #{sportsMeetingId}
+        ORDER BY r.create_time DESC
+    </select>
+
+    <select id="selectVOByEventId" resultType="ResultVO">
+        SELECT r.id, r.sports_meeting_id, r.event_id, r.participant_id, r.score,
+               r.create_time, r.update_time,
+               p.name AS participant_name,
+               e.name AS event_name
+        FROM result r
+        LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN event e ON r.event_id = e.id
+        WHERE r.event_id = #{eventId}
+        ORDER BY r.score ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO result (sports_meeting_id, event_id, participant_id, score)
+        VALUES (#{sportsMeetingId}, #{eventId}, #{participantId}, #{score})
+    </insert>
+
+    <update id="updateById">
+        UPDATE result
+        <set>
+            <if test="eventId != null">event_id = #{eventId},</if>
+            <if test="participantId != null">participant_id = #{participantId},</if>
+            <if test="score != null">score = #{score},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM result WHERE id = #{id}
+    </delete>
+
+</mapper>

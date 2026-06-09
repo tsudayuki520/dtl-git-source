@@ -1,25 +1,26 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMeetingDetail } from '@/api/meeting'
 import type { SportsMeeting } from '@/api/meeting'
-import { getEventList, addEvent, updateEvent, deleteEvent } from '@/api/event'
+import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
 import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getScheduleList, addSchedule, updateSchedule, deleteSchedule } from '@/api/schedule'
 import type { Schedule } from '@/api/schedule'
-import { getNoticeList, addNotice, updateNotice, deleteNotice } from '@/api/notice'
+import { getNoticeList, addNotice, updateNotice, deleteNotice, uploadNoticeFile } from '@/api/notice'
 import type { Notice } from '@/api/notice'
-import { getRegistrationList, updateRegistration, deleteRegistration } from '@/api/registration'
-import type { RegistrationVO } from '@/api/registration'
+import { getResultList, getResultListByEvent, addResult, updateResult, deleteResult } from '@/api/result'
+import type { ResultVO, ResultItem } from '@/api/result'
 import { getTeamList, addTeam, updateTeam, deleteTeam } from '@/api/team'
 import type { Team } from '@/api/team'
 import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType } from '@/api/groupType'
 import type { GroupType } from '@/api/groupType'
 
 const route = useRoute()
+const router = useRouter()
 const meetingId = Number(route.params.id)
 const meeting = ref<SportsMeeting | null>(null)
 const activeTab = ref('schedule')
@@ -50,18 +51,12 @@ const schedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
 const scheduleDialogVisible = ref(false)
 const scheduleForm = ref<Partial<Schedule>>({})
-const eventDialogVisible = ref(false)
-const eventForm = ref<Partial<Event>>({})
-const expandedSchedules = ref<number[]>([])
 const scheduleStatusMap: Record<number, string> = { 0: '进行中', 1: '已结束' }
 
 async function fetchSchedules() {
   try {
     const res: any = await getScheduleList(meetingId)
     schedules.value = res.data || res || []
-    if (schedules.value.length > 0 && expandedSchedules.value.length === 0) {
-      expandedSchedules.value = [schedules.value[0].id]
-    }
   } catch { /* ignore */ }
 }
 
@@ -74,6 +69,10 @@ async function fetchEvents() {
 
 function getEventsBySchedule(scheduleId: number) {
   return events.value.filter(e => e.scheduleId === scheduleId)
+}
+
+function goScheduleDetail(scheduleId: number) {
+  router.push(`/meeting/${meetingId}/schedule/${scheduleId}`)
 }
 
 function openScheduleAdd() {
@@ -106,39 +105,6 @@ async function handleScheduleDelete(id: number) {
     await deleteSchedule(id)
     ElMessage.success('删除成功')
     fetchSchedules()
-    fetchEvents()
-  } catch { /* cancel */ }
-}
-
-function openEventAdd(scheduleId?: number) {
-  if (schedules.value.length === 0) {
-    ElMessage.warning('请先创建轮次，再添加项目')
-    return
-  }
-  eventForm.value = { sportsMeetingId: meetingId, scheduleId, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
-  eventDialogVisible.value = true
-}
-function openEventEdit(row: Event) {
-  eventForm.value = { ...row }
-  eventDialogVisible.value = true
-}
-async function handleEventSubmit() {
-  try {
-    if (eventForm.value.id) {
-      await updateEvent(eventForm.value)
-    } else {
-      await addEvent(eventForm.value)
-    }
-    ElMessage.success('操作成功')
-    eventDialogVisible.value = false
-    fetchEvents()
-  } catch { ElMessage.error('操作失败') }
-}
-async function handleEventDelete(id: number) {
-  try {
-    await ElMessageBox.confirm('确定删除该项目？', '提示', { type: 'warning' })
-    await deleteEvent(id)
-    ElMessage.success('删除成功')
     fetchEvents()
   } catch { /* cancel */ }
 }
@@ -360,6 +326,7 @@ async function handleParticipantDelete(id: number) {
 const notices = ref<Notice[]>([])
 const noticeDialogVisible = ref(false)
 const noticeForm = ref<Partial<Notice>>({})
+const noticeUploading = ref(false)
 
 async function fetchNotices() {
   try {
@@ -369,12 +336,31 @@ async function fetchNotices() {
 }
 
 function openNoticeAdd() {
-  noticeForm.value = { sportsMeetingId: meetingId, title: '', content: '' }
+  noticeForm.value = { sportsMeetingId: meetingId, title: '', content: '', fileUrl: null, fileName: null }
   noticeDialogVisible.value = true
 }
 function openNoticeEdit(row: Notice) {
   noticeForm.value = { ...row }
   noticeDialogVisible.value = true
+}
+async function handleNoticeFileUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  noticeUploading.value = true
+  try {
+    const res: any = await uploadNoticeFile(file)
+    if (res.data) {
+      const parts = (res.data as string).split(',')
+      noticeForm.value.fileUrl = parts[0]
+      noticeForm.value.fileName = parts[1] || file.name
+    }
+    ElMessage.success('文件上传成功')
+  } catch { ElMessage.error('文件上传失败') }
+  finally { noticeUploading.value = false }
+}
+function handleNoticeFileRemove() {
+  noticeForm.value.fileUrl = null
+  noticeForm.value.fileName = null
 }
 async function handleNoticeSubmit() {
   try {
@@ -397,42 +383,106 @@ async function handleNoticeDelete(id: number) {
   } catch { /* cancel */ }
 }
 
-// ============ 报名记录 ============
-const registrations = ref<RegistrationVO[]>([])
-const regFilterStatus = ref<number | undefined>(undefined)
+// ============ 成绩管理 ============
+const results = ref<ResultVO[]>([])
+const resultDialogVisible = ref(false)
+const resultForm = ref<Partial<ResultItem>>({})
+const resultSearch = ref('')
+const resultFilterSchedule = ref<number | undefined>(undefined)
 
-async function fetchRegistrations() {
+async function fetchResults() {
   try {
-    const res: any = await getRegistrationList(meetingId)
-    registrations.value = res.data || res || []
+    const res: any = await getResultList(meetingId)
+    results.value = res.data || res || []
   } catch { /* ignore */ }
 }
 
-const filteredRegistrations = ref<RegistrationVO[]>([])
-watch([registrations, regFilterStatus], () => {
-  filteredRegistrations.value = registrations.value.filter((r) => {
-    if (regFilterStatus.value !== undefined && regFilterStatus.value !== null && r.status !== regFilterStatus.value) return false
-    return true
+function getScheduleNameByEventId(eventId: number): string {
+  const ev = events.value.find(e => e.id === eventId)
+  if (!ev) return '未分类'
+  const sch = schedules.value.find(s => s.id === ev.scheduleId)
+  return sch ? sch.name : '未分类'
+}
+
+const filteredResults = ref<ResultVO[]>([])
+watch([results, resultSearch, resultFilterSchedule], () => {
+  const kw = resultSearch.value.toLowerCase()
+  filteredResults.value = results.value.filter((r) => {
+    if (resultFilterSchedule.value !== undefined && resultFilterSchedule.value !== null) {
+      const ev = events.value.find(e => e.id === r.eventId)
+      if (!ev || ev.scheduleId !== resultFilterSchedule.value) return false
+    }
+    if (!kw) return true
+    return (r.participantName || '').toLowerCase().includes(kw) || (r.eventName || '').toLowerCase().includes(kw)
   })
 }, { immediate: true })
 
-const regStatusMap: Record<number, string> = { 0: '已报名', 1: '已晋级', 2: '已取消' }
-const regStatusColor: Record<number, string> = { 0: '#409eff', 1: '#67c23a', 2: '#909399' }
+function getResultsGroupedBySchedule(): { scheduleId: number | null, scheduleName: string, items: ResultVO[] }[] {
+  const groups: Record<string, ResultVO[]> = {}
+  for (const r of filteredResults.value) {
+    const ev = events.value.find(e => e.id === r.eventId)
+    const schId = ev ? ev.scheduleId : null
+    const key = String(schId)
+    if (!groups[key]) groups[key] = []
+    groups[key].push(r)
+  }
+  return Object.entries(groups).map(([key, items]) => ({
+    scheduleId: key === 'null' ? null : Number(key),
+    scheduleName: items.length > 0 ? getScheduleNameByEventId(items[0].eventId) : '未分类',
+    items,
+  }))
+}
 
-async function handleRegStatusChange(id: number, status: number) {
+function openResultAdd() {
+  resultForm.value = { sportsMeetingId: meetingId, eventId: undefined as any, participantId: undefined as any, score: null }
+  resultDialogVisible.value = true
+}
+function openResultEdit(row: ResultVO) {
+  resultForm.value = { id: row.id, sportsMeetingId: row.sportsMeetingId, eventId: row.eventId, participantId: row.participantId, score: row.score }
+  resultDialogVisible.value = true
+}
+async function handleResultSubmit() {
   try {
-    await updateRegistration(id, status)
-    ElMessage.success('状态更新成功')
-    fetchRegistrations()
+    if (resultForm.value.id) {
+      await updateResult(resultForm.value)
+    } else {
+      await addResult(resultForm.value)
+    }
+    ElMessage.success('操作成功')
+    resultDialogVisible.value = false
+    fetchResults()
   } catch { ElMessage.error('操作失败') }
 }
-async function handleRegDelete(id: number) {
+async function handleResultDelete(id: number) {
   try {
-    await ElMessageBox.confirm('确定删除该报名记录？', '提示', { type: 'warning' })
-    await deleteRegistration(id)
+    await ElMessageBox.confirm('确定删除该成绩记录？', '提示', { type: 'warning' })
+    await deleteResult(id)
     ElMessage.success('删除成功')
-    fetchRegistrations()
+    fetchResults()
   } catch { /* cancel */ }
+}
+
+// ============ 成绩历史记录 ============
+const historyDialogVisible = ref(false)
+const historyFilterEvent = ref<number | undefined>(undefined)
+const historyResults = ref<ResultVO[]>([])
+
+async function openHistoryDialog() {
+  historyFilterEvent.value = undefined
+  historyDialogVisible.value = true
+  await fetchHistoryResults()
+}
+
+async function fetchHistoryResults() {
+  try {
+    if (historyFilterEvent.value) {
+      const res: any = await getResultListByEvent(historyFilterEvent.value)
+      historyResults.value = res.data || res || []
+    } else {
+      const res: any = await getResultList(meetingId)
+      historyResults.value = res.data || res || []
+    }
+  } catch { /* ignore */ }
 }
 
 // ============ Tab 切换加载数据 ============
@@ -445,7 +495,7 @@ function onTabChange(tab: string) {
   else if (tab === 'groupType') { fetchGroupTypes(); fetchTeams(); fetchParticipants() }
   else if (tab === 'participant') fetchParticipants()
   else if (tab === 'notice') fetchNotices()
-  else if (tab === 'registration') fetchRegistrations()
+  else if (tab === 'result') { fetchResults(); fetchSchedules(); fetchEvents(); fetchParticipants() }
 }
 
 onMounted(() => {
@@ -481,53 +531,31 @@ onMounted(() => {
     <!-- Tab 管理区 -->
     <el-tabs v-model="activeTab" @tab-change="onTabChange" class="main-tabs">
 
-      <!-- ======== 赛程轮次 (含比赛项目) ======== -->
+      <!-- ======== 赛程轮次 ======== -->
       <el-tab-pane label="赛程轮次" name="schedule">
         <div class="tab-toolbar">
-          <span class="toolbar-hint">展开轮次查看并管理其下的比赛项目</span>
+          <span class="toolbar-hint">点击轮次进入管理其下的比赛项目</span>
           <el-button type="primary" size="small" @click="openScheduleAdd">+ 新增轮次</el-button>
         </div>
         <el-empty v-if="schedules.length === 0" description="暂无赛程轮次，请先创建" />
-        <el-collapse v-else v-model="expandedSchedules" class="nested-collapse">
-          <el-collapse-item v-for="sch in schedules" :key="sch.id" :name="sch.id">
-            <template #title>
-              <div class="collapse-title">
-                <span class="collapse-title-name">{{ sch.name }}</span>
-                <el-tag :type="sch.status === 0 ? 'primary' : 'info'" size="small">{{ scheduleStatusMap[sch.status] }}</el-tag>
-                <span class="collapse-count">{{ getEventsBySchedule(sch.id).length }} 个项目</span>
-                <div class="collapse-title-actions" @click.stop>
-                  <el-button link type="primary" size="small" @click="openScheduleEdit(sch)">编辑</el-button>
-                  <el-button link type="danger" size="small" @click="handleScheduleDelete(sch.id)">删除</el-button>
-                </div>
-              </div>
-            </template>
-            <div class="nested-section">
-              <div class="tab-toolbar">
-                <div></div>
-                <el-button type="primary" size="small" @click="openEventAdd(sch.id)">+ 新增项目</el-button>
-              </div>
-              <el-table v-if="getEventsBySchedule(sch.id).length > 0" :data="getEventsBySchedule(sch.id)" stripe border size="small">
-                <el-table-column prop="name" label="项目名称" />
-                <el-table-column prop="category" label="类别" width="80" />
-                <el-table-column prop="gender" label="性别" width="70" />
-                <el-table-column prop="groupType" label="组别" width="80" />
-                <el-table-column label="开放报名" width="80">
-                  <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
-                </el-table-column>
-                <el-table-column label="人数上限" width="80">
-                  <template #default="{ row }">{{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>
-                </el-table-column>
-                <el-table-column label="操作" width="120" fixed="right">
-                  <template #default="{ row }">
-                    <el-button link type="primary" size="small" @click="openEventEdit(row)">编辑</el-button>
-                    <el-button link type="danger" size="small" @click="handleEventDelete(row.id)">删除</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-              <el-empty v-else description="暂无项目，点击上方按钮添加" :image-size="60" />
+        <div v-else class="schedule-card-list">
+          <div
+            v-for="sch in schedules" :key="sch.id" class="schedule-card"
+            @click="goScheduleDetail(sch.id)"
+          >
+            <div class="schedule-card-header">
+              <span class="schedule-card-name">{{ sch.name }}</span>
+              <el-tag :type="sch.status === 0 ? 'primary' : 'info'" size="small">{{ scheduleStatusMap[sch.status] }}</el-tag>
             </div>
-          </el-collapse-item>
-        </el-collapse>
+            <div class="schedule-card-info">
+              <span>{{ getEventsBySchedule(sch.id).length }} 个项目</span>
+            </div>
+            <div class="schedule-card-actions" @click.stop>
+              <el-button link type="primary" size="small" @click="openScheduleEdit(sch)">编辑</el-button>
+              <el-button link type="danger" size="small" @click="handleScheduleDelete(sch.id)">删除</el-button>
+            </div>
+          </div>
+        </div>
       </el-tab-pane>
 
       <!-- ======== 组别管理 (含代表队) ======== -->
@@ -627,6 +655,12 @@ onMounted(() => {
           <el-table-column label="内容" show-overflow-tooltip>
             <template #default="{ row }">{{ row.content }}</template>
           </el-table-column>
+          <el-table-column label="附件" width="120">
+            <template #default="{ row }">
+              <a v-if="row.fileName" :href="row.fileUrl" target="_blank" style="color:#409eff;font-size:12px">{{ row.fileName }}</a>
+              <span v-else style="color:#ccc">-</span>
+            </template>
+          </el-table-column>
           <el-table-column label="创建时间" width="170">
             <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
           </el-table-column>
@@ -639,44 +673,40 @@ onMounted(() => {
         </el-table>
       </el-tab-pane>
 
-      <!-- ======== 报名记录 ======== -->
-      <el-tab-pane label="报名记录" name="registration">
+      <!-- ======== 成绩管理 ======== -->
+      <el-tab-pane label="成绩管理" name="result">
         <div class="tab-toolbar">
           <div class="tab-toolbar-left">
-            <el-select v-model="regFilterStatus" placeholder="全部状态" clearable style="width:120px">
-              <el-option label="已报名" :value="0" />
-              <el-option label="已晋级" :value="1" />
-              <el-option label="已取消" :value="2" />
+            <el-input v-model="resultSearch" placeholder="搜索参赛者/项目" clearable style="width:200px" />
+            <el-select v-model="resultFilterSchedule" placeholder="全部赛次" clearable style="width:140px">
+              <el-option v-for="sch in schedules" :key="sch.id" :label="sch.name" :value="sch.id" />
             </el-select>
           </div>
+          <div class="tab-toolbar-left">
+            <el-button size="small" @click="openHistoryDialog">查看历史记录</el-button>
+            <el-button type="primary" size="small" @click="openResultAdd">+ 录入成绩</el-button>
+          </div>
         </div>
-        <el-table :data="filteredRegistrations" stripe border size="small">
-          <el-table-column prop="participantName" label="参赛者" width="100" />
-          <el-table-column prop="eventName" label="项目" />
-          <el-table-column label="状态" width="100">
-            <template #default="{ row }">
-              <el-tag :color="regStatusColor[row.status]" style="border:none;color:#fff" size="small">{{ regStatusMap[row.status] }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="报名时间" width="170">
-            <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="140" fixed="right">
-            <template #default="{ row }">
-              <el-select
-                :model-value="row.status"
-                size="small"
-                style="width:90px"
-                @change="(val: number) => handleRegStatusChange(row.id, val)"
-              >
-                <el-option label="已报名" :value="0" />
-                <el-option label="已晋级" :value="1" />
-                <el-option label="已取消" :value="2" />
-              </el-select>
-              <el-button link type="danger" size="small" @click="handleRegDelete(row.id)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div v-for="group in getResultsGroupedBySchedule()" :key="group.scheduleId ?? 'none'" class="result-group">
+          <div class="result-group-title">{{ group.scheduleName }}（{{ group.items.length }} 条）</div>
+          <el-table :data="group.items" stripe border size="small">
+            <el-table-column prop="participantName" label="参赛者" width="100" />
+            <el-table-column prop="eventName" label="项目" />
+            <el-table-column label="成绩" width="100">
+              <template #default="{ row }">{{ row.score ?? '-' }}</template>
+            </el-table-column>
+            <el-table-column label="创建时间" width="170">
+              <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="120" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small" @click="openResultEdit(row)">编辑</el-button>
+                <el-button link type="danger" size="small" @click="handleResultDelete(row.id)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <el-empty v-if="filteredResults.length === 0" description="暂无成绩数据" />
       </el-tab-pane>
     </el-tabs>
 
@@ -696,51 +726,6 @@ onMounted(() => {
       <template #footer>
         <el-button @click="scheduleDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleScheduleSubmit">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- ======== 弹窗：比赛项目 ======== -->
-    <el-dialog v-model="eventDialogVisible" :title="eventForm.id ? '编辑项目' : '新增项目'" width="480px" destroy-on-close>
-      <el-form :model="eventForm" label-width="90px">
-        <el-form-item label="项目名称" required>
-          <el-input v-model="eventForm.name" />
-        </el-form-item>
-        <el-form-item label="所属轮次" required>
-          <el-select v-model="eventForm.scheduleId" placeholder="请选择轮次" style="width:100%">
-            <el-option v-for="s in schedules" :key="s.id" :label="s.name" :value="s.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="类别">
-          <el-select v-model="eventForm.category" style="width:100%">
-            <el-option label="径赛" value="径赛" />
-            <el-option label="田赛" value="田赛" />
-            <el-option label="趣味赛" value="趣味赛" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="性别限制">
-          <el-select v-model="eventForm.gender" style="width:100%">
-            <el-option label="不限" value="不限" />
-            <el-option label="男" value="男" />
-            <el-option label="女" value="女" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="组别">
-          <el-select v-model="eventForm.groupType" style="width:100%">
-            <el-option label="学生组" value="学生组" />
-            <el-option label="教工组" value="教工组" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="开放报名">
-          <el-switch v-model="eventForm.allowRegister" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-        <el-form-item label="人数上限">
-          <el-input-number v-model="eventForm.registerLimit" :min="0" />
-          <span style="margin-left:8px;color:#999;font-size:12px">0 表示不限</span>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="eventDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleEventSubmit">确定</el-button>
       </template>
     </el-dialog>
 
@@ -830,6 +815,48 @@ onMounted(() => {
       </template>
     </el-dialog>
 
+    <!-- ======== 弹窗：成绩录入 ======== -->
+    <el-dialog v-model="resultDialogVisible" :title="resultForm.id ? '编辑成绩' : '录入成绩'" width="480px" destroy-on-close>
+      <el-form :model="resultForm" label-width="90px">
+        <el-form-item label="比赛项目" required>
+          <el-select v-model="resultForm.eventId" placeholder="请选择项目" style="width:100%" :disabled="!!resultForm.id">
+            <el-option v-for="e in events" :key="e.id" :label="e.name" :value="e.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="参赛人员" required>
+          <el-select v-model="resultForm.participantId" placeholder="请选择参赛人员" filterable style="width:100%" :disabled="!!resultForm.id">
+            <el-option v-for="p in participants" :key="p.id" :label="`${p.name}（${p.userCode}）`" :value="p.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="成绩" required>
+          <el-input-number v-model="resultForm.score" :precision="2" :min="0" style="width:100%" placeholder="请输入成绩" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="resultDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleResultSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ======== 弹窗：成绩历史记录 ======== -->
+    <el-dialog v-model="historyDialogVisible" title="成绩历史记录" width="700px" destroy-on-close>
+      <div style="margin-bottom:12px">
+        <el-select v-model="historyFilterEvent" placeholder="按项目筛选" clearable style="width:240px" @change="fetchHistoryResults">
+          <el-option v-for="e in events" :key="e.id" :label="e.name" :value="e.id" />
+        </el-select>
+      </div>
+      <el-table :data="historyResults" stripe border size="small" max-height="400">
+        <el-table-column prop="participantName" label="参赛者" width="100" />
+        <el-table-column prop="eventName" label="项目" />
+        <el-table-column label="成绩" width="100">
+          <template #default="{ row }">{{ row.score ?? '-' }}</template>
+        </el-table-column>
+        <el-table-column label="录入时间" width="170">
+          <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+
     <!-- ======== 弹窗：公告通知 ======== -->
     <el-dialog v-model="noticeDialogVisible" :title="noticeForm.id ? '编辑公告' : '新增公告'" width="560px" destroy-on-close>
       <el-form :model="noticeForm" label-width="70px">
@@ -837,7 +864,17 @@ onMounted(() => {
           <el-input v-model="noticeForm.title" />
         </el-form-item>
         <el-form-item label="内容" required>
-          <el-input v-model="noticeForm.content" type="textarea" :rows="8" />
+          <el-input v-model="noticeForm.content" type="textarea" :rows="6" />
+        </el-form-item>
+        <el-form-item label="附件">
+          <div v-if="noticeForm.fileName" class="notice-file-info">
+            <a :href="noticeForm.fileUrl" target="_blank" style="color:#409eff">{{ noticeForm.fileName }}</a>
+            <el-button link type="danger" size="small" @click="handleNoticeFileRemove" style="margin-left:8px">移除</el-button>
+          </div>
+          <div v-else>
+            <input type="file" @change="handleNoticeFileUpload" :disabled="noticeUploading" style="width:100%" />
+            <span v-if="noticeUploading" style="color:#999;font-size:12px">上传中...</span>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -989,5 +1026,62 @@ onMounted(() => {
   padding: 8px 12px 12px;
   border-top: 1px solid #ebeef5;
   background: #fff;
+}
+
+/* 赛程卡片列表 */
+.schedule-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.schedule-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.schedule-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #409eff;
+}
+.schedule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.schedule-card-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.schedule-card-info {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 10px;
+}
+.schedule-card-actions {
+  display: flex;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 成绩分组 */
+.result-group { margin-bottom: 20px; }
+.result-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
+  line-height: 20px;
+}
+
+.notice-file-info {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
 }
 </style>

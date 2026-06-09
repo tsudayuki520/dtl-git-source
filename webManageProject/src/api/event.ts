@@ -8,6 +8,7 @@ export interface Event {
   category: string
   gender: string
   groupType: string
+  groupTypeId: number | null
   allowRegister: number
   registerLimit: number
   status: number

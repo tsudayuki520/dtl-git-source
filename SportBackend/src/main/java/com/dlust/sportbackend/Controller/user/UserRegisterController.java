@@ -2,13 +2,16 @@ package com.dlust.sportbackend.Controller.user;
 
 import com.dlust.sportbackend.Mapper.ParticipantMapper;
 import com.dlust.sportbackend.Mapper.RegistrationMapper;
+import com.dlust.sportbackend.Mapper.SportsMeetingMapper;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Participant;
 import com.dlust.sportbackend.entity.Registration;
+import com.dlust.sportbackend.entity.SportsMeeting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,9 @@ public class UserRegisterController {
     @Autowired
     private RegistrationMapper registrationMapper;
 
+    @Autowired
+    private SportsMeetingMapper sportsMeetingMapper;
+
     /**
      * 报名接口
      */
@@ -34,6 +40,22 @@ public class UserRegisterController {
         String userCode = body.get("userCode").toString();
         String name = body.get("name").toString();
         log.info("报名参赛: sportsMeetingId={}, eventId={}, userCode={}, name={}", sportsMeetingId, eventId, userCode, name);
+
+        // 0. 校验报名时间
+        SportsMeeting meeting = sportsMeetingMapper.selectById(sportsMeetingId);
+        if (meeting == null) {
+            return Result.error(404, "运动会不存在");
+        }
+        if (meeting.getStatus() != 1) {
+            return Result.error(400, "当前不在报名时间内");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (meeting.getRegistrationStart() != null && now.isBefore(meeting.getRegistrationStart())) {
+            return Result.error(400, "报名尚未开始");
+        }
+        if (meeting.getRegistrationEnd() != null && now.isAfter(meeting.getRegistrationEnd())) {
+            return Result.error(400, "报名已截止");
+        }
         String phone = body.get("phone").toString();
         String gender = body.get("gender").toString();
         String college = body.getOrDefault("college", "") != null ? body.get("college").toString() : "";

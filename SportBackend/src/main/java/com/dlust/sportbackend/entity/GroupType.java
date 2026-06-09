@@ -4,16 +4,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class Participant {
+public class GroupType {
     private Long id;
     private Long sportsMeetingId;
-    private Long teamId;           // 代表队ID（关联team表）
-    private String userCode;
     private String name;
-    private String phone;
-    private String gender;
-    private String college;
-    private String major;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

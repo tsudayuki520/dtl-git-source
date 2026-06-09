@@ -15,6 +15,12 @@ public class AdminSportsMeetingController {
     @Autowired
     private SportsMeetingService sportsMeetingService;
 
+    @GetMapping("/list")
+    public Result<java.util.List<SportsMeeting>> list() {
+        log.info("管理端查询运动会列表（全部）");
+        return Result.success(sportsMeetingService.getAll());
+    }
+
     @PostMapping("/add")
     public Result<String> add(@RequestBody SportsMeeting sportsMeeting) {
         log.info("添加运动会: name={}", sportsMeeting.getName());

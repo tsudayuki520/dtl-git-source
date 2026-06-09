@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { addNotice, updateNotice, deleteNotice } from '@/api/notice'
+import { addNotice, updateNotice, deleteNotice, uploadNoticeFile } from '@/api/notice'
+import type { Notice } from '@/api/notice'
 import request from '@/utils/request'
-
-interface Notice {
-  id: number
-  sportsMeetingId: number | null
-  title: string
-  content: string
-  createTime: string
-  updateTime: string
-}
 
 const notices = ref<Notice[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增全局通知')
+const uploading = ref(false)
 
-const form = ref<Partial<Notice>>({ title: '', content: '' })
+const form = ref<Partial<Notice>>({ title: '', content: '', fileUrl: null, fileName: null })
 
 async function fetchNotices() {
   loading.value = true
@@ -34,7 +27,7 @@ async function fetchNotices() {
 
 function openAdd() {
   dialogTitle.value = '新增全局通知'
-  form.value = { title: '', content: '' }
+  form.value = { title: '', content: '', fileUrl: null, fileName: null }
   dialogVisible.value = true
 }
 
@@ -42,6 +35,27 @@ function openEdit(row: Notice) {
   dialogTitle.value = '编辑全局通知'
   form.value = { ...row }
   dialogVisible.value = true
+}
+
+async function handleFileUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  uploading.value = true
+  try {
+    const res: any = await uploadNoticeFile(file)
+    if (res.data) {
+      const parts = (res.data as string).split(',')
+      form.value.fileUrl = parts[0]
+      form.value.fileName = parts[1] || file.name
+    }
+    ElMessage.success('文件上传成功')
+  } catch { ElMessage.error('文件上传失败') }
+  finally { uploading.value = false }
+}
+
+function handleFileRemove() {
+  form.value.fileUrl = null
+  form.value.fileName = null
 }
 
 async function handleSubmit() {
@@ -85,6 +99,12 @@ onMounted(fetchNotices)
       <el-table-column label="内容" show-overflow-tooltip>
         <template #default="{ row }">{{ row.content }}</template>
       </el-table-column>
+      <el-table-column label="附件" width="120">
+        <template #default="{ row }">
+          <a v-if="row.fileName" :href="row.fileUrl" target="_blank" style="color:#409eff;font-size:12px">{{ row.fileName }}</a>
+          <span v-else style="color:#ccc">-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" width="170">
         <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
       </el-table-column>
@@ -102,7 +122,17 @@ onMounted(fetchNotices)
           <el-input v-model="form.title" />
         </el-form-item>
         <el-form-item label="内容" required>
-          <el-input v-model="form.content" type="textarea" :rows="8" />
+          <el-input v-model="form.content" type="textarea" :rows="6" />
+        </el-form-item>
+        <el-form-item label="附件">
+          <div v-if="form.fileName" class="file-info">
+            <a :href="form.fileUrl" target="_blank" style="color:#409eff">{{ form.fileName }}</a>
+            <el-button link type="danger" size="small" @click="handleFileRemove" style="margin-left:8px">移除</el-button>
+          </div>
+          <div v-else>
+            <input type="file" @change="handleFileUpload" :disabled="uploading" style="width:100%" />
+            <span v-if="uploading" style="color:#999;font-size:12px">上传中...</span>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -116,4 +146,5 @@ onMounted(fetchNotices)
 <style scoped>
 .notice-page { padding: 20px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.file-info { display: flex; align-items: center; font-size: 13px; }
 </style>

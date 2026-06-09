@@ -98,6 +98,19 @@ function goDetail(id: number) {
   router.push(`/meeting/${id}`)
 }
 
+async function handlePublish(item: SportsMeeting) {
+  try {
+    await ElMessageBox.confirm(`确定将「${item.name}」发布？发布后状态将变为报名中。`, '发布确认', {
+      confirmButtonText: '确定发布',
+      cancelButtonText: '取消',
+      type: 'info',
+    })
+    await updateMeeting({ ...item, status: 1 })
+    ElMessage.success('发布成功')
+    fetchMeetings()
+  } catch { /* cancel */ }
+}
+
 function formatDate(d: string) {
   if (!d) return ''
   return d.substring(0, 10)
@@ -131,13 +144,16 @@ onMounted(fetchMeetings)
       >
         <div class="card-header">
           <span class="card-title">{{ item.name }}</span>
-          <el-tag
-            :color="statusMap[item.status]?.color"
-            :style="{ color: statusMap[item.status]?.borderColor, border: 'none' }"
-            size="small"
-          >
-            {{ statusMap[item.status]?.label }}
-          </el-tag>
+          <div class="card-header-right">
+            <el-tag
+              :color="statusMap[item.status]?.color"
+              :style="{ color: statusMap[item.status]?.borderColor, border: 'none' }"
+              size="small"
+            >
+              {{ statusMap[item.status]?.label }}
+            </el-tag>
+            <el-button v-if="item.status === 0" type="success" size="small" @click="handlePublish(item)">去发布</el-button>
+          </div>
         </div>
         <div class="card-info">
           <div>地点：{{ item.venue }}</div>
@@ -227,6 +243,11 @@ onMounted(fetchMeetings)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .card-title {
   font-size: 16px;

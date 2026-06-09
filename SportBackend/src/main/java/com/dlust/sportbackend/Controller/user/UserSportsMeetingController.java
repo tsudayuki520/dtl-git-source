@@ -23,7 +23,10 @@ public class UserSportsMeetingController {
         if (status != null) {
             return Result.success(sportsMeetingService.getByStatus(status));
         }
-        return Result.success(sportsMeetingService.getAll());
+        // 小程序端不展示筹备中的运动会
+        return Result.success(sportsMeetingService.getAll().stream()
+                .filter(sm -> sm.getStatus() != null && sm.getStatus() != 0)
+                .toList());
     }
 
     @GetMapping("/search")

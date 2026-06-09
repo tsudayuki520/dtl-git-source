@@ -19,13 +19,25 @@ Page({
     }
   },
 
+  /** 判断当前是否在报名时间内 */
+  isRegistrationOpen(meeting) {
+    if (!meeting) return false
+    if (meeting.status !== 1) return false
+    const now = new Date().getTime()
+    const start = meeting.registrationStart ? new Date(meeting.registrationStart.replace('T', ' ')).getTime() : 0
+    const end = meeting.registrationEnd ? new Date(meeting.registrationEnd.replace('T', ' ')).getTime() : Infinity
+    return now >= start && now <= end
+  },
+
   loadDetail(id) {
     wx.request({
       url: auth.BASE_URL + '/api/sports-meeting/' + id,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {
-          this.setData({ meeting: res.data.data })
+          const meeting = res.data.data
+          const regOpen = this.isRegistrationOpen(meeting)
+          this.setData({ meeting, regOpen })
         }
       },
       fail: (err) => {

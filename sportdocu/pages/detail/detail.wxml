@@ -104,10 +104,11 @@
   <view class="bottom-bar-info">
     <text class="bottom-bar-name">{{meeting.name}}</text>
     <text class="bottom-bar-hint" wx:if="{{meeting.status === 0}}">运动会筹备中</text>
-    <text class="bottom-bar-hint" wx:elif="{{meeting.status === 1}}">报名进行中，快来参加吧</text>
+    <text class="bottom-bar-hint" wx:elif="{{regOpen}}">报名进行中，快来参加吧</text>
+    <text class="bottom-bar-hint" wx:elif="{{meeting.status === 1}}">当前不在报名时间内</text>
     <text class="bottom-bar-hint" wx:elif="{{meeting.status === 2}}">比赛进行中</text>
     <text class="bottom-bar-hint" wx:else>比赛已结束</text>
   </view>
-  <view class="register-btn" wx:if="{{meeting.status === 1}}" bindtap="goToRegister">报名参赛</view>
+  <view class="register-btn" wx:if="{{regOpen}}" bindtap="goToRegister">报名参赛</view>
   <view class="register-btn disabled" wx:else>未开放</view>
 </view>

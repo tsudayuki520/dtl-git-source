@@ -21,6 +21,24 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '运动会管理' },
       },
       {
+        path: 'meeting/:meetingId/schedule/:scheduleId',
+        name: 'ScheduleDetail',
+        component: () => import('@/views/ScheduleDetailView.vue'),
+        meta: { title: '赛程管理' },
+      },
+      {
+        path: 'meeting/:meetingId/event/:eventId',
+        name: 'EventDetail',
+        component: () => import('@/views/EventDetailView.vue'),
+        meta: { title: '项目报名' },
+      },
+      {
+        path: 'record',
+        name: 'Record',
+        component: () => import('@/views/RecordView.vue'),
+        meta: { title: '记录管理' },
+      },
+      {
         path: 'banner',
         name: 'Banner',
         component: () => import('@/views/BannerView.vue'),

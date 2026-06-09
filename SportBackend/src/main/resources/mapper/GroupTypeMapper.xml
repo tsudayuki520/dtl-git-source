@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.GroupTypeMapper">
+
+    <select id="selectBySportsMeetingId" resultType="GroupType">
+        SELECT * FROM group_type
+        WHERE sports_meeting_id = #{sportsMeetingId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectById" resultType="GroupType">
+        SELECT * FROM group_type WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO group_type (sports_meeting_id, name)
+        VALUES (#{sportsMeetingId}, #{name})
+    </insert>
+
+    <update id="updateById">
+        UPDATE group_type
+        <set>
+            <if test="name != null">name = #{name},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM group_type WHERE id = #{id}
+    </delete>
+
+</mapper>

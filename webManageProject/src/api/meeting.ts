@@ -15,7 +15,7 @@ export interface SportsMeeting {
 }
 
 export function getMeetingList(params?: { status?: number }) {
-  return request.get('/sports-meeting/list', { params })
+  return request.get('/admin/sports-meeting/list', { params })
 }
 
 export function getMeetingDetail(id: number) {

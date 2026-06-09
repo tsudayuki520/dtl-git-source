@@ -22,6 +22,8 @@ public interface RegistrationMapper {
 
     List<RegistrationVO> selectVOBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
 
+    List<RegistrationVO> selectVOByEventId(@Param("eventId") Long eventId);
+
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     void deleteById(@Param("id") Long id);
