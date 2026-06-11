@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlust.sportbackend.Mapper.EventScheduleMapper">
+
+    <select id="selectByEventId" resultType="EventSchedule">
+        SELECT * FROM event_schedule
+        WHERE event_id = #{eventId} AND is_deleted = 0
+    </select>
+
+    <select id="selectByScheduleId" resultType="EventSchedule">
+        SELECT * FROM event_schedule
+        WHERE schedule_id = #{scheduleId} AND is_deleted = 0
+    </select>
+
+    <select id="selectScheduleIdsByEventId" resultType="java.lang.Long">
+        SELECT es.schedule_id FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE es.event_id = #{eventId} AND es.is_deleted = 0 AND s.is_deleted = 0
+        ORDER BY s.create_time ASC
+    </select>
+
+    <select id="selectEventIdsByScheduleId" resultType="java.lang.Long">
+        SELECT event_id FROM event_schedule
+        WHERE schedule_id = #{scheduleId} AND is_deleted = 0
+    </select>
+
+    <select id="selectBySportsMeetingId" resultType="EventSchedule">
+        SELECT es.* FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE s.sports_meeting_id = #{sportsMeetingId} AND es.is_deleted = 0 AND s.is_deleted = 0
+    </select>
+
+    <insert id="insert">
+        INSERT INTO event_schedule (event_id, schedule_id)
+        VALUES (#{eventId}, #{scheduleId})
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO event_schedule (event_id, schedule_id)
+        VALUES
+        <foreach collection="scheduleIds" item="scheduleId" separator=",">
+            (#{eventId}, #{scheduleId})
+        </foreach>
+    </insert>
+
+    <update id="deleteByEventId">
+        UPDATE event_schedule SET is_deleted = 1 WHERE event_id = #{eventId}
+    </update>
+
+    <update id="deleteById">
+        UPDATE event_schedule SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <update id="deleteByScheduleId">
+        UPDATE event_schedule SET is_deleted = 1 WHERE schedule_id = #{scheduleId}
+    </update>
+
+</mapper>

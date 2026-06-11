@@ -3,7 +3,6 @@ import request from '@/utils/request'
 export interface Event {
   id: number
   sportsMeetingId: number
-  scheduleId: number
   name: string
   category: string
   gender: string

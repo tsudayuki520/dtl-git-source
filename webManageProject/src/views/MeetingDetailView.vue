@@ -6,6 +6,8 @@ import { getMeetingDetail } from '@/api/meeting'
 import type { SportsMeeting } from '@/api/meeting'
 import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
+import { getEventSchedulesBySportsMeeting } from '@/api/eventSchedule'
+import type { EventSchedule } from '@/api/eventSchedule'
 import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getScheduleList, addSchedule, updateSchedule, deleteSchedule } from '@/api/schedule'
@@ -49,6 +51,7 @@ function formatDate(d: string) {
 // ============ 赛程轮次 (含比赛项目) ============
 const schedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
+const eventScheduleList = ref<EventSchedule[]>([])
 const scheduleDialogVisible = ref(false)
 const scheduleForm = ref<Partial<Schedule>>({})
 const scheduleStatusMap: Record<number, string> = { 0: '进行中', 1: '已结束' }
@@ -67,8 +70,20 @@ async function fetchEvents() {
   } catch { /* ignore */ }
 }
 
+async function fetchEventSchedules() {
+  try {
+    const res: any = await getEventSchedulesBySportsMeeting(meetingId)
+    eventScheduleList.value = res.data || res || []
+  } catch { /* ignore */ }
+}
+
+function getEventIdsBySchedule(scheduleId: number): Set<number> {
+  return new Set(eventScheduleList.value.filter(es => es.scheduleId === scheduleId).map(es => es.eventId))
+}
+
 function getEventsBySchedule(scheduleId: number) {
-  return events.value.filter(e => e.scheduleId === scheduleId)
+  const ids = getEventIdsBySchedule(scheduleId)
+  return events.value.filter(e => ids.has(e.id))
 }
 
 function goScheduleDetail(scheduleId: number) {
@@ -397,10 +412,14 @@ async function fetchResults() {
   } catch { /* ignore */ }
 }
 
+function getScheduleIdsByEventId(eventId: number): number[] {
+  return eventScheduleList.value.filter(es => es.eventId === eventId).map(es => es.scheduleId)
+}
+
 function getScheduleNameByEventId(eventId: number): string {
-  const ev = events.value.find(e => e.id === eventId)
-  if (!ev) return '未分类'
-  const sch = schedules.value.find(s => s.id === ev.scheduleId)
+  const schIds = getScheduleIdsByEventId(eventId)
+  if (schIds.length === 0) return '未分类'
+  const sch = schedules.value.find(s => s.id === schIds[0])
   return sch ? sch.name : '未分类'
 }
 
@@ -409,8 +428,8 @@ watch([results, resultSearch, resultFilterSchedule], () => {
   const kw = resultSearch.value.toLowerCase()
   filteredResults.value = results.value.filter((r) => {
     if (resultFilterSchedule.value !== undefined && resultFilterSchedule.value !== null) {
-      const ev = events.value.find(e => e.id === r.eventId)
-      if (!ev || ev.scheduleId !== resultFilterSchedule.value) return false
+      const schIds = getScheduleIdsByEventId(r.eventId)
+      if (!schIds.includes(resultFilterSchedule.value)) return false
     }
     if (!kw) return true
     return (r.participantName || '').toLowerCase().includes(kw) || (r.eventName || '').toLowerCase().includes(kw)
@@ -420,8 +439,8 @@ watch([results, resultSearch, resultFilterSchedule], () => {
 function getResultsGroupedBySchedule(): { scheduleId: number | null, scheduleName: string, items: ResultVO[] }[] {
   const groups: Record<string, ResultVO[]> = {}
   for (const r of filteredResults.value) {
-    const ev = events.value.find(e => e.id === r.eventId)
-    const schId = ev ? ev.scheduleId : null
+    const schIds = getScheduleIdsByEventId(r.eventId)
+    const schId = schIds.length > 0 ? schIds[0] : null
     const key = String(schId)
     if (!groups[key]) groups[key] = []
     groups[key].push(r)
@@ -491,11 +510,11 @@ const loadedTabs = new Set<string>()
 function onTabChange(tab: string) {
   if (loadedTabs.has(tab)) return
   loadedTabs.add(tab)
-  if (tab === 'schedule') { fetchSchedules(); fetchEvents() }
+  if (tab === 'schedule') { fetchSchedules(); fetchEvents(); fetchEventSchedules() }
   else if (tab === 'groupType') { fetchGroupTypes(); fetchTeams(); fetchParticipants() }
   else if (tab === 'participant') fetchParticipants()
   else if (tab === 'notice') fetchNotices()
-  else if (tab === 'result') { fetchResults(); fetchSchedules(); fetchEvents(); fetchParticipants() }
+  else if (tab === 'result') { fetchResults(); fetchSchedules(); fetchEvents(); fetchEventSchedules(); fetchParticipants() }
 }
 
 onMounted(() => {
@@ -503,6 +522,7 @@ onMounted(() => {
   loadedTabs.add('schedule')
   fetchSchedules()
   fetchEvents()
+  fetchEventSchedules()
 })
 </script>
 

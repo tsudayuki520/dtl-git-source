@@ -108,6 +108,7 @@ onMounted(() => {
       <el-table v-if="filteredRegistrations.length > 0" :data="filteredRegistrations" stripe border size="small">
         <el-table-column prop="participantName" label="参赛者" width="120" />
         <el-table-column prop="eventName" label="项目" />
+        <el-table-column prop="scheduleName" label="赛次" width="90" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="regStatusType[row.status]" size="small">{{ regStatusMap[row.status] }}</el-tag>

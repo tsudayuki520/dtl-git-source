@@ -4,10 +4,12 @@ export interface RegistrationVO {
   id: number
   participantId: number
   eventId: number
+  scheduleId: number
   status: number
   createTime: string
   participantName: string
   eventName: string
+  scheduleName: string
 }
 
 export function getRegistrationList(sportsMeetingId: number) {

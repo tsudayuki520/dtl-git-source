@@ -1,8 +1,8 @@
 -- 比赛项目表（具体项目：100米短跑、跳远等）
+-- 赛程关联已迁移至 event_schedule 中间表
 CREATE TABLE IF NOT EXISTS event (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '项目ID',
     sports_meeting_id BIGINT                             NOT NULL COMMENT '所属运动会ID',
-    schedule_id       BIGINT                             NOT NULL COMMENT '所属赛程ID',
     name              VARCHAR(100)                       NOT NULL COMMENT '项目名称：100米短跑、跳远等',
     category          VARCHAR(20)                        NOT NULL DEFAULT '径赛' COMMENT '项目分类：田赛、径赛、趣味赛',
     gender            VARCHAR(10)                        NOT NULL DEFAULT '不限' COMMENT '性别限制：男、女、不限',

@@ -8,12 +8,7 @@ import java.util.List;
 @Mapper
 public interface EventMapper {
 
-    List<Event> selectByScheduleId(@Param("scheduleId") Long scheduleId);
-
     List<Event> selectBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
-
-    List<Event> selectByScheduleIdAndGroupType(@Param("scheduleId") Long scheduleId,
-                                                @Param("groupType") String groupType);
 
     Event selectById(@Param("id") Long id);
 

@@ -8,6 +8,7 @@ import { getScheduleList, updateSchedule } from '@/api/schedule'
 import type { Schedule } from '@/api/schedule'
 import { getEventList, addEvent, updateEvent, deleteEvent } from '@/api/event'
 import type { Event } from '@/api/event'
+import { getEventSchedulesBySchedule, getEventSchedules, saveEventSchedules } from '@/api/eventSchedule'
 import { getRegistrationList } from '@/api/registration'
 
 const route = useRoute()
@@ -17,10 +18,12 @@ const meetingId = Number(route.params.meetingId)
 
 const meeting = ref<SportsMeeting | null>(null)
 const schedule = ref<Schedule | null>(null)
+const allSchedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
 const regCountMap = ref<Record<number, number>>({})
 const eventDialogVisible = ref(false)
 const eventForm = ref<Partial<Event>>({})
+const eventFormScheduleIds = ref<number[]>([])
 
 const scheduleStatusMap: Record<number, string> = { 0: '进行中', 1: '已结束' }
 
@@ -35,14 +38,22 @@ async function fetchSchedule() {
   try {
     const res: any = await getScheduleList(meetingId)
     const list: Schedule[] = res.data || res || []
+    allSchedules.value = list
     schedule.value = list.find((s: Schedule) => s.id === scheduleId) || null
   } catch { /* ignore */ }
 }
 
 async function fetchEvents() {
   try {
+    const assocRes: any = await getEventSchedulesBySchedule(scheduleId)
+    const associations: any[] = assocRes.data || assocRes || []
+    const eventIds = new Set(associations.map((a: any) => a.eventId))
+    if (eventIds.size === 0) {
+      events.value = []
+      return
+    }
     const res: any = await getEventList({ sportsMeetingId: meetingId })
-    events.value = (res.data || res || []).filter((e: Event) => e.scheduleId === scheduleId)
+    events.value = (res.data || res || []).filter((e: Event) => eventIds.has(e.id))
   } catch { /* ignore */ }
 }
 
@@ -61,19 +72,30 @@ async function fetchRegCounts() {
 }
 
 function openEventAdd() {
-  eventForm.value = { sportsMeetingId: meetingId, scheduleId, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
+  eventForm.value = { sportsMeetingId: meetingId, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
+  eventFormScheduleIds.value = [scheduleId]
   eventDialogVisible.value = true
 }
-function openEventEdit(row: Event) {
+async function openEventEdit(row: Event) {
   eventForm.value = { ...row }
+  try {
+    const res: any = await getEventSchedules(row.id)
+    const list: any[] = res.data || res || []
+    eventFormScheduleIds.value = list.map((a: any) => a.scheduleId)
+  } catch { eventFormScheduleIds.value = [] }
   eventDialogVisible.value = true
 }
 async function handleEventSubmit() {
   try {
     if (eventForm.value.id) {
       await updateEvent(eventForm.value)
+      await saveEventSchedules(eventForm.value.id, eventFormScheduleIds.value)
     } else {
-      await addEvent(eventForm.value)
+      const res: any = await addEvent(eventForm.value)
+      const newId = res.data
+      if (newId) {
+        await saveEventSchedules(newId, eventFormScheduleIds.value)
+      }
     }
     ElMessage.success('操作成功')
     eventDialogVisible.value = false
@@ -164,6 +186,11 @@ onMounted(() => {
       <el-form :model="eventForm" label-width="90px">
         <el-form-item label="项目名称" required>
           <el-input v-model="eventForm.name" />
+        </el-form-item>
+        <el-form-item label="参赛轮次" required>
+          <el-select v-model="eventFormScheduleIds" multiple placeholder="请选择轮次" style="width:100%">
+            <el-option v-for="sch in allSchedules" :key="sch.id" :label="sch.name" :value="sch.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="类别">
           <el-select v-model="eventForm.category" style="width:100%">

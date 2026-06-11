@@ -1,5 +1,6 @@
 package com.dlust.sportbackend.Controller.user;
 
+import com.dlust.sportbackend.Service.EventScheduleService;
 import com.dlust.sportbackend.Service.EventService;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Event;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -17,16 +19,25 @@ public class UserEventController {
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private EventScheduleService eventScheduleService;
+
     @GetMapping("/list")
     public Result<List<Event>> getList(@RequestParam(required = false) Long scheduleId,
                                         @RequestParam(required = false) Long sportsMeetingId,
                                         @RequestParam(required = false) String groupType) {
         log.info("获取项目列表: scheduleId={}, sportsMeetingId={}, groupType={}", scheduleId, sportsMeetingId, groupType);
         if (scheduleId != null) {
-            if (groupType != null && !groupType.isEmpty()) {
-                return Result.success(eventService.getByScheduleIdAndGroupType(scheduleId, groupType));
+            List<Long> eventIds = eventScheduleService.getEventIdsByScheduleId(scheduleId);
+            if (eventIds.isEmpty()) {
+                return Result.success(List.of());
             }
-            return Result.success(eventService.getByScheduleId(scheduleId));
+            List<Event> events = eventIds.stream()
+                    .map(eventService::getById)
+                    .filter(e -> e != null)
+                    .filter(e -> groupType == null || groupType.isEmpty() || e.getGroupType().equals(groupType))
+                    .collect(Collectors.toList());
+            return Result.success(events);
         }
         if (sportsMeetingId != null) {
             return Result.success(eventService.getBySportsMeetingId(sportsMeetingId));

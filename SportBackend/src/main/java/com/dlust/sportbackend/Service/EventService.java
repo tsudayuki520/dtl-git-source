@@ -5,11 +5,7 @@ import java.util.List;
 
 public interface EventService {
 
-    List<Event> getByScheduleId(Long scheduleId);
-
     List<Event> getBySportsMeetingId(Long sportsMeetingId);
-
-    List<Event> getByScheduleIdAndGroupType(Long scheduleId, String groupType);
 
     Event getById(Long id);
 

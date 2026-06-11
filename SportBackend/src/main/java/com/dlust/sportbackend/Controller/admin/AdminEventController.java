@@ -16,10 +16,10 @@ public class AdminEventController {
     private EventService eventService;
 
     @PostMapping("/add")
-    public Result<String> add(@RequestBody Event event) {
+    public Result<Long> add(@RequestBody Event event) {
         log.info("添加项目: name={}", event.getName());
         eventService.add(event);
-        return Result.success("添加成功");
+        return Result.success(event.getId());
     }
 
     @PutMapping("/update")

@@ -3,14 +3,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.RegistrationMapper">
 
+    <select id="selectById" resultType="Registration">
+        SELECT * FROM registration WHERE id = #{id}
+    </select>
+
+    <select id="selectByParticipantIdEventIdScheduleId" resultType="Registration">
+        SELECT * FROM registration
+        WHERE participant_id = #{participantId} AND event_id = #{eventId} AND schedule_id = #{scheduleId}
+    </select>
+
     <select id="selectByParticipantIdAndEventId" resultType="Registration">
         SELECT * FROM registration
         WHERE participant_id = #{participantId} AND event_id = #{eventId}
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO registration (participant_id, event_id, status)
-        VALUES (#{participantId}, #{eventId}, #{status})
+        INSERT INTO registration (participant_id, event_id, schedule_id, status)
+        VALUES (#{participantId}, #{eventId}, #{scheduleId}, #{status})
     </insert>
 
     <select id="countByEventId" resultType="int">
@@ -27,23 +36,27 @@
     </select>
 
     <select id="selectVOBySportsMeetingId" resultType="RegistrationVO">
-        SELECT r.id, r.participant_id, r.event_id, r.status, r.create_time, r.update_time,
+        SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
                p.name AS participant_name,
-               e.name AS event_name
+               e.name AS event_name,
+               s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id
         LEFT JOIN event e ON r.event_id = e.id
+        LEFT JOIN schedule s ON r.schedule_id = s.id
         WHERE e.sports_meeting_id = #{sportsMeetingId}
         ORDER BY r.create_time DESC
     </select>
 
     <select id="selectVOByEventId" resultType="RegistrationVO">
-        SELECT r.id, r.participant_id, r.event_id, r.status, r.create_time, r.update_time,
+        SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
                p.name AS participant_name,
-               e.name AS event_name
+               e.name AS event_name,
+               s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id
         LEFT JOIN event e ON r.event_id = e.id
+        LEFT JOIN schedule s ON r.schedule_id = s.id
         WHERE r.event_id = #{eventId}
         ORDER BY r.create_time DESC
     </select>

@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public class Event {
     private Long id;
     private Long sportsMeetingId;
-    private Long scheduleId;
     private String name;        // 项目名称：100米短跑、跳远等
     private String category;    // 项目分类：田赛、径赛、趣味赛
     private String gender;      // 性别限制：男、女、不限

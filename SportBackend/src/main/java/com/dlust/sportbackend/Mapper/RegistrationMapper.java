@@ -11,6 +11,12 @@ import java.util.Map;
 @Mapper
 public interface RegistrationMapper {
 
+    Registration selectById(@Param("id") Long id);
+
+    Registration selectByParticipantIdEventIdScheduleId(@Param("participantId") Long participantId,
+                                                        @Param("eventId") Long eventId,
+                                                        @Param("scheduleId") Long scheduleId);
+
     Registration selectByParticipantIdAndEventId(@Param("participantId") Long participantId,
                                                  @Param("eventId") Long eventId);
 

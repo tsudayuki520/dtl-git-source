@@ -9,25 +9,13 @@
         ORDER BY category, group_type, name
     </select>
 
-    <select id="selectByScheduleId" resultType="Event">
-        SELECT * FROM event
-        WHERE schedule_id = #{scheduleId} AND is_deleted = 0
-        ORDER BY create_time ASC
-    </select>
-
-    <select id="selectByScheduleIdAndGroupType" resultType="Event">
-        SELECT * FROM event
-        WHERE schedule_id = #{scheduleId} AND group_type = #{groupType} AND is_deleted = 0
-        ORDER BY create_time ASC
-    </select>
-
     <select id="selectById" resultType="Event">
         SELECT * FROM event WHERE id = #{id} AND is_deleted = 0
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO event (sports_meeting_id, schedule_id, name, category, gender, group_type, group_type_id, allow_register, register_limit, status)
-        VALUES (#{sportsMeetingId}, #{scheduleId}, #{name}, #{category}, #{gender}, #{groupType}, #{groupTypeId}, #{allowRegister}, #{registerLimit}, #{status})
+        INSERT INTO event (sports_meeting_id, name, category, gender, group_type, group_type_id, allow_register, register_limit, status)
+        VALUES (#{sportsMeetingId}, #{name}, #{category}, #{gender}, #{groupType}, #{groupTypeId}, #{allowRegister}, #{registerLimit}, #{status})
     </insert>
 
     <update id="updateById">

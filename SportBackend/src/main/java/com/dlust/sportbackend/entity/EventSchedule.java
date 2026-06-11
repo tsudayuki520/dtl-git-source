@@ -4,16 +4,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class RegistrationVO {
+public class EventSchedule {
     private Long id;
-    private Long participantId;
     private Long eventId;
     private Long scheduleId;
-    private Integer status;
+    private Integer isDeleted;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    // 关联字段
-    private String participantName;
-    private String eventName;
-    private String scheduleName;
 }

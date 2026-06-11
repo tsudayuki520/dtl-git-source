@@ -3,6 +3,7 @@ package com.dlust.sportbackend.Controller.user;
 import com.dlust.sportbackend.Mapper.ParticipantMapper;
 import com.dlust.sportbackend.Mapper.RegistrationMapper;
 import com.dlust.sportbackend.Mapper.SportsMeetingMapper;
+import com.dlust.sportbackend.Service.EventScheduleService;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Participant;
 import com.dlust.sportbackend.entity.Registration;
@@ -30,6 +31,9 @@ public class UserRegisterController {
     @Autowired
     private SportsMeetingMapper sportsMeetingMapper;
 
+    @Autowired
+    private EventScheduleService eventScheduleService;
+
     /**
      * 报名接口
      */
@@ -40,6 +44,17 @@ public class UserRegisterController {
         String userCode = body.get("userCode").toString();
         String name = body.get("name").toString();
         log.info("报名参赛: sportsMeetingId={}, eventId={}, userCode={}, name={}", sportsMeetingId, eventId, userCode, name);
+
+        // 获取 scheduleId：前端传或取项目第一个赛次
+        Long scheduleId = null;
+        if (body.get("scheduleId") != null) {
+            scheduleId = Long.valueOf(body.get("scheduleId").toString());
+        } else {
+            List<Long> scheduleIds = eventScheduleService.getScheduleIdsByEventId(eventId);
+            if (scheduleIds != null && !scheduleIds.isEmpty()) {
+                scheduleId = scheduleIds.get(0);
+            }
+        }
 
         // 0. 校验报名时间
         SportsMeeting meeting = sportsMeetingMapper.selectById(sportsMeetingId);
@@ -75,16 +90,24 @@ public class UserRegisterController {
             participantMapper.insert(participant);
         }
 
-        // 2. 检查是否已报名该项目
-        Registration existing = registrationMapper.selectByParticipantIdAndEventId(participant.getId(), eventId);
-        if (existing != null) {
-            return Result.error(400, "您已报名该项目");
+        // 2. 检查是否已报名该项目该赛次
+        if (scheduleId != null) {
+            Registration existing = registrationMapper.selectByParticipantIdEventIdScheduleId(participant.getId(), eventId, scheduleId);
+            if (existing != null) {
+                return Result.error(400, "您已报名该项目");
+            }
+        } else {
+            Registration existing = registrationMapper.selectByParticipantIdAndEventId(participant.getId(), eventId);
+            if (existing != null) {
+                return Result.error(400, "您已报名该项目");
+            }
         }
 
         // 3. 插入报名记录
         Registration registration = new Registration();
         registration.setParticipantId(participant.getId());
         registration.setEventId(eventId);
+        registration.setScheduleId(scheduleId);
         registration.setStatus(0);
         registrationMapper.insert(registration);
 
