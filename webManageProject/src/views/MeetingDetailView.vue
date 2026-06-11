@@ -218,7 +218,6 @@ async function handleTeamDelete(id: number) {
 }
 
 // ============ 代表队 - 参赛人员分配 ============
-const expandedTeams = ref<number[]>([])
 const teamParticipants = ref<Record<number, Participant[]>>({})
 const assignDialogVisible = ref(false)
 const assignTeamId = ref<number>(0)
@@ -230,15 +229,6 @@ async function fetchTeamParticipants(teamId: number) {
     const res: any = await getParticipantListByTeam(teamId)
     teamParticipants.value[teamId] = res.data || res || []
   } catch { /* ignore */ }
-}
-
-function onTeamExpand(teamId: number) {
-  if (!expandedTeams.value.includes(teamId)) {
-    expandedTeams.value.push(teamId)
-    fetchTeamParticipants(teamId)
-  } else {
-    expandedTeams.value = expandedTeams.value.filter(id => id !== teamId)
-  }
 }
 
 function getTeamParticipants(teamId: number): Participant[] {
@@ -262,16 +252,6 @@ async function handleAssignSubmit() {
     fetchTeamParticipants(assignTeamId.value)
     fetchParticipants()
   } catch { ElMessage.error('分配失败') }
-}
-
-async function handleRemoveFromTeam(participantId: number, teamId: number) {
-  try {
-    await ElMessageBox.confirm('确定将该人员移出代表队？', '提示', { type: 'warning' })
-    await updateParticipant({ id: participantId, teamId: null })
-    ElMessage.success('移出成功')
-    fetchTeamParticipants(teamId)
-    fetchParticipants()
-  } catch { /* cancel */ }
 }
 
 // ============ 参赛人员 ============
@@ -603,38 +583,16 @@ onMounted(() => {
                 <el-button type="primary" size="small" @click="openTeamAdd(gt.id)">+ 新增代表队</el-button>
               </div>
               <el-empty v-if="getTeamsByGroupType(gt.id).length === 0" description="暂无代表队，点击上方按钮添加" :image-size="60" />
-              <div v-else class="team-list">
-                <div v-for="team in getTeamsByGroupType(gt.id)" :key="team.id" class="team-item">
-                  <div class="team-header" @click="onTeamExpand(team.id)">
-                    <div class="team-header-left">
-                      <el-icon :size="14" class="team-expand-icon" :class="{ 'is-expanded': expandedTeams.includes(team.id) }">
-                        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M340.864 149.312a64 64 0 0 0 0 90.496L597.76 496.512l-256.896 256.704a64 64 0 1 0 90.496 90.496l302.08-302.08a64 64 0 0 0 0-90.496l-302.08-302.08a64 64 0 0 0-90.496 0z" fill="currentColor"/></svg>
-                      </el-icon>
-                      <span class="team-name">{{ team.name }}</span>
-                      <el-tag type="info" size="small">{{ getTeamParticipants(team.id).length }} 人</el-tag>
-                    </div>
-                    <div class="team-header-actions" @click.stop>
-                      <el-button link type="success" size="small" @click="openAssignDialog(team)">分配人员</el-button>
-                      <el-button link type="primary" size="small" @click="openTeamEdit(team)">编辑</el-button>
-                      <el-button link type="danger" size="small" @click="handleTeamDelete(team.id)">删除</el-button>
-                    </div>
+              <div v-else class="team-card-list">
+                <div v-for="team in getTeamsByGroupType(gt.id)" :key="team.id" class="team-card" @click="router.push(`/meeting/${meetingId}/team/${team.id}`)">
+                  <div class="team-card-header">
+                    <span class="team-card-name">{{ team.name }}</span>
+                    <el-tag type="info" size="small">{{ getTeamParticipants(team.id).length }} 人</el-tag>
                   </div>
-                  <div v-if="expandedTeams.includes(team.id)" class="team-participants">
-                    <el-table v-if="getTeamParticipants(team.id).length > 0" :data="getTeamParticipants(team.id)" stripe border size="small">
-                      <el-table-column prop="userCode" label="学号/工号" width="120" />
-                      <el-table-column prop="name" label="姓名" width="100" />
-                      <el-table-column prop="gender" label="性别" width="60" />
-                      <el-table-column prop="phone" label="电话" width="130" />
-                      <el-table-column prop="teamName" label="代表队" width="120" />
-                      <el-table-column prop="college" label="学院" />
-                      <el-table-column prop="major" label="专业" />
-                      <el-table-column label="操作" width="80" fixed="right">
-                        <template #default="{ row }">
-                          <el-button link type="danger" size="small" @click="handleRemoveFromTeam(row.id, team.id)">移出</el-button>
-                        </template>
-                      </el-table-column>
-                    </el-table>
-                    <el-empty v-else description="暂无人员，点击上方「分配人员」添加" :image-size="50" />
+                  <div class="team-card-info">
+                    <span v-if="team.leader">领队：{{ team.leader }}</span>
+                    <span v-if="team.coach">教练：{{ team.coach }}</span>
+                    <span v-if="!team.leader && !team.coach" style="color:#c0c4cc">暂无领队/教练信息</span>
                   </div>
                 </div>
               </div>
@@ -787,6 +745,7 @@ onMounted(() => {
     </el-dialog>
 
     <!-- ======== 弹窗：参赛人员 ======== -->
+
     <el-dialog v-model="participantDialogVisible" :title="participantForm.id ? '编辑人员' : '新增人员'" width="480px" destroy-on-close>
       <el-form :model="participantForm" label-width="90px">
         <el-form-item label="学号/工号" required>
@@ -1001,54 +960,41 @@ onMounted(() => {
   padding: 0 8px 8px;
 }
 
-/* 代表队列表样式 */
-.team-list {
+/* 代表队卡片网格 */
+.team-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.team-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.team-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #409eff;
+}
+.team-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.team-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+.team-card-info {
+  font-size: 12px;
+  color: #909399;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-.team-item {
-  border: 1px solid #ebeef5;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.team-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #f5f7fa;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-.team-header:hover {
-  background: #ecf0f5;
-}
-.team-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.team-expand-icon {
-  transition: transform 0.2s;
-  color: #909399;
-}
-.team-expand-icon.is-expanded {
-  transform: rotate(90deg);
-}
-.team-name {
-  font-weight: 600;
-  font-size: 13px;
-}
-.team-header-actions {
-  display: flex;
-  gap: 4px;
-}
-.team-participants {
-  padding: 8px 12px 12px;
-  border-top: 1px solid #ebeef5;
-  background: #fff;
+  gap: 2px;
 }
 
 /* 赛程卡片列表 */

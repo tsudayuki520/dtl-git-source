@@ -33,6 +33,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '项目报名' },
       },
       {
+        path: 'meeting/:meetingId/team/:teamId',
+        name: 'TeamDetail',
+        component: () => import('@/views/TeamDetailView.vue'),
+        meta: { title: '代表队详情' },
+      },
+      {
         path: 'record',
         name: 'Record',
         component: () => import('@/views/RecordView.vue'),

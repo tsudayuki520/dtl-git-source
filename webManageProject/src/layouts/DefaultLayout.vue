@@ -12,6 +12,7 @@ const activeMenu = computed(() => {
 
 const isScheduleDetail = computed(() => route.name === 'ScheduleDetail')
 const isEventDetail = computed(() => route.name === 'EventDetail')
+const isTeamDetail = computed(() => route.name === 'TeamDetail')
 
 function handleMenuClick(index: string) {
   router.push(index)
@@ -46,11 +47,12 @@ function handleMenuClick(index: string) {
     <el-container>
       <el-header class="layout-header">
         <span class="header-title" @click="router.push('/home')">后台管理系统</span>
-        <el-breadcrumb separator="/" v-if="route.name === 'MeetingDetail' || isScheduleDetail || isEventDetail">
+        <el-breadcrumb separator="/" v-if="route.name === 'MeetingDetail' || isScheduleDetail || isEventDetail || isTeamDetail">
           <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
           <el-breadcrumb-item :to="{ path: `/meeting/${route.params.meetingId || route.params.id}` }">运动会管理</el-breadcrumb-item>
           <el-breadcrumb-item v-if="isScheduleDetail" :to="{ path: `/meeting/${route.params.meetingId}/schedule/${route.params.scheduleId}` }">赛程管理</el-breadcrumb-item>
           <el-breadcrumb-item v-if="isEventDetail">项目报名</el-breadcrumb-item>
+          <el-breadcrumb-item v-if="isTeamDetail">代表队详情</el-breadcrumb-item>
         </el-breadcrumb>
       </el-header>
       <el-main class="layout-main">
