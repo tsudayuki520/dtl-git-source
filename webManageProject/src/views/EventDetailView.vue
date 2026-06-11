@@ -194,6 +194,7 @@ onMounted(() => {
         <el-table-column prop="userCode" label="学号/工号" width="120" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="gender" label="性别" width="60" />
+        <el-table-column prop="teamName" label="代表队" width="120" />
         <el-table-column prop="college" label="学院" />
       </el-table>
       <template #footer>

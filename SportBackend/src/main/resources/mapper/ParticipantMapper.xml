@@ -4,24 +4,29 @@
 <mapper namespace="com.dlust.sportbackend.Mapper.ParticipantMapper">
 
     <select id="selectById" resultType="Participant">
-        SELECT * FROM participant WHERE id = #{id}
+        SELECT p.*, t.name AS team_name FROM participant p
+        LEFT JOIN team t ON p.team_id = t.id
+        WHERE p.id = #{id}
     </select>
 
     <select id="selectByUserCodeAndSportsMeetingId" resultType="Participant">
-        SELECT * FROM participant
-        WHERE user_code = #{userCode} AND sports_meeting_id = #{sportsMeetingId}
+        SELECT p.*, t.name AS team_name FROM participant p
+        LEFT JOIN team t ON p.team_id = t.id
+        WHERE p.user_code = #{userCode} AND p.sports_meeting_id = #{sportsMeetingId}
     </select>
 
     <select id="selectBySportsMeetingId" resultType="Participant">
-        SELECT * FROM participant
-        WHERE sports_meeting_id = #{sportsMeetingId}
-        ORDER BY create_time DESC
+        SELECT p.*, t.name AS team_name FROM participant p
+        LEFT JOIN team t ON p.team_id = t.id
+        WHERE p.sports_meeting_id = #{sportsMeetingId}
+        ORDER BY p.create_time DESC
     </select>
 
     <select id="selectByTeamId" resultType="Participant">
-        SELECT * FROM participant
-        WHERE team_id = #{teamId}
-        ORDER BY create_time DESC
+        SELECT p.*, t.name AS team_name FROM participant p
+        LEFT JOIN team t ON p.team_id = t.id
+        WHERE p.team_id = #{teamId}
+        ORDER BY p.create_time DESC
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

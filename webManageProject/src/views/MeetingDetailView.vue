@@ -625,6 +625,7 @@ onMounted(() => {
                       <el-table-column prop="name" label="姓名" width="100" />
                       <el-table-column prop="gender" label="性别" width="60" />
                       <el-table-column prop="phone" label="电话" width="130" />
+                      <el-table-column prop="teamName" label="代表队" width="120" />
                       <el-table-column prop="college" label="学院" />
                       <el-table-column prop="major" label="专业" />
                       <el-table-column label="操作" width="80" fixed="right">
@@ -653,6 +654,7 @@ onMounted(() => {
           <el-table-column prop="name" label="姓名" width="100" />
           <el-table-column prop="gender" label="性别" width="60" />
           <el-table-column prop="phone" label="电话" width="130" />
+          <el-table-column prop="teamName" label="代表队" width="120" />
           <el-table-column prop="college" label="学院" />
           <el-table-column prop="major" label="专业" />
           <el-table-column label="操作" width="120" fixed="right">
@@ -824,6 +826,7 @@ onMounted(() => {
         <el-table-column prop="userCode" label="学号/工号" width="120" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="gender" label="性别" width="60" />
+        <el-table-column prop="teamName" label="代表队" width="120" />
         <el-table-column prop="college" label="学院" />
         <el-table-column prop="major" label="专业" />
       </el-table>

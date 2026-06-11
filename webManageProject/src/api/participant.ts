@@ -4,6 +4,7 @@ export interface Participant {
   id: number
   sportsMeetingId: number
   teamId: number | null
+  teamName: string | null
   userCode: string
   name: string
   phone: string

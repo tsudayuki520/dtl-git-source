@@ -8,6 +8,7 @@ public class Participant {
     private Long id;
     private Long sportsMeetingId;
     private Long teamId;           // 代表队ID（关联team表）
+    private String teamName;       // 代表队名称（JOIN查询）
     private String userCode;
     private String name;
     private String phone;
