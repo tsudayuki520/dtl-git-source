@@ -20,6 +20,10 @@ export function getRegistrationListByEvent(eventId: number) {
   return request.get('/admin/registration/listByEvent', { params: { eventId } })
 }
 
+export function addRegistration(data: { participantId: number; eventId: number; scheduleId?: number }) {
+  return request.post('/admin/registration/add', data)
+}
+
 export function updateRegistration(id: number, status: number) {
   return request.put('/admin/registration/update', { id, status })
 }

@@ -20,7 +20,7 @@ const meeting = ref<SportsMeeting | null>(null)
 const schedule = ref<Schedule | null>(null)
 const allSchedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
-const regCountMap = ref<Record<number, number>>({})
+const regCountMap = ref<Record<string, number>>({})
 const eventDialogVisible = ref(false)
 const eventForm = ref<Partial<Event>>({})
 const eventFormScheduleIds = ref<number[]>([])
@@ -61,10 +61,11 @@ async function fetchRegCounts() {
   try {
     const res: any = await getRegistrationList(meetingId)
     const list: any[] = res.data || res || []
-    const map: Record<number, number> = {}
+    const map: Record<string, number> = {}
     list.forEach((r: any) => {
-      if (r.status === 0) {
-        map[r.eventId] = (map[r.eventId] || 0) + 1
+      if ((r.status === 0 || r.status === 1) && r.scheduleId) {
+        const key = `${r.eventId}-${r.scheduleId}`
+        map[key] = (map[key] || 0) + 1
       }
     })
     regCountMap.value = map
@@ -168,11 +169,11 @@ onMounted(() => {
           <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
         </el-table-column>
         <el-table-column label="报名/上限" width="100">
-          <template #default="{ row }">{{ regCountMap[row.id] || 0 }} / {{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>
+          <template #default="{ row }">{{ regCountMap[`${row.id}-${scheduleId}`] || 0 }} / {{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link type="success" size="small" @click="router.push(`/meeting/${meetingId}/event/${row.id}`)">查看报名</el-button>
+            <el-button link type="success" size="small" @click="router.push(`/meeting/${meetingId}/schedule/${scheduleId}/event/${row.id}`)">查看报名</el-button>
             <el-button link type="primary" size="small" @click="openEventEdit(row)">编辑</el-button>
             <el-button link type="danger" size="small" @click="handleEventDelete(row.id)">删除</el-button>
           </template>

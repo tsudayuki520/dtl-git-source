@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '赛程管理' },
       },
       {
-        path: 'meeting/:meetingId/event/:eventId',
+        path: 'meeting/:meetingId/schedule/:scheduleId/event/:eventId',
         name: 'EventDetail',
         component: () => import('@/views/EventDetailView.vue'),
         meta: { title: '项目报名' },

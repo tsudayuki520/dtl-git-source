@@ -30,6 +30,16 @@ public class AdminRegistrationController {
         return Result.success(registrationService.getByEventId(eventId));
     }
 
+    @PostMapping("/add")
+    public Result<String> add(@RequestBody Map<String, Object> params) {
+        Long participantId = Long.valueOf(params.get("participantId").toString());
+        Long eventId = Long.valueOf(params.get("eventId").toString());
+        Long scheduleId = params.get("scheduleId") != null ? Long.valueOf(params.get("scheduleId").toString()) : null;
+        log.info("手动添加报名: participantId={}, eventId={}, scheduleId={}", participantId, eventId, scheduleId);
+        registrationService.add(participantId, eventId, scheduleId);
+        return Result.success("添加成功");
+    }
+
     @PutMapping("/update")
     public Result<String> update(@RequestBody Map<String, Object> params) {
         Long id = Long.valueOf(params.get("id").toString());

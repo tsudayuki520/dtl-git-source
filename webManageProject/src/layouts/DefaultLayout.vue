@@ -49,7 +49,7 @@ function handleMenuClick(index: string) {
         <el-breadcrumb separator="/" v-if="route.name === 'MeetingDetail' || isScheduleDetail || isEventDetail">
           <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
           <el-breadcrumb-item :to="{ path: `/meeting/${route.params.meetingId || route.params.id}` }">运动会管理</el-breadcrumb-item>
-          <el-breadcrumb-item v-if="isScheduleDetail">赛程管理</el-breadcrumb-item>
+          <el-breadcrumb-item v-if="isScheduleDetail" :to="{ path: `/meeting/${route.params.meetingId}/schedule/${route.params.scheduleId}` }">赛程管理</el-breadcrumb-item>
           <el-breadcrumb-item v-if="isEventDetail">项目报名</el-breadcrumb-item>
         </el-breadcrumb>
       </el-header>

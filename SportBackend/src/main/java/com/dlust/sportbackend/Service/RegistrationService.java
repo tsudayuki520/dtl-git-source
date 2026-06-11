@@ -9,6 +9,8 @@ public interface RegistrationService {
 
     List<RegistrationVO> getByEventId(Long eventId);
 
+    void add(Long participantId, Long eventId, Long scheduleId);
+
     void update(Long id, Integer status);
 
     void delete(Long id);

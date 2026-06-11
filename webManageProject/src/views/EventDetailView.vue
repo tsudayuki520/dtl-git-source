@@ -4,13 +4,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
-import { getRegistrationListByEvent, updateRegistration, deleteRegistration } from '@/api/registration'
+import { getRegistrationListByEvent, addRegistration, updateRegistration, deleteRegistration } from '@/api/registration'
 import type { RegistrationVO } from '@/api/registration'
+import { getParticipantList } from '@/api/participant'
+import type { Participant } from '@/api/participant'
 
 const route = useRoute()
 const router = useRouter()
 const meetingId = Number(route.params.meetingId)
 const eventId = Number(route.params.eventId)
+const scheduleId = Number(route.params.scheduleId)
 
 const eventInfo = ref<Event | null>(null)
 const registrations = ref<RegistrationVO[]>([])
@@ -18,6 +21,12 @@ const regFilterStatus = ref<number | undefined>(undefined)
 
 const regStatusMap: Record<number, string> = { 0: '已报名', 1: '已晋级', 2: '已取消' }
 const regStatusType: Record<number, string> = { 0: 'primary', 1: 'success', 2: 'info' }
+
+// ============ 手动添加报名 ============
+const addDialogVisible = ref(false)
+const participants = ref<Participant[]>([])
+const addSelectedIds = ref<number[]>([])
+const addSearch = ref('')
 
 async function fetchEvent() {
   try {
@@ -30,7 +39,8 @@ async function fetchEvent() {
 async function fetchRegistrations() {
   try {
     const res: any = await getRegistrationListByEvent(eventId)
-    registrations.value = res.data || res || []
+    const all: RegistrationVO[] = res.data || res || []
+    registrations.value = all.filter(r => r.scheduleId === scheduleId)
   } catch { /* ignore */ }
   filterRegistrations()
 }
@@ -64,6 +74,50 @@ async function handleRegDelete(id: number) {
     ElMessage.success('删除成功')
     fetchRegistrations()
   } catch { /* cancel */ }
+}
+
+// ============ 添加参赛人员 ============
+async function openAddDialog() {
+  addSelectedIds.value = []
+  addSearch.value = ''
+  try {
+    const pRes: any = await getParticipantList(meetingId)
+    participants.value = pRes.data || pRes || []
+  } catch { /* ignore */ }
+  updateAvailableParticipants()
+  addDialogVisible.value = true
+}
+
+// 已报名该项目的选手ID
+function getRegisteredParticipantIds(): Set<number> {
+  return new Set(registrations.value.filter(r => r.status !== 2).map(r => r.participantId))
+}
+
+// 可选人员：未报名该项目且未被取消的
+const availableParticipants = ref<Participant[]>([])
+function updateAvailableParticipants() {
+  const registeredIds = getRegisteredParticipantIds()
+  const kw = addSearch.value.toLowerCase()
+  availableParticipants.value = participants.value.filter(p => {
+    if (registeredIds.has(p.id)) return false
+    if (kw && !p.name.toLowerCase().includes(kw) && !p.userCode.toLowerCase().includes(kw)) return false
+    return true
+  })
+}
+
+async function handleAddSubmit() {
+  if (addSelectedIds.value.length === 0) {
+    ElMessage.warning('请选择参赛人员')
+    return
+  }
+  try {
+    for (const pid of addSelectedIds.value) {
+      await addRegistration({ participantId: pid, eventId, scheduleId })
+    }
+    ElMessage.success(`成功添加 ${addSelectedIds.value.length} 名参赛人员`)
+    addDialogVisible.value = false
+    fetchRegistrations()
+  } catch { ElMessage.error('添加失败') }
 }
 
 function goBack() {
@@ -104,6 +158,7 @@ onMounted(() => {
             <el-option label="已取消" :value="2" />
           </el-select>
         </div>
+        <el-button type="primary" size="small" @click="openAddDialog">+ 添加参赛人员</el-button>
       </div>
       <el-table v-if="filteredRegistrations.length > 0" :data="filteredRegistrations" stripe border size="small">
         <el-table-column prop="participantName" label="参赛者" width="120" />
@@ -127,6 +182,27 @@ onMounted(() => {
       </el-table>
       <el-empty v-else description="暂无报名记录" />
     </div>
+
+    <!-- 弹窗：添加参赛人员 -->
+    <el-dialog v-model="addDialogVisible" title="添加参赛人员" width="600px" destroy-on-close @open="updateAvailableParticipants">
+      <div style="margin-bottom:12px">
+        <el-input v-model="addSearch" placeholder="搜索姓名/学号" clearable style="width:200px" @input="updateAvailableParticipants" />
+      </div>
+      <el-table :data="availableParticipants" stripe border size="small" max-height="400"
+        @selection-change="(rows: any[]) => addSelectedIds = rows.map(r => r.id)">
+        <el-table-column type="selection" width="45" />
+        <el-table-column prop="userCode" label="学号/工号" width="120" />
+        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="gender" label="性别" width="60" />
+        <el-table-column prop="college" label="学院" />
+      </el-table>
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="addSelectedIds.length === 0" @click="handleAddSubmit">
+          确认添加 ({{ addSelectedIds.length }} 人)
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

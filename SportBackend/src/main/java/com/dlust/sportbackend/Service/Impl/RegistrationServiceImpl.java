@@ -32,12 +32,31 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
+    public void add(Long participantId, Long eventId, Long scheduleId) {
+        Registration reg = new Registration();
+        reg.setParticipantId(participantId);
+        reg.setEventId(eventId);
+        reg.setScheduleId(scheduleId);
+        reg.setStatus(0);
+        registrationMapper.insert(reg);
+    }
+
+    @Override
     public void update(Long id, Integer status) {
+        // 先查询当前报名的旧状态
+        Registration reg = registrationMapper.selectById(id);
+        Integer oldStatus = (reg != null) ? reg.getStatus() : null;
+
         registrationMapper.updateStatus(id, status);
 
         // 晋级时自动报名下一赛次
         if (status == 1) {
             autoRegisterNextSchedule(id);
+        }
+
+        // 取消晋级时，自动删除下一赛次中自动创建的报名记录
+        if (oldStatus != null && oldStatus == 1 && status != 1) {
+            removeNextScheduleRegistration(reg);
         }
     }
 
@@ -70,6 +89,26 @@ public class RegistrationServiceImpl implements RegistrationService {
         registrationMapper.insert(newReg);
         log.info("晋级自动报名: participantId={}, eventId={}, nextScheduleId={}",
                 reg.getParticipantId(), reg.getEventId(), nextScheduleId);
+    }
+
+    private void removeNextScheduleRegistration(Registration reg) {
+        if (reg == null || reg.getEventId() == null || reg.getScheduleId() == null) return;
+
+        List<Long> scheduleIds = eventScheduleService.getScheduleIdsByEventId(reg.getEventId());
+        if (scheduleIds == null || scheduleIds.isEmpty()) return;
+
+        int currentIndex = scheduleIds.indexOf(reg.getScheduleId());
+        if (currentIndex < 0 || currentIndex >= scheduleIds.size() - 1) return;
+
+        Long nextScheduleId = scheduleIds.get(currentIndex + 1);
+
+        Registration existing = registrationMapper.selectByParticipantIdEventIdScheduleId(
+                reg.getParticipantId(), reg.getEventId(), nextScheduleId);
+        if (existing != null) {
+            registrationMapper.deleteById(existing.getId());
+            log.info("取消晋级，删除下一赛次报名: participantId={}, eventId={}, nextScheduleId={}",
+                    reg.getParticipantId(), reg.getEventId(), nextScheduleId);
+        }
     }
 
     @Override
