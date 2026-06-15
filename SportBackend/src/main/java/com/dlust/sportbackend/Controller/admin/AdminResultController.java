@@ -29,18 +29,32 @@ public class AdminResultController {
         return Result.success(resultService.getByEventId(eventId));
     }
 
+    @GetMapping("/listByEventAndSchedule")
+    public Result<List<ResultVO>> listByEventAndSchedule(@RequestParam Long eventId, @RequestParam Long scheduleId) {
+        log.info("按项目和赛次查询成绩: eventId={}, scheduleId={}", eventId, scheduleId);
+        return Result.success(resultService.getByEventAndSchedule(eventId, scheduleId));
+    }
+
     @PostMapping("/add")
     public Result<String> add(@RequestBody com.dlust.sportbackend.entity.Result result) {
         log.info("添加成绩: eventId={}, participantId={}, score={}", result.getEventId(), result.getParticipantId(), result.getScore());
-        resultService.add(result);
-        return Result.success("添加成功");
+        try {
+            resultService.add(result);
+            return Result.success("添加成功");
+        } catch (RuntimeException e) {
+            return Result.error(400, e.getMessage());
+        }
     }
 
     @PutMapping("/update")
     public Result<String> update(@RequestBody com.dlust.sportbackend.entity.Result result) {
         log.info("更新成绩: id={}", result.getId());
-        resultService.update(result);
-        return Result.success("更新成功");
+        try {
+            resultService.update(result);
+            return Result.success("更新成功");
+        } catch (RuntimeException e) {
+            return Result.error(400, e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

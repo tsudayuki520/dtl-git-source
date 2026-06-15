@@ -10,6 +10,8 @@ public interface ResultService {
 
     List<ResultVO> getByEventId(Long eventId);
 
+    List<ResultVO> getByEventAndSchedule(Long eventId, Long scheduleId);
+
     void add(Result result);
 
     void update(Result result);
