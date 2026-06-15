@@ -31,6 +31,11 @@
         WHERE s.sports_meeting_id = #{sportsMeetingId} AND es.is_deleted = 0 AND s.is_deleted = 0
     </select>
 
+    <select id="selectByEventIdAndScheduleId" resultType="EventSchedule">
+        SELECT * FROM event_schedule
+        WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 0
+    </select>
+
     <insert id="insert">
         INSERT INTO event_schedule (event_id, schedule_id)
         VALUES (#{eventId}, #{scheduleId})

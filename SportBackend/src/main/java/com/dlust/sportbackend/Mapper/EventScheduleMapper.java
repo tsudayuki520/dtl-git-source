@@ -19,6 +19,8 @@ public interface EventScheduleMapper {
 
     List<EventSchedule> selectBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
 
+    EventSchedule selectByEventIdAndScheduleId(@Param("eventId") Long eventId, @Param("scheduleId") Long scheduleId);
+
     void insert(@Param("eventId") Long eventId, @Param("scheduleId") Long scheduleId);
 
     void batchInsert(@Param("eventId") Long eventId, @Param("scheduleIds") List<Long> scheduleIds);
