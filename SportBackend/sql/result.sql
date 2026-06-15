@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS result (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '成绩ID',
     sports_meeting_id BIGINT       NOT NULL COMMENT '所属运动会ID',
     event_id          BIGINT       NOT NULL COMMENT '比赛项目ID（关联event表）',
+    event_schedule_id BIGINT       DEFAULT NULL COMMENT '项目-赛程关联ID（关联event_schedule.id）',
     participant_id    BIGINT       NOT NULL COMMENT '参赛人员ID（关联participant表）',
     score             DECIMAL(10,2) DEFAULT NULL COMMENT '成绩（小数类型，如秒数、米数）',
     create_time       DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
