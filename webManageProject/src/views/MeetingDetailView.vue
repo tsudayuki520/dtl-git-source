@@ -439,6 +439,10 @@ function openResultEdit(row: ResultVO) {
   resultDialogVisible.value = true
 }
 async function handleResultSubmit() {
+  if (!resultForm.value.scheduleId) {
+    ElMessage.warning('请选择赛次')
+    return
+  }
   try {
     if (resultForm.value.id) {
       await updateResult(resultForm.value)

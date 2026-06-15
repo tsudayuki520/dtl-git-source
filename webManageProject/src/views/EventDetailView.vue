@@ -71,7 +71,9 @@ async function saveScore(row: RegistrationVO) {
   const existing = resultMap.value.get(row.participantId)
   try {
     if (existing) {
-      await updateResult({ id: existing.id, scheduleId, score: Number(val) })
+      // 修改成绩：直接用已有的 eventScheduleId，避免 Service 重查 event_schedule
+      // （update 不应改赛次；不传 scheduleId 则 resolveEventScheduleId 跳过）
+      await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, score: Number(val) })
     } else {
       await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, score: Number(val) })
     }
