@@ -392,14 +392,14 @@ async function fetchResults() {
   } catch { /* ignore */ }
 }
 
-function getScheduleIdsByEventId(eventId: number): number[] {
+function getScheduleIdsByEventId(eventId: number | undefined): number[] {
+  if (eventId == null) return []
   return eventScheduleList.value.filter(es => es.eventId === eventId).map(es => es.scheduleId)
 }
 
-function getScheduleNameByEventId(eventId: number): string {
-  const schIds = getScheduleIdsByEventId(eventId)
-  if (schIds.length === 0) return '未分类'
-  const sch = schedules.value.find(s => s.id === schIds[0])
+function getScheduleNameById(scheduleId: number | null): string {
+  if (scheduleId == null) return '未分类'
+  const sch = schedules.value.find(s => s.id === scheduleId)
   return sch ? sch.name : '未分类'
 }
 
@@ -408,8 +408,7 @@ watch([results, resultSearch, resultFilterSchedule], () => {
   const kw = resultSearch.value.toLowerCase()
   filteredResults.value = results.value.filter((r) => {
     if (resultFilterSchedule.value !== undefined && resultFilterSchedule.value !== null) {
-      const schIds = getScheduleIdsByEventId(r.eventId)
-      if (!schIds.includes(resultFilterSchedule.value)) return false
+      if (r.scheduleId !== resultFilterSchedule.value) return false
     }
     if (!kw) return true
     return (r.participantName || '').toLowerCase().includes(kw) || (r.eventName || '').toLowerCase().includes(kw)
@@ -419,25 +418,24 @@ watch([results, resultSearch, resultFilterSchedule], () => {
 function getResultsGroupedBySchedule(): { scheduleId: number | null, scheduleName: string, items: ResultVO[] }[] {
   const groups: Record<string, ResultVO[]> = {}
   for (const r of filteredResults.value) {
-    const schIds = getScheduleIdsByEventId(r.eventId)
-    const schId = schIds.length > 0 ? schIds[0] : null
+    const schId = r.scheduleId ?? null
     const key = String(schId)
     if (!groups[key]) groups[key] = []
     groups[key].push(r)
   }
   return Object.entries(groups).map(([key, items]) => ({
     scheduleId: key === 'null' ? null : Number(key),
-    scheduleName: items.length > 0 ? getScheduleNameByEventId(items[0].eventId) : '未分类',
+    scheduleName: items[0].scheduleName || getScheduleNameById(items[0].scheduleId),
     items,
   }))
 }
 
 function openResultAdd() {
-  resultForm.value = { sportsMeetingId: meetingId, eventId: undefined as any, participantId: undefined as any, score: null }
+  resultForm.value = { sportsMeetingId: meetingId, eventId: undefined as any, scheduleId: undefined, participantId: undefined as any, score: null }
   resultDialogVisible.value = true
 }
 function openResultEdit(row: ResultVO) {
-  resultForm.value = { id: row.id, sportsMeetingId: row.sportsMeetingId, eventId: row.eventId, participantId: row.participantId, score: row.score }
+  resultForm.value = { id: row.id, sportsMeetingId: row.sportsMeetingId, eventId: row.eventId, scheduleId: row.scheduleId ?? undefined, participantId: row.participantId, score: row.score }
   resultDialogVisible.value = true
 }
 async function handleResultSubmit() {
@@ -803,6 +801,16 @@ onMounted(() => {
         <el-form-item label="比赛项目" required>
           <el-select v-model="resultForm.eventId" placeholder="请选择项目" style="width:100%" :disabled="!!resultForm.id">
             <el-option v-for="e in events" :key="e.id" :label="e.name" :value="e.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="赛次" required>
+          <el-select v-model="resultForm.scheduleId" placeholder="请选择赛次" style="width:100%" :disabled="!!resultForm.id">
+            <el-option
+              v-for="schId in getScheduleIdsByEventId(resultForm.eventId)"
+              :key="schId"
+              :label="getScheduleNameById(schId)"
+              :value="schId"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="参赛人员" required>
