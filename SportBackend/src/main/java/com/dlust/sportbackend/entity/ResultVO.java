@@ -9,6 +9,8 @@ public class ResultVO {
     private Long id;
     private Long sportsMeetingId;
     private Long eventId;
+    private Long eventScheduleId;
+    private Long scheduleId;
     private Long participantId;
     private BigDecimal score;
     private LocalDateTime createTime;
@@ -17,4 +19,5 @@ public class ResultVO {
     // 关联查询字段
     private String participantName;
     private String eventName;
+    private String scheduleName;
 }
