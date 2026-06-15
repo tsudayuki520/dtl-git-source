@@ -4,11 +4,15 @@
 <mapper namespace="com.dlust.sportbackend.Mapper.ResultMapper">
 
     <select id="selectVOBySportsMeetingId" resultType="ResultVO">
-        SELECT r.id, r.sports_meeting_id, r.event_id, r.participant_id, r.score,
-               r.create_time, r.update_time,
+        SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
+               r.participant_id, r.score, r.create_time, r.update_time,
+               es.schedule_id AS schedule_id,
                p.name AS participant_name,
-               e.name AS event_name
+               e.name AS event_name,
+               s.name AS schedule_name
         FROM result r
+        LEFT JOIN event_schedule es ON r.event_schedule_id = es.id
+        LEFT JOIN schedule s ON es.schedule_id = s.id
         LEFT JOIN participant p ON r.participant_id = p.id
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.sports_meeting_id = #{sportsMeetingId}
@@ -16,25 +20,46 @@
     </select>
 
     <select id="selectVOByEventId" resultType="ResultVO">
-        SELECT r.id, r.sports_meeting_id, r.event_id, r.participant_id, r.score,
-               r.create_time, r.update_time,
+        SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
+               r.participant_id, r.score, r.create_time, r.update_time,
+               es.schedule_id AS schedule_id,
                p.name AS participant_name,
-               e.name AS event_name
+               e.name AS event_name,
+               s.name AS schedule_name
         FROM result r
+        LEFT JOIN event_schedule es ON r.event_schedule_id = es.id
+        LEFT JOIN schedule s ON es.schedule_id = s.id
         LEFT JOIN participant p ON r.participant_id = p.id
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.event_id = #{eventId}
         ORDER BY r.score ASC
     </select>
 
+    <select id="selectVOByEventAndSchedule" resultType="ResultVO">
+        SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
+               r.participant_id, r.score, r.create_time, r.update_time,
+               es.schedule_id AS schedule_id,
+               p.name AS participant_name,
+               e.name AS event_name,
+               s.name AS schedule_name
+        FROM result r
+        INNER JOIN event_schedule es ON r.event_schedule_id = es.id
+        LEFT JOIN schedule s ON es.schedule_id = s.id
+        LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN event e ON r.event_id = e.id
+        WHERE r.event_id = #{eventId} AND es.schedule_id = #{scheduleId} AND es.is_deleted = 0
+        ORDER BY r.score ASC
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO result (sports_meeting_id, event_id, participant_id, score)
-        VALUES (#{sportsMeetingId}, #{eventId}, #{participantId}, #{score})
+        INSERT INTO result (sports_meeting_id, event_id, event_schedule_id, participant_id, score)
+        VALUES (#{sportsMeetingId}, #{eventId}, #{eventScheduleId}, #{participantId}, #{score})
     </insert>
 
     <update id="updateById">
         UPDATE result
         <set>
+            <if test="eventScheduleId != null">event_schedule_id = #{eventScheduleId},</if>
             <if test="eventId != null">event_id = #{eventId},</if>
             <if test="participantId != null">participant_id = #{participantId},</if>
             <if test="score != null">score = #{score},</if>
