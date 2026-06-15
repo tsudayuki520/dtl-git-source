@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getEventList } from '@/api/event'
@@ -8,6 +8,8 @@ import { getRegistrationListByEvent, addRegistration, updateRegistration, delete
 import type { RegistrationVO } from '@/api/registration'
 import { getParticipantList } from '@/api/participant'
 import type { Participant } from '@/api/participant'
+import { getResultsByEventAndSchedule, addResult, updateResult } from '@/api/result'
+import type { ResultVO } from '@/api/result'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +23,65 @@ const regFilterStatus = ref<number | undefined>(undefined)
 
 const regStatusMap: Record<number, string> = { 0: '已报名', 1: '已晋级', 2: '已取消' }
 const regStatusType: Record<number, string> = { 0: 'primary', 1: 'success', 2: 'info' }
+
+// ============ 成绩（行内编辑） ============
+// resultMap 必须用 computed 依赖响应式 results，
+// 否则成绩保存后（只更新 results）模板的成绩列不会重渲染。
+const results = ref<ResultVO[]>([])
+const resultMap = computed(() => new Map<number, ResultVO>(results.value.map(r => [r.participantId, r])))
+const editingId = ref<number | null>(null)
+const editingScore = ref('')
+
+// 自动聚焦指令：el-input 渲染时聚焦内部 input
+const vFocus = {
+  mounted: (el: HTMLElement) => {
+    el.querySelector('input')?.focus()
+  }
+}
+
+async function fetchResults() {
+  try {
+    const res: any = await getResultsByEventAndSchedule(eventId, scheduleId)
+    results.value = res.data || res || []
+  } catch { /* ignore */ }
+}
+
+function startEdit(row: RegistrationVO) {
+  editingId.value = row.participantId
+  const existing = resultMap.value.get(row.participantId)
+  editingScore.value = existing?.score != null ? String(existing.score) : ''
+}
+
+function cancelEdit() {
+  editingId.value = null
+}
+
+async function saveScore(row: RegistrationVO) {
+  // 防止回车后 blur 重复触发
+  if (editingId.value !== row.participantId) return
+  const val = editingScore.value.trim()
+  if (val === '') {
+    editingId.value = null
+    return
+  }
+  if (!Number.isFinite(Number(val))) {
+    ElMessage.warning('请输入有效成绩')
+    return
+  }
+  const existing = resultMap.value.get(row.participantId)
+  try {
+    if (existing) {
+      await updateResult({ id: existing.id, scheduleId, score: Number(val) })
+    } else {
+      await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, score: Number(val) })
+    }
+    ElMessage.success('保存成功')
+    editingId.value = null
+    fetchResults()
+  } catch {
+    ElMessage.error('保存失败')
+  }
+}
 
 // ============ 手动添加报名 ============
 const addDialogVisible = ref(false)
@@ -127,6 +188,7 @@ function goBack() {
 onMounted(() => {
   fetchEvent()
   fetchRegistrations()
+  fetchResults()
 })
 </script>
 
@@ -164,6 +226,23 @@ onMounted(() => {
         <el-table-column prop="participantName" label="参赛者" width="120" />
         <el-table-column prop="eventName" label="项目" />
         <el-table-column prop="scheduleName" label="赛次" width="90" />
+        <el-table-column label="成绩" width="110">
+          <template #default="{ row }">
+            <el-input
+              v-if="editingId === row.participantId"
+              v-model="editingScore"
+              v-focus
+              size="small"
+              style="width:90px"
+              @keyup.enter="saveScore(row)"
+              @keyup.esc="cancelEdit"
+              @blur="saveScore(row)"
+            />
+            <el-button v-else link type="primary" size="small" @click="startEdit(row)">
+              {{ resultMap.get(row.participantId)?.score ?? '录入' }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="regStatusType[row.status]" size="small">{{ regStatusMap[row.status] }}</el-tag>
