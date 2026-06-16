@@ -789,7 +789,7 @@ onMounted(() => {
           <el-checkbox :model-value="isCategoryAllChecked(cat)" @change="(v:any)=>toggleCategoryAll(cat,v)">{{ cat }}（全选）</el-checkbox>
         </div>
         <el-checkbox-group v-model="limitForm.eventIds" style="margin-left:24px">
-          <el-checkbox v-for="ev in evs" :key="ev.id" :label="ev.id">{{ ev.name }}</el-checkbox>
+          <el-checkbox v-for="ev in evs" :key="ev.id" :value="ev.id">{{ ev.name }}</el-checkbox>
         </el-checkbox-group>
       </div>
       <el-form-item label="每人限报项目数" style="margin-top:8px">
