@@ -32,5 +32,9 @@ public interface RegistrationMapper {
 
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
+    int countDistinctEventByParticipantInEvents(@Param("participantId") Long participantId,
+                                                 @Param("eventIds") List<Long> eventIds,
+                                                 @Param("statuses") List<Integer> statuses);
+
     void deleteById(@Param("id") Long id);
 }

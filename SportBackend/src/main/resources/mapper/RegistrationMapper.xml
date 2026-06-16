@@ -65,6 +65,15 @@
         UPDATE registration SET status = #{status} WHERE id = #{id}
     </update>
 
+    <select id="countDistinctEventByParticipantInEvents" resultType="int">
+        SELECT COUNT(DISTINCT event_id) FROM registration
+        WHERE participant_id = #{participantId}
+        AND event_id IN
+        <foreach collection="eventIds" item="eid" open="(" separator="," close=")">#{eid}</foreach>
+        AND status IN
+        <foreach collection="statuses" item="st" open="(" separator="," close=")">#{st}</foreach>
+    </select>
+
     <delete id="deleteById">
         DELETE FROM registration WHERE id = #{id}
     </delete>
