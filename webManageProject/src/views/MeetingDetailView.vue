@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMeetingDetail } from '@/api/meeting'
@@ -18,7 +18,7 @@ import { getResultList, getResultListByEvent, addResult, updateResult, deleteRes
 import type { ResultVO, ResultItem } from '@/api/result'
 import { getTeamList, addTeam, updateTeam, deleteTeam } from '@/api/team'
 import type { Team } from '@/api/team'
-import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType } from '@/api/groupType'
+import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType, getLimitConfig, saveLimitConfig } from '@/api/groupType'
 import type { GroupType } from '@/api/groupType'
 
 const route = useRoute()
@@ -191,6 +191,60 @@ async function handleGtDelete(id: number) {
 function openTeamAdd(groupTypeId: number) {
   teamForm.value = { sportsMeetingId: meetingId, groupTypeId, name: '', leader: '', coach: '', totalScore: 0 }
   teamDialogVisible.value = true
+}
+
+// ============ 限报配置 ============
+const limitDialogVisible = ref(false)
+const limitForm = ref({ groupTypeId: 0, perPersonLimit: 0, eventIds: [] as number[] })
+const allEvents = ref<Event[]>([])
+const eventsByCategory = computed(() => {
+  const m: Record<string, Event[]> = {}
+  for (const e of allEvents.value) {
+    const cat = e.category || '其他'
+    ;(m[cat] = m[cat] || []).push(e)
+  }
+  return m
+})
+
+function isCategoryAllChecked(cat: string) {
+  const ids = (eventsByCategory.value[cat] || []).map(e => e.id)
+  return ids.length > 0 && ids.every(id => limitForm.value.eventIds.includes(id))
+}
+
+function toggleCategoryAll(cat: string, checked: any) {
+  const ids = (eventsByCategory.value[cat] || []).map(e => e.id)
+  if (checked) {
+    limitForm.value.eventIds = Array.from(new Set([...limitForm.value.eventIds, ...ids]))
+  } else {
+    limitForm.value.eventIds = limitForm.value.eventIds.filter(id => !ids.includes(id))
+  }
+}
+
+async function openLimitConfig(gt: GroupType) {
+  limitForm.value.groupTypeId = gt.id
+  if (allEvents.value.length === 0) {
+    const res: any = await getEventList({ sportsMeetingId: meetingId })
+    allEvents.value = res.data || res || []
+  }
+  const res: any = await getLimitConfig(gt.id)
+  const cfg = res.data || res
+  limitForm.value.perPersonLimit = cfg?.perPersonLimit || 0
+  try {
+    limitForm.value.eventIds = cfg?.limitEventIds ? JSON.parse(cfg.limitEventIds) : []
+  } catch {
+    limitForm.value.eventIds = []
+  }
+  limitDialogVisible.value = true
+}
+
+async function saveLimit() {
+  await saveLimitConfig({
+    groupTypeId: limitForm.value.groupTypeId,
+    perPersonLimit: limitForm.value.perPersonLimit,
+    eventIds: limitForm.value.eventIds
+  })
+  ElMessage.success('限报配置已保存')
+  limitDialogVisible.value = false
 }
 function openTeamEdit(row: Team) {
   teamForm.value = { ...row }
@@ -573,6 +627,7 @@ onMounted(() => {
               <div class="collapse-title">
                 <span class="collapse-title-name">{{ gt.name }}</span>
                 <span class="collapse-count">{{ getTeamsByGroupType(gt.id).length }} 个代表队</span>
+                <el-button size="small" link type="primary" @click.stop="openLimitConfig(gt)">限报配置</el-button>
                 <div class="collapse-title-actions" @click.stop>
                   <el-button link type="primary" size="small" @click="openGtEdit(gt)">编辑</el-button>
                   <el-button link type="danger" size="small" @click="handleGtDelete(gt.id)">删除</el-button>
@@ -721,6 +776,29 @@ onMounted(() => {
       <template #footer>
         <el-button @click="gtDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleGtSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ======== 弹窗：限报配置 ======== -->
+    <el-dialog v-model="limitDialogVisible" title="限报配置" width="640px" destroy-on-close>
+      <div style="margin-bottom:8px;color:#999">
+        勾选受限项目（按类别分组，可一键全选某类），并设置每人最多可报项目数。
+      </div>
+      <div v-for="(evs, cat) in eventsByCategory" :key="cat" style="margin-bottom:16px">
+        <div style="margin-bottom:6px">
+          <el-checkbox :model-value="isCategoryAllChecked(cat)" @change="(v:any)=>toggleCategoryAll(cat,v)">{{ cat }}（全选）</el-checkbox>
+        </div>
+        <el-checkbox-group v-model="limitForm.eventIds" style="margin-left:24px">
+          <el-checkbox v-for="ev in evs" :key="ev.id" :label="ev.id">{{ ev.name }}</el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <el-form-item label="每人限报项目数" style="margin-top:8px">
+        <el-input-number v-model="limitForm.perPersonLimit" :min="0" />
+        <span style="margin-left:8px;color:#999">0 = 不限</span>
+      </el-form-item>
+      <template #footer>
+        <el-button @click="limitDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveLimit">保存</el-button>
       </template>
     </el-dialog>
 
