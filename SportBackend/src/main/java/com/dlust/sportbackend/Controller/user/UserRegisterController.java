@@ -4,6 +4,7 @@ import com.dlust.sportbackend.Mapper.ParticipantMapper;
 import com.dlust.sportbackend.Mapper.RegistrationMapper;
 import com.dlust.sportbackend.Mapper.SportsMeetingMapper;
 import com.dlust.sportbackend.Service.EventScheduleService;
+import com.dlust.sportbackend.Service.RegistrationService;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Participant;
 import com.dlust.sportbackend.entity.Registration;
@@ -33,6 +34,9 @@ public class UserRegisterController {
 
     @Autowired
     private EventScheduleService eventScheduleService;
+
+    @Autowired
+    private RegistrationService registrationService;
 
     /**
      * 报名接口
@@ -103,13 +107,12 @@ public class UserRegisterController {
             }
         }
 
-        // 3. 插入报名记录
-        Registration registration = new Registration();
-        registration.setParticipantId(participant.getId());
-        registration.setEventId(eventId);
-        registration.setScheduleId(scheduleId);
-        registration.setStatus(0);
-        registrationMapper.insert(registration);
+        // 3. 插入报名记录（含每人限报校验）
+        try {
+            registrationService.add(participant.getId(), eventId, scheduleId);
+        } catch (RuntimeException e) {
+            return Result.error(400, e.getMessage());
+        }
 
         return Result.success("报名成功");
     }
