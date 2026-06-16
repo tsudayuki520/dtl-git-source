@@ -180,7 +180,10 @@ async function handleAddSubmit() {
     ElMessage.success(`成功添加 ${addSelectedIds.value.length} 名参赛人员`)
     addDialogVisible.value = false
     fetchRegistrations()
-  } catch { ElMessage.error('添加失败') }
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || '添加失败')
+    fetchRegistrations()
+  }
 }
 
 function goBack() {
