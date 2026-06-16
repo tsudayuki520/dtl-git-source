@@ -4,6 +4,8 @@ export interface GroupType {
   id: number
   sportsMeetingId: number
   name: string
+  perPersonLimit?: number
+  limitEventIds?: string | null
 }
 
 export function getGroupTypeList(sportsMeetingId: number) {
@@ -20,4 +22,12 @@ export function updateGroupType(data: Partial<GroupType>) {
 
 export function deleteGroupType(id: number) {
   return request.delete(`/admin/group-type/${id}`)
+}
+
+export function getLimitConfig(groupTypeId: number) {
+  return request.get('/admin/group-type/limitConfig', { params: { groupTypeId } })
+}
+
+export function saveLimitConfig(data: { groupTypeId: number; perPersonLimit: number; eventIds: number[] }) {
+  return request.post('/admin/group-type/saveLimitConfig', data)
 }
