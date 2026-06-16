@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -41,5 +43,24 @@ public class AdminGroupTypeController {
         log.info("删除组别: id={}", id);
         groupTypeService.delete(id);
         return Result.success("删除成功");
+    }
+
+    // ===== 限报配置 =====
+
+    @GetMapping("/limitConfig")
+    public Result<GroupType> limitConfig(@RequestParam Long groupTypeId) {
+        return Result.success(groupTypeService.getLimitConfig(groupTypeId));
+    }
+
+    @PostMapping("/saveLimitConfig")
+    public Result<String> saveLimitConfig(@RequestBody Map<String, Object> params) {
+        Long groupTypeId = Long.valueOf(params.get("groupTypeId").toString());
+        Integer perPersonLimit = params.get("perPersonLimit") != null
+                ? Integer.valueOf(params.get("perPersonLimit").toString()) : 0;
+        List<Long> eventIds = ((List<?>) params.get("eventIds")).stream()
+                .map(o -> Long.valueOf(o.toString())).collect(Collectors.toList());
+        log.info("保存限报配置: groupTypeId={}, perPersonLimit={}, eventIds={}", groupTypeId, perPersonLimit, eventIds);
+        groupTypeService.saveLimitConfig(groupTypeId, perPersonLimit, eventIds);
+        return Result.success("保存成功");
     }
 }
