@@ -85,9 +85,10 @@ public class RegistrationServiceImpl implements RegistrationService {
         // 已报的不同event数(本次尚未insert,故不含本次)
         int counted = registrationMapper.countDistinctEventByParticipantInEvents(
                 participantId, limitEventIds, Arrays.asList(0, 1));
-        // 若同event已有报名记录(另一赛次),则本次不新增占用
-        Registration existing = registrationMapper.selectByParticipantIdAndEventId(participantId, eventId);
-        int after = (existing != null) ? counted : counted + 1;
+        // 判断本次event是否已有active报名(复用计数查询,排除已取消status=2)
+        boolean alreadyActive = registrationMapper.countDistinctEventByParticipantInEvents(
+                participantId, Arrays.asList(eventId), Arrays.asList(0, 1)) > 0;
+        int after = alreadyActive ? counted : counted + 1;
         if (after > n) {
             throw new RuntimeException("超出限报:每人最多报 " + n + " 个项目");
         }
