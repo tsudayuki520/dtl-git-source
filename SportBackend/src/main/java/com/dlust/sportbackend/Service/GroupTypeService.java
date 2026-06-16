@@ -9,4 +9,8 @@ public interface GroupTypeService {
     void add(GroupType groupType);
     void update(GroupType groupType);
     void delete(Long id);
+
+    // 限报配置
+    GroupType getLimitConfig(Long groupTypeId);
+    void saveLimitConfig(Long groupTypeId, Integer perPersonLimit, List<Long> eventIds);
 }
