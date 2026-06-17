@@ -16,4 +16,6 @@ public interface ParticipantService {
     void update(Participant participant);
 
     void delete(Long id);
+
+    void clearTeam(Long id);
 }

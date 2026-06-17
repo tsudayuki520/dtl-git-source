@@ -43,4 +43,9 @@ public class ParticipantServiceImpl implements ParticipantService {
     public void delete(Long id) {
         participantMapper.deleteById(id);
     }
+
+    @Override
+    public void clearTeam(Long id) {
+        participantMapper.clearTeam(id);
+    }
 }

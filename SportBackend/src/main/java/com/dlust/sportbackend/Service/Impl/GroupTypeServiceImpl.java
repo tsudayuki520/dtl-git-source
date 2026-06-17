@@ -48,13 +48,16 @@ public class GroupTypeServiceImpl implements GroupTypeService {
     }
 
     @Override
-    public void saveLimitConfig(Long groupTypeId, Integer perPersonLimit, List<Long> eventIds) {
+    public void saveLimitConfig(Long groupTypeId, Integer perTeamLimit, List<Long> eventIds,
+                                Integer perPersonLimit, List<Long> personEventIds) {
         GroupType gt = new GroupType();
         gt.setId(groupTypeId);
+        gt.setPerTeamLimit(perTeamLimit == null ? 0 : perTeamLimit);
         gt.setPerPersonLimit(perPersonLimit == null ? 0 : perPersonLimit);
         try {
             // 空列表存 null,语义=不限
             gt.setLimitEventIds((eventIds == null || eventIds.isEmpty()) ? null : MAPPER.writeValueAsString(eventIds));
+            gt.setPersonLimitEventIds((personEventIds == null || personEventIds.isEmpty()) ? null : MAPPER.writeValueAsString(personEventIds));
         } catch (Exception e) {
             throw new RuntimeException("限报项目配置序列化失败", e);
         }

@@ -12,5 +12,6 @@ public interface GroupTypeService {
 
     // 限报配置
     GroupType getLimitConfig(Long groupTypeId);
-    void saveLimitConfig(Long groupTypeId, Integer perPersonLimit, List<Long> eventIds);
+    void saveLimitConfig(Long groupTypeId, Integer perTeamLimit, List<Long> eventIds,
+                         Integer perPersonLimit, List<Long> personEventIds);
 }

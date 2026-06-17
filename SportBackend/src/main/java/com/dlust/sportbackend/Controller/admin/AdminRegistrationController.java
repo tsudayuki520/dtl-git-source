@@ -30,6 +30,12 @@ public class AdminRegistrationController {
         return Result.success(registrationService.getByEventId(eventId));
     }
 
+    @GetMapping("/listByParticipant")
+    public Result<List<RegistrationVO>> listByParticipant(@RequestParam Long participantId) {
+        log.info("按参赛人员查询报名记录: participantId={}", participantId);
+        return Result.success(registrationService.getByParticipantId(participantId));
+    }
+
     @PostMapping("/add")
     public Result<String> add(@RequestBody Map<String, Object> params) {
         Long participantId = Long.valueOf(params.get("participantId").toString());

@@ -55,12 +55,20 @@ public class AdminGroupTypeController {
     @PostMapping("/saveLimitConfig")
     public Result<String> saveLimitConfig(@RequestBody Map<String, Object> params) {
         Long groupTypeId = Long.valueOf(params.get("groupTypeId").toString());
-        Integer perPersonLimit = params.get("perPersonLimit") != null
-                ? Integer.valueOf(params.get("perPersonLimit").toString()) : 0;
+        Integer perTeamLimit = params.get("perTeamLimit") != null
+                ? Integer.valueOf(params.get("perTeamLimit").toString()) : 0;
         List<Long> eventIds = ((List<?>) params.get("eventIds")).stream()
                 .map(o -> Long.valueOf(o.toString())).collect(Collectors.toList());
-        log.info("保存限报配置: groupTypeId={}, perPersonLimit={}, eventIds={}", groupTypeId, perPersonLimit, eventIds);
-        groupTypeService.saveLimitConfig(groupTypeId, perPersonLimit, eventIds);
+        Integer perPersonLimit = params.get("perPersonLimit") != null
+                ? Integer.valueOf(params.get("perPersonLimit").toString()) : 0;
+        Object personEventIdsObj = params.get("personEventIds");
+        List<Long> personEventIds = personEventIdsObj != null
+                ? ((List<?>) personEventIdsObj).stream()
+                    .map(o -> Long.valueOf(o.toString())).collect(Collectors.toList())
+                : List.of();
+        log.info("保存限报配置: groupTypeId={}, perTeamLimit={}, eventIds={}, perPersonLimit={}, personEventIds={}",
+                groupTypeId, perTeamLimit, eventIds, perPersonLimit, personEventIds);
+        groupTypeService.saveLimitConfig(groupTypeId, perTeamLimit, eventIds, perPersonLimit, personEventIds);
         return Result.success("保存成功");
     }
 }

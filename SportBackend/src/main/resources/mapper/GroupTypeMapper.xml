@@ -14,18 +14,22 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO group_type (sports_meeting_id, name, per_person_limit, limit_event_ids)
+        INSERT INTO group_type (sports_meeting_id, name, per_team_limit, limit_event_ids, per_person_limit, person_limit_event_ids)
         VALUES (#{sportsMeetingId}, #{name},
+                <choose><when test="perTeamLimit != null">#{perTeamLimit}</when><otherwise>0</otherwise></choose>,
+                #{limitEventIds},
                 <choose><when test="perPersonLimit != null">#{perPersonLimit}</when><otherwise>0</otherwise></choose>,
-                #{limitEventIds})
+                #{personLimitEventIds})
     </insert>
 
     <update id="updateById">
         UPDATE group_type
         <set>
             <if test="name != null">name = #{name},</if>
-            <if test="perPersonLimit != null">per_person_limit = #{perPersonLimit},</if>
+            <if test="perTeamLimit != null">per_team_limit = #{perTeamLimit},</if>
             <if test="limitEventIds != null">limit_event_ids = #{limitEventIds},</if>
+            <if test="perPersonLimit != null">per_person_limit = #{perPersonLimit},</if>
+            <if test="personLimitEventIds != null">person_limit_event_ids = #{personLimitEventIds},</if>
         </set>
         WHERE id = #{id}
     </update>

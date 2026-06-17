@@ -23,4 +23,6 @@ public interface ParticipantMapper {
     void updateById(Participant participant);
 
     void deleteById(@Param("id") Long id);
+
+    void clearTeam(@Param("id") Long id);
 }

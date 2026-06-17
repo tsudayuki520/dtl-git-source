@@ -6,7 +6,7 @@ import { getMeetingDetail } from '@/api/meeting'
 import type { SportsMeeting } from '@/api/meeting'
 import { getTeamList, updateTeam, deleteTeam } from '@/api/team'
 import type { Team } from '@/api/team'
-import { getParticipantListByTeam, getParticipantList, updateParticipant } from '@/api/participant'
+import { getParticipantListByTeam, getParticipantList, updateParticipant, removeFromTeam } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getGroupTypeList } from '@/api/groupType'
 
@@ -82,7 +82,7 @@ async function handleTeamDelete() {
 async function handleRemoveFromTeam(participantId: number) {
   try {
     await ElMessageBox.confirm('确定将该人员移出代表队？', '提示', { type: 'warning' })
-    await updateParticipant({ id: participantId, teamId: null })
+    await removeFromTeam(participantId)
     ElMessage.success('移出成功')
     fetchParticipants()
   } catch { /* cancel */ }

@@ -49,4 +49,11 @@ public class AdminParticipantController {
         participantService.delete(id);
         return Result.success("删除成功");
     }
+
+    @PutMapping("/clearTeam")
+    public Result<String> clearTeam(@RequestParam Long participantId) {
+        log.info("移出代表队: participantId={}", participantId);
+        participantService.clearTeam(participantId);
+        return Result.success("移出成功");
+    }
 }

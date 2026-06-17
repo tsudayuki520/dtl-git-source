@@ -4,8 +4,10 @@ export interface GroupType {
   id: number
   sportsMeetingId: number
   name: string
-  perPersonLimit?: number
+  perTeamLimit?: number
   limitEventIds?: string | null
+  perPersonLimit?: number
+  personLimitEventIds?: string | null
 }
 
 export function getGroupTypeList(sportsMeetingId: number) {
@@ -28,6 +30,12 @@ export function getLimitConfig(groupTypeId: number) {
   return request.get('/admin/group-type/limitConfig', { params: { groupTypeId } })
 }
 
-export function saveLimitConfig(data: { groupTypeId: number; perPersonLimit: number; eventIds: number[] }) {
+export function saveLimitConfig(data: {
+  groupTypeId: number
+  perTeamLimit: number
+  eventIds: number[]
+  perPersonLimit: number
+  personEventIds: number[]
+}) {
   return request.post('/admin/group-type/saveLimitConfig', data)
 }

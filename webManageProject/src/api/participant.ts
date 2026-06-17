@@ -11,6 +11,7 @@ export interface Participant {
   gender: string
   college: string
   major: string
+  perPersonLimit?: number
 }
 
 export function getParticipantList(sportsMeetingId: number) {
@@ -31,4 +32,8 @@ export function updateParticipant(data: Partial<Participant>) {
 
 export function deleteParticipant(id: number) {
   return request.delete(`/admin/participant/${id}`)
+}
+
+export function removeFromTeam(participantId: number) {
+  return request.put('/admin/participant/clearTeam', null, { params: { participantId } })
 }

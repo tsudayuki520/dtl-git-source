@@ -61,6 +61,19 @@
         ORDER BY r.create_time DESC
     </select>
 
+    <select id="selectVOByParticipantId" resultType="RegistrationVO">
+        SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
+               p.name AS participant_name,
+               e.name AS event_name,
+               s.name AS schedule_name
+        FROM registration r
+        LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN event e ON r.event_id = e.id
+        LEFT JOIN schedule s ON r.schedule_id = s.id
+        WHERE r.participant_id = #{participantId}
+        ORDER BY r.create_time DESC
+    </select>
+
     <update id="updateStatus">
         UPDATE registration SET status = #{status} WHERE id = #{id}
     </update>
@@ -71,6 +84,16 @@
         AND event_id IN
         <foreach collection="eventIds" item="eid" open="(" separator="," close=")">#{eid}</foreach>
         AND status IN
+        <foreach collection="statuses" item="st" open="(" separator="," close=")">#{st}</foreach>
+    </select>
+
+    <select id="countDistinctParticipantByTeamAndEvent" resultType="int">
+        SELECT COUNT(DISTINCT r.participant_id)
+        FROM registration r
+        JOIN participant p ON r.participant_id = p.id
+        WHERE p.team_id = #{teamId}
+        AND r.event_id = #{eventId}
+        AND r.status IN
         <foreach collection="statuses" item="st" open="(" separator="," close=")">#{st}</foreach>
     </select>
 

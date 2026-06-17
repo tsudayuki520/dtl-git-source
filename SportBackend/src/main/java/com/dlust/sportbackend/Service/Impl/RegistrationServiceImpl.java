@@ -52,6 +52,11 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
+    public List<RegistrationVO> getByParticipantId(Long participantId) {
+        return registrationMapper.selectVOByParticipantId(participantId);
+    }
+
+    @Override
     public void add(Long participantId, Long eventId, Long scheduleId) {
         checkRegisterLimit(participantId, eventId);
         Registration reg = new Registration();
@@ -63,34 +68,55 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     /**
-     * 每人限报校验:participant → team → group_type,取组别限报规则;
-     * 仅当 N>0 且选中项目集非空 且 本次 event 在选中集时才计数。
-     * 计数=该人在选中集内已报的不同event数(status∈{0,1}),同event多赛次算1。
+     * 报名校验(三步):
+     * ① 资格:参赛人员必须有代表队(participant→team→group_type),任一缺失即拒绝;
+     * ② 规则A:每代表队在「代表队选中集(limit_event_ids)」项目上限报人数(per_team_limit),
+     *          统计该队在该 event 已报不同参赛人数(status∈{0,1}),达 M 即拒绝;
+     * ③ 规则B:每人限报项目数(per_person_limit),统计「每人选中集(person_limit_event_ids)」内
+     *          已报不同 event 数(只算 status=0,忽略已晋级),含本次后超过 N 即拒绝。
      */
     private void checkRegisterLimit(Long participantId, Long eventId) {
         Participant p = participantMapper.selectById(participantId);
-        if (p == null || p.getTeamId() == null) return;
+        if (p == null) return;
+
+        // ① 资格:参赛人员必须有代表队(participant→team→group_type)
+        if (p.getTeamId() == null) {
+            throw new RuntimeException("请先加入代表队后再报名");
+        }
         Team team = teamMapper.selectById(p.getTeamId());
-        if (team == null || team.getGroupTypeId() == null) return;
+        if (team == null || team.getGroupTypeId() == null) {
+            throw new RuntimeException("请先加入代表队后再报名");
+        }
         GroupType gt = groupTypeMapper.selectById(team.getGroupTypeId());
-        if (gt == null) return;
+        if (gt == null) {
+            throw new RuntimeException("请先加入代表队后再报名");
+        }
 
+        // ② 规则A:每代表队在「代表队选中集」项目上限报人数
+        Integer m = gt.getPerTeamLimit();
+        List<Long> teamEventIds = parseLongList(gt.getLimitEventIds());
+        if (m != null && m > 0 && teamEventIds != null && !teamEventIds.isEmpty()
+                && teamEventIds.contains(eventId)) {
+            int counted = registrationMapper.countDistinctParticipantByTeamAndEvent(
+                    p.getTeamId(), eventId, Arrays.asList(0, 1));
+            if (counted >= m) {
+                throw new RuntimeException("超出限报:该代表队在此项目最多报 " + m + " 人");
+            }
+        }
+
+        // ③ 规则B:每人限报项目数(每人选中集内,只统计 status=0 的已报名)
         Integer n = gt.getPerPersonLimit();
-        if (n == null || n <= 0) return;
-
-        List<Long> limitEventIds = parseLongList(gt.getLimitEventIds());
-        if (limitEventIds == null || limitEventIds.isEmpty()) return;
-        if (!limitEventIds.contains(eventId)) return;  // 本次项目不在限制范围
-
-        // 已报的不同event数(本次尚未insert,故不含本次)
-        int counted = registrationMapper.countDistinctEventByParticipantInEvents(
-                participantId, limitEventIds, Arrays.asList(0, 1));
-        // 判断本次event是否已有active报名(复用计数查询,排除已取消status=2)
-        boolean alreadyActive = registrationMapper.countDistinctEventByParticipantInEvents(
-                participantId, Arrays.asList(eventId), Arrays.asList(0, 1)) > 0;
-        int after = alreadyActive ? counted : counted + 1;
-        if (after > n) {
-            throw new RuntimeException("超出限报:每人最多报 " + n + " 个项目");
+        List<Long> personEventIds = parseLongList(gt.getPersonLimitEventIds());
+        if (n != null && n > 0 && personEventIds != null && !personEventIds.isEmpty()
+                && personEventIds.contains(eventId)) {
+            int counted = registrationMapper.countDistinctEventByParticipantInEvents(
+                    participantId, personEventIds, Arrays.asList(0));
+            boolean alreadyActive = registrationMapper.countDistinctEventByParticipantInEvents(
+                    participantId, Arrays.asList(eventId), Arrays.asList(0)) > 0;
+            int after = alreadyActive ? counted : counted + 1;
+            if (after > n) {
+                throw new RuntimeException("超出限报:每人最多报 " + n + " 个项目");
+            }
         }
     }
 

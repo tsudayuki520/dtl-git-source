@@ -147,6 +147,7 @@ async function fetchTeams() {
   try {
     const res: any = await getTeamList({ sportsMeetingId: meetingId })
     teams.value = res.data || res || []
+    teams.value.forEach(t => fetchTeamParticipants(t.id))
   } catch { /* ignore */ }
 }
 
@@ -195,7 +196,13 @@ function openTeamAdd(groupTypeId: number) {
 
 // ============ 限报配置 ============
 const limitDialogVisible = ref(false)
-const limitForm = ref({ groupTypeId: 0, perPersonLimit: 0, eventIds: [] as number[] })
+const limitForm = ref({
+  groupTypeId: 0,
+  perTeamLimit: 0,
+  eventIds: [] as number[],
+  perPersonLimit: 0,
+  personEventIds: [] as number[]
+})
 const allEvents = ref<Event[]>([])
 const eventsByCategory = computed(() => {
   const m: Record<string, Event[]> = {}
@@ -206,17 +213,17 @@ const eventsByCategory = computed(() => {
   return m
 })
 
-function isCategoryAllChecked(cat: string) {
+function isCategoryAllChecked(cat: string, field: 'eventIds' | 'personEventIds') {
   const ids = (eventsByCategory.value[cat] || []).map(e => e.id)
-  return ids.length > 0 && ids.every(id => limitForm.value.eventIds.includes(id))
+  return ids.length > 0 && ids.every(id => limitForm.value[field].includes(id))
 }
 
-function toggleCategoryAll(cat: string, checked: any) {
+function toggleCategoryAll(cat: string, checked: any, field: 'eventIds' | 'personEventIds') {
   const ids = (eventsByCategory.value[cat] || []).map(e => e.id)
   if (checked) {
-    limitForm.value.eventIds = Array.from(new Set([...limitForm.value.eventIds, ...ids]))
+    limitForm.value[field] = Array.from(new Set([...limitForm.value[field], ...ids]))
   } else {
-    limitForm.value.eventIds = limitForm.value.eventIds.filter(id => !ids.includes(id))
+    limitForm.value[field] = limitForm.value[field].filter(id => !ids.includes(id))
   }
 }
 
@@ -228,11 +235,14 @@ async function openLimitConfig(gt: GroupType) {
   }
   const res: any = await getLimitConfig(gt.id)
   const cfg = res.data || res
+  limitForm.value.perTeamLimit = cfg?.perTeamLimit || 0
   limitForm.value.perPersonLimit = cfg?.perPersonLimit || 0
   try {
     limitForm.value.eventIds = cfg?.limitEventIds ? JSON.parse(cfg.limitEventIds) : []
+    limitForm.value.personEventIds = cfg?.personLimitEventIds ? JSON.parse(cfg.personLimitEventIds) : []
   } catch {
     limitForm.value.eventIds = []
+    limitForm.value.personEventIds = []
   }
   limitDialogVisible.value = true
 }
@@ -240,8 +250,10 @@ async function openLimitConfig(gt: GroupType) {
 async function saveLimit() {
   await saveLimitConfig({
     groupTypeId: limitForm.value.groupTypeId,
+    perTeamLimit: limitForm.value.perTeamLimit,
+    eventIds: limitForm.value.eventIds,
     perPersonLimit: limitForm.value.perPersonLimit,
-    eventIds: limitForm.value.eventIds
+    personEventIds: limitForm.value.personEventIds
   })
   ElMessage.success('限报配置已保存')
   limitDialogVisible.value = false
@@ -666,14 +678,19 @@ onMounted(() => {
         </div>
         <el-table :data="filteredParticipants" stripe border size="small">
           <el-table-column prop="userCode" label="学号/工号" width="120" />
-          <el-table-column prop="name" label="姓名" width="100" />
+          <el-table-column label="姓名" width="100">
+            <template #default="{ row }">
+              <el-button link type="primary" size="small" @click="router.push(`/meeting/${meetingId}/participant/${row.id}`)">{{ row.name }}</el-button>
+            </template>
+          </el-table-column>
           <el-table-column prop="gender" label="性别" width="60" />
           <el-table-column prop="phone" label="电话" width="130" />
           <el-table-column prop="teamName" label="代表队" width="120" />
           <el-table-column prop="college" label="学院" />
           <el-table-column prop="major" label="专业" />
-          <el-table-column label="操作" width="120" fixed="right">
+          <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
+              <el-button link type="primary" size="small" @click="router.push(`/meeting/${meetingId}/participant/${row.id}`)">详情</el-button>
               <el-button link type="primary" size="small" @click="openParticipantEdit(row)">编辑</el-button>
               <el-button link type="danger" size="small" @click="handleParticipantDelete(row.id)">删除</el-button>
             </template>
@@ -781,14 +798,36 @@ onMounted(() => {
 
     <!-- ======== 弹窗：限报配置 ======== -->
     <el-dialog v-model="limitDialogVisible" title="限报配置" width="640px" destroy-on-close>
+      <!-- 规则A：每代表队限报 -->
+      <div style="font-weight:600;margin-bottom:4px">每代表队限报</div>
       <div style="margin-bottom:8px;color:#999">
-        勾选受限项目（按类别分组，可一键全选某类），并设置每人最多可报项目数。
+        勾选受限项目（按类别分组），设置每代表队在选定项目中最多可报人数。
       </div>
-      <div v-for="(evs, cat) in eventsByCategory" :key="cat" style="margin-bottom:16px">
+      <div v-for="(evs, cat) in eventsByCategory" :key="'a-'+cat" style="margin-bottom:12px">
         <div style="margin-bottom:6px">
-          <el-checkbox :model-value="isCategoryAllChecked(cat)" @change="(v:any)=>toggleCategoryAll(cat,v)">{{ cat }}（全选）</el-checkbox>
+          <el-checkbox :model-value="isCategoryAllChecked(cat,'eventIds')" @change="(v:any)=>toggleCategoryAll(cat,v,'eventIds')">{{ cat }}（全选）</el-checkbox>
         </div>
         <el-checkbox-group v-model="limitForm.eventIds" style="margin-left:24px">
+          <el-checkbox v-for="ev in evs" :key="ev.id" :value="ev.id">{{ ev.name }}</el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <el-form-item label="每代表队限报人数" style="margin-top:8px">
+        <el-input-number v-model="limitForm.perTeamLimit" :min="0" />
+        <span style="margin-left:8px;color:#999">0 = 不限</span>
+      </el-form-item>
+
+      <el-divider />
+
+      <!-- 规则B：每人限报 -->
+      <div style="font-weight:600;margin-bottom:4px">每人限报</div>
+      <div style="margin-bottom:8px;color:#999">
+        勾选受限项目（按类别分组），设置每人在选定项目中最多可报项目数。
+      </div>
+      <div v-for="(evs, cat) in eventsByCategory" :key="'b-'+cat" style="margin-bottom:12px">
+        <div style="margin-bottom:6px">
+          <el-checkbox :model-value="isCategoryAllChecked(cat,'personEventIds')" @change="(v:any)=>toggleCategoryAll(cat,v,'personEventIds')">{{ cat }}（全选）</el-checkbox>
+        </div>
+        <el-checkbox-group v-model="limitForm.personEventIds" style="margin-left:24px">
           <el-checkbox v-for="ev in evs" :key="ev.id" :value="ev.id">{{ ev.name }}</el-checkbox>
         </el-checkbox-group>
       </div>

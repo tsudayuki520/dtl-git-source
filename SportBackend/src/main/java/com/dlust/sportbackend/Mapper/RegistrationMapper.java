@@ -30,11 +30,17 @@ public interface RegistrationMapper {
 
     List<RegistrationVO> selectVOByEventId(@Param("eventId") Long eventId);
 
+    List<RegistrationVO> selectVOByParticipantId(@Param("participantId") Long participantId);
+
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     int countDistinctEventByParticipantInEvents(@Param("participantId") Long participantId,
                                                  @Param("eventIds") List<Long> eventIds,
                                                  @Param("statuses") List<Integer> statuses);
+
+    int countDistinctParticipantByTeamAndEvent(@Param("teamId") Long teamId,
+                                                @Param("eventId") Long eventId,
+                                                @Param("statuses") List<Integer> statuses);
 
     void deleteById(@Param("id") Long id);
 }

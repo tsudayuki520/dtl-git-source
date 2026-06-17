@@ -52,4 +52,8 @@
         DELETE FROM participant WHERE id = #{id}
     </delete>
 
+    <update id="clearTeam">
+        UPDATE participant SET team_id = NULL WHERE id = #{id}
+    </update>
+
 </mapper>
