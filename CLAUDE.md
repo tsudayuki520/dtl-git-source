@@ -48,6 +48,13 @@ Vue 3 + TypeScript + Element Plus + Pinia + Vue Router。API 模块在 `src/api/
 ### 数据库
 MySQL `sport_db`，建表脚本在 `SportBackend/sql/`。核心表：`sports_meeting`、`schedule`、`event`、`participant`、`registration`、`team`、`group_type`、`banner`、`notice`、`user`。表间通过逻辑外键关联（无物理外键约束）。MyBatis 配置了 `map-underscore-to-camel-case: true`。
 
+#### Schema 同步约定（强制）
+每次对数据库执行 **DDL 结构变更**（`ALTER TABLE` 加列/改列/改类型/删列、`CREATE TABLE`、`DROP TABLE` 等）后，**必须立即同步更新** `SportBackend/sql/` 下对应的建表脚本（如 `event.sql`、`schedule.sql`、`group_type.sql`、`participant.sql`），保持脚本与实际表结构一致，不得遗漏。
+
+- 仅 DDL（结构变更）触发此约定；纯数据操作（`INSERT`/`UPDATE`/`DELETE`/数据回填）不涉及。
+- 同步时保持现有手写格式（中文 `COMMENT`、`IF NOT EXISTS`、对齐缩进），**不要用 `mysqldump` 覆盖**（其输出格式与手写脚本不一致）。
+- 执行任何数据库写操作（DDL 或 DML）前，须先向用户确认。
+
 ### 第三方集成
 - **华为云 OBS**：图片存储（轮播图、头像），工具类 `OBSUtil.java`
 - **微信登录**：后端调用 `jscode2session` 换取 openid，JWT 有效期 7 天

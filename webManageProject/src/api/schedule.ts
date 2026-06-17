@@ -4,6 +4,7 @@ export interface Schedule {
   id: number
   sportsMeetingId: number
   name: string
+  sort: number
   status: number
 }
 

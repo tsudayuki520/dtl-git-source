@@ -32,6 +32,38 @@ const resultMap = computed(() => new Map<number, ResultVO>(results.value.map(r =
 const editingId = ref<number | null>(null)
 const editingScore = ref('')
 
+// 成绩值（径赛=毫秒，田赛=厘米）与录入值（径赛=秒，田赛=米）互转，并格式化显示
+function scoreValueToInput(scoreValue: number | null | undefined): string {
+  if (scoreValue == null) return ''
+  const cat = eventInfo.value?.category
+  if (cat === '径赛') return (scoreValue / 1000).toString()
+  if (cat === '田赛') return (scoreValue / 100).toString()
+  return String(scoreValue)
+}
+function inputToScoreValue(val: string): number {
+  const n = Number(val)
+  if (!Number.isFinite(n)) return 0
+  const cat = eventInfo.value?.category
+  if (cat === '径赛') return Math.round(n * 1000)
+  if (cat === '田赛') return Math.round(n * 100)
+  return Math.round(n)
+}
+function formatScore(r?: ResultVO): string {
+  if (!r || r.scoreValue == null) return '录入'
+  const cat = eventInfo.value?.category || r.category
+  if (cat === '径赛') {
+    const totalMs = r.scoreValue
+    const totalSeconds = Math.floor(totalMs / 1000)
+    const ms = totalMs % 1000
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    if (minutes > 0) return `${minutes}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}`
+    return `${seconds}.${String(ms).padStart(3, '0')}秒`
+  }
+  if (cat === '田赛') return `${(r.scoreValue / 100).toFixed(2)}米`
+  return String(r.scoreValue)
+}
+
 // 自动聚焦指令：el-input 渲染时聚焦内部 input
 const vFocus = {
   mounted: (el: HTMLElement) => {
@@ -49,7 +81,7 @@ async function fetchResults() {
 function startEdit(row: RegistrationVO) {
   editingId.value = row.participantId
   const existing = resultMap.value.get(row.participantId)
-  editingScore.value = existing?.score != null ? String(existing.score) : ''
+  editingScore.value = scoreValueToInput(existing?.scoreValue)
 }
 
 function cancelEdit() {
@@ -73,9 +105,9 @@ async function saveScore(row: RegistrationVO) {
     if (existing) {
       // 修改成绩：直接用已有的 eventScheduleId，避免 Service 重查 event_schedule
       // （update 不应改赛次；不传 scheduleId 则 resolveEventScheduleId 跳过）
-      await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, score: Number(val) })
+      await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, scoreValue: inputToScoreValue(val) })
     } else {
-      await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, score: Number(val) })
+      await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: inputToScoreValue(val) })
     }
     ElMessage.success('保存成功')
     editingId.value = null
@@ -238,13 +270,14 @@ onMounted(() => {
               v-model="editingScore"
               v-focus
               size="small"
-              style="width:90px"
+              style="width:130px"
+              :placeholder="eventInfo?.category === '田赛' ? '米，如5.32' : '秒，如12.350'"
               @keyup.enter="saveScore(row)"
               @keyup.esc="cancelEdit"
               @blur="saveScore(row)"
             />
             <el-button v-else link type="primary" size="small" @click="startEdit(row)">
-              {{ resultMap.get(row.participantId)?.score ?? '录入' }}
+              {{ formatScore(resultMap.get(row.participantId)) }}
             </el-button>
           </template>
         </el-table-column>

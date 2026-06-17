@@ -8,6 +8,7 @@ public class Schedule {
     private Long id;
     private Long sportsMeetingId;
     private String name;        // 轮次名称：预选赛、复赛、决赛
+    private Integer sort;       // 轮次序号：越小越靠前（晋级方向由小到大）
     private Integer status;     // 0-进行中，1-已结束
     private Integer isDeleted;  // 0-正常，1-已删除
     private LocalDateTime createTime;

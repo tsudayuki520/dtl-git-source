@@ -16,7 +16,7 @@ import { getNoticeList, addNotice, updateNotice, deleteNotice, uploadNoticeFile 
 import type { Notice } from '@/api/notice'
 import { getResultList, getResultListByEvent, addResult, updateResult, deleteResult } from '@/api/result'
 import type { ResultVO, ResultItem } from '@/api/result'
-import { getTeamList, addTeam, updateTeam, deleteTeam } from '@/api/team'
+import { getTeamList, addTeam, updateTeam } from '@/api/team'
 import type { Team } from '@/api/team'
 import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType, getLimitConfig, saveLimitConfig } from '@/api/groupType'
 import type { GroupType } from '@/api/groupType'
@@ -91,7 +91,7 @@ function goScheduleDetail(scheduleId: number) {
 }
 
 function openScheduleAdd() {
-  scheduleForm.value = { sportsMeetingId: meetingId, name: '', status: 0 }
+  scheduleForm.value = { sportsMeetingId: meetingId, name: '', sort: schedules.value.length + 1, status: 0 }
   scheduleDialogVisible.value = true
 }
 function openScheduleEdit(row: Schedule) {
@@ -258,10 +258,6 @@ async function saveLimit() {
   ElMessage.success('限报配置已保存')
   limitDialogVisible.value = false
 }
-function openTeamEdit(row: Team) {
-  teamForm.value = { ...row }
-  teamDialogVisible.value = true
-}
 async function handleTeamSubmit() {
   try {
     if (teamForm.value.id) {
@@ -273,14 +269,6 @@ async function handleTeamSubmit() {
     teamDialogVisible.value = false
     fetchTeams()
   } catch { ElMessage.error('操作失败') }
-}
-async function handleTeamDelete(id: number) {
-  try {
-    await ElMessageBox.confirm('确定删除该代表队？', '提示', { type: 'warning' })
-    await deleteTeam(id)
-    ElMessage.success('删除成功')
-    fetchTeams()
-  } catch { /* cancel */ }
 }
 
 // ============ 代表队 - 参赛人员分配 ============
@@ -299,13 +287,6 @@ async function fetchTeamParticipants(teamId: number) {
 
 function getTeamParticipants(teamId: number): Participant[] {
   return teamParticipants.value[teamId] || []
-}
-
-function openAssignDialog(team: Team) {
-  assignTeamId.value = team.id
-  assignTeamName.value = team.name
-  assignSelectedIds.value = []
-  assignDialogVisible.value = true
 }
 
 async function handleAssignSubmit() {
@@ -404,7 +385,7 @@ function openNoticeEdit(row: Notice) {
   noticeForm.value = { ...row }
   noticeDialogVisible.value = true
 }
-async function handleNoticeFileUpload(e: Event) {
+async function handleNoticeFileUpload(e: globalThis.Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
   noticeUploading.value = true
@@ -450,6 +431,63 @@ const resultDialogVisible = ref(false)
 const resultForm = ref<Partial<ResultItem>>({})
 const resultSearch = ref('')
 const resultFilterSchedule = ref<number | undefined>(undefined)
+// 成绩录入临时输入：径赛分/秒/毫秒，田赛米/厘米
+const resultInput = ref({ minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 })
+
+// 当前选中项目的分类（决定录入单位）
+const selectedEventCategory = computed(() => {
+  const ev = events.value.find(e => e.id === resultForm.value.eventId)
+  return ev?.category || ''
+})
+
+// 成绩值按分类格式化显示
+function formatScore(row: ResultVO): string {
+  if (row.scoreValue == null) return '-'
+  if (row.category === '径赛') {
+    const totalMs = row.scoreValue
+    const totalSeconds = Math.floor(totalMs / 1000)
+    const ms = totalMs % 1000
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    if (minutes > 0) {
+      return `${minutes}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}`
+    }
+    return `${seconds}.${String(ms).padStart(3, '0')}秒`
+  }
+  if (row.category === '田赛') {
+    return `${(row.scoreValue / 100).toFixed(2)}米`
+  }
+  return String(row.scoreValue)
+}
+
+// 录入控件值合并为 scoreValue
+function buildScoreValue(): number | null {
+  const cat = selectedEventCategory.value
+  const i = resultInput.value
+  if (cat === '径赛') {
+    return i.minutes * 60000 + i.seconds * 1000 + i.millis
+  }
+  if (cat === '田赛') {
+    return i.meters * 100 + i.centimeters
+  }
+  return null
+}
+
+// 编辑时把 scoreValue 拆成录入控件值
+function splitScoreValue(scoreValue: number | null, category: string) {
+  const i = { minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 }
+  if (scoreValue == null) return i
+  if (category === '径赛') {
+    i.minutes = Math.floor(scoreValue / 60000)
+    const rest = scoreValue % 60000
+    i.seconds = Math.floor(rest / 1000)
+    i.millis = rest % 1000
+  } else if (category === '田赛') {
+    i.meters = Math.floor(scoreValue / 100)
+    i.centimeters = scoreValue % 100
+  }
+  return i
+}
 
 async function fetchResults() {
   try {
@@ -497,11 +535,13 @@ function getResultsGroupedBySchedule(): { scheduleId: number | null, scheduleNam
 }
 
 function openResultAdd() {
-  resultForm.value = { sportsMeetingId: meetingId, eventId: undefined as any, scheduleId: undefined, participantId: undefined as any, score: null }
+  resultForm.value = { sportsMeetingId: meetingId, eventId: undefined as any, scheduleId: undefined, participantId: undefined as any, scoreValue: null, points: 0 }
+  resultInput.value = { minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 }
   resultDialogVisible.value = true
 }
 function openResultEdit(row: ResultVO) {
-  resultForm.value = { id: row.id, sportsMeetingId: row.sportsMeetingId, eventId: row.eventId, scheduleId: row.scheduleId ?? undefined, participantId: row.participantId, score: row.score }
+  resultForm.value = { id: row.id, sportsMeetingId: row.sportsMeetingId, eventId: row.eventId, scheduleId: row.scheduleId ?? undefined, participantId: row.participantId, scoreValue: row.scoreValue, points: row.points }
+  resultInput.value = splitScoreValue(row.scoreValue, row.category)
   resultDialogVisible.value = true
 }
 async function handleResultSubmit() {
@@ -509,6 +549,7 @@ async function handleResultSubmit() {
     ElMessage.warning('请选择赛次')
     return
   }
+  resultForm.value.scoreValue = buildScoreValue()
   try {
     if (resultForm.value.id) {
       await updateResult(resultForm.value)
@@ -612,7 +653,9 @@ onMounted(() => {
             @click="goScheduleDetail(sch.id)"
           >
             <div class="schedule-card-header">
-              <span class="schedule-card-name">{{ sch.name }}</span>
+              <span class="schedule-card-name">
+                <el-tag size="small" type="info" effect="plain" style="margin-right:6px">第{{ sch.sort || '?' }}轮</el-tag>{{ sch.name }}
+              </span>
               <el-tag :type="sch.status === 0 ? 'primary' : 'info'" size="small">{{ scheduleStatusMap[sch.status] }}</el-tag>
             </div>
             <div class="schedule-card-info">
@@ -746,9 +789,10 @@ onMounted(() => {
           <el-table :data="group.items" stripe border size="small">
             <el-table-column prop="participantName" label="参赛者" width="100" />
             <el-table-column prop="eventName" label="项目" />
-            <el-table-column label="成绩" width="100">
-              <template #default="{ row }">{{ row.score ?? '-' }}</template>
+            <el-table-column label="成绩" width="130">
+              <template #default="{ row }">{{ formatScore(row) }}</template>
             </el-table-column>
+            <el-table-column label="积分" prop="points" width="80" />
             <el-table-column label="创建时间" width="170">
               <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
             </el-table-column>
@@ -769,6 +813,10 @@ onMounted(() => {
       <el-form :model="scheduleForm" label-width="80px">
         <el-form-item label="轮次名称" required>
           <el-input v-model="scheduleForm.name" placeholder="如：预赛、半决赛、决赛" />
+        </el-form-item>
+        <el-form-item label="轮次序号">
+          <el-input-number v-model="scheduleForm.sort" :min="0" />
+          <span style="margin-left:8px;color:#999;font-size:12px">越小越靠前（如预赛1、复赛2、决赛3）</span>
         </el-form-item>
         <el-form-item label="状态" v-if="scheduleForm.id">
           <el-select v-model="scheduleForm.status" style="width:100%">
@@ -939,8 +987,29 @@ onMounted(() => {
             <el-option v-for="p in participants" :key="p.id" :label="`${p.name}（${p.userCode}）`" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="成绩" required>
-          <el-input-number v-model="resultForm.score" :precision="2" :min="0" style="width:100%" placeholder="请输入成绩" />
+        <el-form-item label="成绩" v-if="selectedEventCategory === '径赛'">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.minutes" :min="0" controls-position="right" style="width:120px" />
+            <span>分</span>
+            <el-input-number v-model="resultInput.seconds" :min="0" :max="59" controls-position="right" style="width:120px" />
+            <span>秒</span>
+            <el-input-number v-model="resultInput.millis" :min="0" :max="999" controls-position="right" style="width:120px" />
+            <span>毫秒</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="成绩" v-else-if="selectedEventCategory === '田赛'">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.meters" :min="0" controls-position="right" style="width:150px" />
+            <span>米</span>
+            <el-input-number v-model="resultInput.centimeters" :min="0" :max="99" controls-position="right" style="width:150px" />
+            <span>厘米</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="成绩" v-else>
+          <span style="color:#999">该项目（{{ selectedEventCategory || '未选择项目' }}）暂不支持直接录入成绩，可通过积分记录</span>
+        </el-form-item>
+        <el-form-item label="积分">
+          <el-input-number v-model="resultForm.points" :min="0" controls-position="right" style="width:100%" placeholder="该成绩对应积分（用于代表队总分）" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -959,9 +1028,10 @@ onMounted(() => {
       <el-table :data="historyResults" stripe border size="small" max-height="400">
         <el-table-column prop="participantName" label="参赛者" width="100" />
         <el-table-column prop="eventName" label="项目" />
-        <el-table-column label="成绩" width="100">
-          <template #default="{ row }">{{ row.score ?? '-' }}</template>
+        <el-table-column label="成绩" width="130">
+          <template #default="{ row }">{{ formatScore(row) }}</template>
         </el-table-column>
+        <el-table-column label="积分" prop="points" width="80" />
         <el-table-column label="录入时间" width="170">
           <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
         </el-table-column>
@@ -979,7 +1049,7 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="附件">
           <div v-if="noticeForm.fileName" class="notice-file-info">
-            <a :href="noticeForm.fileUrl" target="_blank" style="color:#409eff">{{ noticeForm.fileName }}</a>
+            <a :href="noticeForm.fileUrl || undefined" target="_blank" style="color:#409eff">{{ noticeForm.fileName }}</a>
             <el-button link type="danger" size="small" @click="handleNoticeFileRemove" style="margin-left:8px">移除</el-button>
           </div>
           <div v-else>

@@ -6,7 +6,7 @@
     <select id="selectBySportsMeetingId" resultType="Schedule">
         SELECT * FROM schedule
         WHERE sports_meeting_id = #{sportsMeetingId} AND is_deleted = 0
-        ORDER BY create_time ASC
+        ORDER BY sort ASC, create_time ASC
     </select>
 
     <select id="selectById" resultType="Schedule">
@@ -14,14 +14,15 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO schedule (sports_meeting_id, name, status)
-        VALUES (#{sportsMeetingId}, #{name}, #{status})
+        INSERT INTO schedule (sports_meeting_id, name, sort, status)
+        VALUES (#{sportsMeetingId}, #{name}, #{sort}, #{status})
     </insert>
 
     <update id="updateById">
         UPDATE schedule
         <set>
             <if test="name != null">name = #{name},</if>
+            <if test="sort != null">sort = #{sort},</if>
             <if test="status != null">status = #{status},</if>
         </set>
         WHERE id = #{id} AND is_deleted = 0

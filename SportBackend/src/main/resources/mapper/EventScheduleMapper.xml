@@ -17,7 +17,7 @@
         SELECT es.schedule_id FROM event_schedule es
         INNER JOIN schedule s ON es.schedule_id = s.id
         WHERE es.event_id = #{eventId} AND es.is_deleted = 0 AND s.is_deleted = 0
-        ORDER BY s.create_time ASC
+        ORDER BY s.sort ASC, s.create_time ASC
     </select>
 
     <select id="selectEventIdsByScheduleId" resultType="java.lang.Long">

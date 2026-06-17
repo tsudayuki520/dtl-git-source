@@ -7,12 +7,17 @@ export interface ResultVO {
   eventScheduleId: number | null
   scheduleId: number | null
   participantId: number
-  score: number | null
+  // 成绩值：径赛=毫秒数，田赛=厘米数（按 category 区分）
+  scoreValue: number | null
+  // 积分（用于代表队总分计算）
+  points: number
   createTime: string
   updateTime: string
   participantName: string
   eventName: string
   scheduleName: string
+  // 项目分类：田赛/径赛/趣味赛
+  category: string
 }
 
 export interface ResultItem {
@@ -22,7 +27,8 @@ export interface ResultItem {
   scheduleId?: number
   eventScheduleId?: number
   participantId: number
-  score: number | null
+  scoreValue: number | null
+  points?: number
 }
 
 export function getResultList(sportsMeetingId: number) {

@@ -37,7 +37,7 @@ public class AdminResultController {
 
     @PostMapping("/add")
     public Result<String> add(@RequestBody com.dlust.sportbackend.entity.Result result) {
-        log.info("添加成绩: eventId={}, participantId={}, score={}", result.getEventId(), result.getParticipantId(), result.getScore());
+        log.info("添加成绩: eventId={}, participantId={}, scoreValue={}, points={}", result.getEventId(), result.getParticipantId(), result.getScoreValue(), result.getPoints());
         try {
             resultService.add(result);
             return Result.success("添加成功");

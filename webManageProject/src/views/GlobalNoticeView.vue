@@ -126,7 +126,7 @@ onMounted(fetchNotices)
         </el-form-item>
         <el-form-item label="附件">
           <div v-if="form.fileName" class="file-info">
-            <a :href="form.fileUrl" target="_blank" style="color:#409eff">{{ form.fileName }}</a>
+            <a :href="form.fileUrl || undefined" target="_blank" style="color:#409eff">{{ form.fileName }}</a>
             <el-button link type="danger" size="small" @click="handleFileRemove" style="margin-left:8px">移除</el-button>
           </div>
           <div v-else>
