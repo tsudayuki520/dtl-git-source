@@ -210,7 +210,7 @@ onMounted(() => {
       <div class="info-meta">
         <span>类别：{{ eventInfo.category }}</span>
         <span>性别：{{ eventInfo.gender }}</span>
-        <span>组别：{{ eventInfo.groupType }}</span>
+        <span>组别：{{ eventInfo.groupTypeName }}</span>
         <span>报名人数：{{ registrations.length }}</span>
       </div>
     </div>

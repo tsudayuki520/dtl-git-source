@@ -25,8 +25,8 @@ public class UserEventController {
     @GetMapping("/list")
     public Result<List<Event>> getList(@RequestParam(required = false) Long scheduleId,
                                         @RequestParam(required = false) Long sportsMeetingId,
-                                        @RequestParam(required = false) String groupType) {
-        log.info("获取项目列表: scheduleId={}, sportsMeetingId={}, groupType={}", scheduleId, sportsMeetingId, groupType);
+                                        @RequestParam(required = false) Long groupTypeId) {
+        log.info("获取项目列表: scheduleId={}, sportsMeetingId={}, groupTypeId={}", scheduleId, sportsMeetingId, groupTypeId);
         if (scheduleId != null) {
             List<Long> eventIds = eventScheduleService.getEventIdsByScheduleId(scheduleId);
             if (eventIds.isEmpty()) {
@@ -35,7 +35,7 @@ public class UserEventController {
             List<Event> events = eventIds.stream()
                     .map(eventService::getById)
                     .filter(e -> e != null)
-                    .filter(e -> groupType == null || groupType.isEmpty() || e.getGroupType().equals(groupType))
+                    .filter(e -> groupTypeId == null || groupTypeId.equals(e.getGroupTypeId()))
                     .collect(Collectors.toList());
             return Result.success(events);
         }

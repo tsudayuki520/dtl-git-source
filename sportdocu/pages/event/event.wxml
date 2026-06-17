@@ -4,12 +4,12 @@
   <view class="group-tabs">
     <view
       wx:for="{{groupTypes}}"
-      wx:key="index"
-      class="group-tab {{currentGroup === index ? 'active' : ''}}"
-      data-index="{{index}}"
+      wx:key="id"
+      class="group-tab {{currentGroup === item.id ? 'active' : ''}}"
+      data-group-type-id="{{item.id}}"
       bindtap="switchGroup"
     >
-      {{item}}
+      {{item.name}}
     </view>
   </view>
 
@@ -20,7 +20,7 @@
       <text class="event-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
     </view>
     <view class="event-footer">
-      <text class="event-group">{{item.groupType}}</text>
+      <text class="event-group">{{item.groupTypeName}}</text>
     </view>
   </view>
 

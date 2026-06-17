@@ -59,7 +59,7 @@ Page({
           events.forEach(e => {
             const cat = e.category || '径赛'
             if (!map[cat]) map[cat] = []
-            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupType: e.groupType, allowRegister: e.allowRegister })
+            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupTypeName: e.groupTypeName, allowRegister: e.allowRegister })
           })
           const eventCategories = categoryOrder
             .filter(cat => map[cat])

@@ -40,7 +40,7 @@ Page({
     const scheduleId = e.currentTarget.dataset.id
     const scheduleName = e.currentTarget.dataset.name
     wx.navigateTo({
-      url: '/pages/event/event?scheduleId=' + scheduleId + '&scheduleName=' + encodeURIComponent(scheduleName)
+      url: '/pages/event/event?scheduleId=' + scheduleId + '&scheduleName=' + encodeURIComponent(scheduleName) + '&sportsMeetingId=' + this.data.sportsMeetingId
     })
   },
 })

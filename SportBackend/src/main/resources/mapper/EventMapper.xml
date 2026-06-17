@@ -4,18 +4,21 @@
 <mapper namespace="com.dlust.sportbackend.Mapper.EventMapper">
 
     <select id="selectBySportsMeetingId" resultType="Event">
-        SELECT * FROM event
-        WHERE sports_meeting_id = #{sportsMeetingId} AND is_deleted = 0
-        ORDER BY category, group_type, name
+        SELECT e.*, g.name AS group_type_name FROM event e
+        LEFT JOIN group_type g ON e.group_type_id = g.id
+        WHERE e.sports_meeting_id = #{sportsMeetingId} AND e.is_deleted = 0
+        ORDER BY e.category, e.group_type_id, e.name
     </select>
 
     <select id="selectById" resultType="Event">
-        SELECT * FROM event WHERE id = #{id} AND is_deleted = 0
+        SELECT e.*, g.name AS group_type_name FROM event e
+        LEFT JOIN group_type g ON e.group_type_id = g.id
+        WHERE e.id = #{id} AND e.is_deleted = 0
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO event (sports_meeting_id, name, category, gender, group_type, group_type_id, allow_register, register_limit, status)
-        VALUES (#{sportsMeetingId}, #{name}, #{category}, #{gender}, #{groupType}, #{groupTypeId}, #{allowRegister}, #{registerLimit}, #{status})
+        INSERT INTO event (sports_meeting_id, name, category, gender, group_type_id, allow_register, register_limit, status)
+        VALUES (#{sportsMeetingId}, #{name}, #{category}, #{gender}, #{groupTypeId}, #{allowRegister}, #{registerLimit}, #{status})
     </insert>
 
     <update id="updateById">
@@ -24,7 +27,6 @@
             <if test="name != null">name = #{name},</if>
             <if test="category != null">category = #{category},</if>
             <if test="gender != null">gender = #{gender},</if>
-            <if test="groupType != null">group_type = #{groupType},</if>
             <if test="groupTypeId != null">group_type_id = #{groupTypeId},</if>
             <if test="allowRegister != null">allow_register = #{allowRegister},</if>
             <if test="registerLimit != null">register_limit = #{registerLimit},</if>

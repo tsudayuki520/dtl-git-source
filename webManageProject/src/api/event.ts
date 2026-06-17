@@ -6,7 +6,7 @@ export interface Event {
   name: string
   category: string
   gender: string
-  groupType: string
+  groupTypeName: string
   groupTypeId: number | null
   allowRegister: number
   registerLimit: number

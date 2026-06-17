@@ -8,6 +8,8 @@ import { getScheduleList, updateSchedule } from '@/api/schedule'
 import type { Schedule } from '@/api/schedule'
 import { getEventList, addEvent, updateEvent, deleteEvent } from '@/api/event'
 import type { Event } from '@/api/event'
+import { getGroupTypeList } from '@/api/groupType'
+import type { GroupType } from '@/api/groupType'
 import { getEventSchedulesBySchedule, getEventSchedules, saveEventSchedules } from '@/api/eventSchedule'
 import { getRegistrationList } from '@/api/registration'
 
@@ -20,6 +22,7 @@ const meeting = ref<SportsMeeting | null>(null)
 const schedule = ref<Schedule | null>(null)
 const allSchedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
+const groupTypes = ref<GroupType[]>([])
 const regCountMap = ref<Record<string, number>>({})
 const eventDialogVisible = ref(false)
 const eventForm = ref<Partial<Event>>({})
@@ -72,8 +75,15 @@ async function fetchRegCounts() {
   } catch { /* ignore */ }
 }
 
+async function fetchGroupTypes() {
+  try {
+    const res: any = await getGroupTypeList(meetingId)
+    groupTypes.value = res.data || res || []
+  } catch { /* ignore */ }
+}
+
 function openEventAdd() {
-  eventForm.value = { sportsMeetingId: meetingId, name: '', category: '径赛', gender: '不限', groupType: '学生组', allowRegister: 1, registerLimit: 0, status: 0 }
+  eventForm.value = { sportsMeetingId: meetingId, name: '', category: '径赛', gender: '不限', groupTypeId: groupTypes.value[0]?.id ?? null, allowRegister: 1, registerLimit: 0, status: 0 }
   eventFormScheduleIds.value = [scheduleId]
   eventDialogVisible.value = true
 }
@@ -131,6 +141,7 @@ onMounted(() => {
   fetchSchedule()
   fetchEvents()
   fetchRegCounts()
+  fetchGroupTypes()
 })
 </script>
 
@@ -164,7 +175,7 @@ onMounted(() => {
         <el-table-column prop="name" label="项目名称" />
         <el-table-column prop="category" label="类别" width="80" />
         <el-table-column prop="gender" label="性别" width="70" />
-        <el-table-column prop="groupType" label="组别" width="80" />
+        <el-table-column prop="groupTypeName" label="组别" width="80" />
         <el-table-column label="开放报名" width="80">
           <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
         </el-table-column>
@@ -208,9 +219,8 @@ onMounted(() => {
           </el-select>
         </el-form-item>
         <el-form-item label="组别">
-          <el-select v-model="eventForm.groupType" style="width:100%">
-            <el-option label="学生组" value="学生组" />
-            <el-option label="教工组" value="教工组" />
+          <el-select v-model="eventForm.groupTypeId" style="width:100%" placeholder="请选择组别">
+            <el-option v-for="gt in groupTypes" :key="gt.id" :label="gt.name" :value="gt.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="开放报名">

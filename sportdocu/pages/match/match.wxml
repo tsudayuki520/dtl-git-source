@@ -23,7 +23,7 @@
           <view class="event-scroll-inner">
             <view class="event-card" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
               <text class="event-card-name">{{evt.name}}</text>
-              <text class="event-card-info">{{evt.groupType}} · {{evt.gender}}</text>
+              <text class="event-card-info">{{evt.groupTypeName}} · {{evt.gender}}</text>
               <text class="event-card-cat">{{evt.category}}</text>
             </view>
           </view>

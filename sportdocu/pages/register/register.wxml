@@ -9,7 +9,7 @@
       <view class="event-item" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
         <view class="event-detail">
           <text class="event-name">{{evt.name}}</text>
-          <text class="event-meta">{{evt.groupType}} · {{evt.gender}}</text>
+          <text class="event-meta">{{evt.groupTypeName}} · {{evt.gender}}</text>
           <text class="event-count">已报名 {{evt.registeredCount}} / {{evt.registerLimit > 0 ? evt.registerLimit + '人' : '不限'}}</text>
         </view>
         <view class="register-btn {{evt.registerLimit > 0 && evt.registeredCount >= evt.registerLimit ? 'full' : ''}}"
@@ -17,7 +17,7 @@
               data-id="{{evt.id}}"
               data-name="{{evt.name}}"
               data-gender="{{evt.gender}}"
-              data-group-type="{{evt.groupType}}">
+              data-group-type="{{evt.groupTypeName}}">
           {{evt.registerLimit > 0 && evt.registeredCount >= evt.registerLimit ? '已满' : '报名'}}
         </view>
       </view>

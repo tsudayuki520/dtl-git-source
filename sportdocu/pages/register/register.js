@@ -29,7 +29,7 @@ Page({
               id: e.id,
               name: e.name,
               gender: e.gender,
-              groupType: e.groupType,
+              groupTypeName: e.groupTypeName,
               registerLimit: e.registerLimit || 0,
               registeredCount: 0,
             })
