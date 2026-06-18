@@ -16,4 +16,6 @@ public interface RegistrationService {
     void update(Long id, Integer status);
 
     void delete(Long id);
+
+    int promoteTopN(Long eventId, Long scheduleId, int topN);
 }

@@ -988,20 +988,20 @@ onMounted(() => {
           </el-select>
         </el-form-item>
         <el-form-item label="成绩" v-if="selectedEventCategory === '径赛'">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <el-input-number v-model="resultInput.minutes" :min="0" controls-position="right" style="width:120px" />
-            <span>分</span>
-            <el-input-number v-model="resultInput.seconds" :min="0" :max="59" controls-position="right" style="width:120px" />
-            <span>秒</span>
-            <el-input-number v-model="resultInput.millis" :min="0" :max="999" controls-position="right" style="width:120px" />
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.minutes" :min="0" :controls="false" style="width:64px" />
+            <span style="margin-right:8px">分</span>
+            <el-input-number v-model="resultInput.seconds" :min="0" :max="59" :controls="false" style="width:64px" />
+            <span style="margin-right:8px">秒</span>
+            <el-input-number v-model="resultInput.millis" :min="0" :max="999" :controls="false" style="width:84px" />
             <span>毫秒</span>
           </div>
         </el-form-item>
         <el-form-item label="成绩" v-else-if="selectedEventCategory === '田赛'">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <el-input-number v-model="resultInput.meters" :min="0" controls-position="right" style="width:150px" />
-            <span>米</span>
-            <el-input-number v-model="resultInput.centimeters" :min="0" :max="99" controls-position="right" style="width:150px" />
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.meters" :min="0" :controls="false" style="width:96px" />
+            <span style="margin-right:8px">米</span>
+            <el-input-number v-model="resultInput.centimeters" :min="0" :max="99" :controls="false" style="width:72px" />
             <span>厘米</span>
           </div>
         </el-form-item>

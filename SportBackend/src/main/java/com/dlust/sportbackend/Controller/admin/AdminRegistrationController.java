@@ -55,6 +55,16 @@ public class AdminRegistrationController {
         return Result.success("更新成功");
     }
 
+    @PostMapping("/promoteTopN")
+    public Result<Map<String, Object>> promoteTopN(@RequestBody Map<String, Object> params) {
+        Long eventId = Long.valueOf(params.get("eventId").toString());
+        Long scheduleId = Long.valueOf(params.get("scheduleId").toString());
+        int topN = Integer.parseInt(params.get("topN").toString());
+        log.info("一键晋级前N名: eventId={}, scheduleId={}, topN={}", eventId, scheduleId, topN);
+        int count = registrationService.promoteTopN(eventId, scheduleId, topN);
+        return Result.success(Map.of("promoted", count));
+    }
+
     @DeleteMapping("/{id}")
     public Result<String> delete(@PathVariable Long id) {
         log.info("删除报名记录: id={}", id);

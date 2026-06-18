@@ -35,3 +35,7 @@ export function updateRegistration(id: number, status: number) {
 export function deleteRegistration(id: number) {
   return request.delete(`/admin/registration/${id}`)
 }
+
+export function promoteTopN(eventId: number, scheduleId: number, topN: number) {
+  return request.post('/admin/registration/promoteTopN', { eventId, scheduleId, topN })
+}

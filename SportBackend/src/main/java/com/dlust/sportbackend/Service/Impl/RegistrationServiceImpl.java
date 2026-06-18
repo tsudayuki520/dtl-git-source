@@ -6,10 +6,12 @@ import com.dlust.sportbackend.Mapper.RegistrationMapper;
 import com.dlust.sportbackend.Mapper.TeamMapper;
 import com.dlust.sportbackend.Service.EventScheduleService;
 import com.dlust.sportbackend.Service.RegistrationService;
+import com.dlust.sportbackend.Service.ResultService;
 import com.dlust.sportbackend.entity.GroupType;
 import com.dlust.sportbackend.entity.Participant;
 import com.dlust.sportbackend.entity.Registration;
 import com.dlust.sportbackend.entity.RegistrationVO;
+import com.dlust.sportbackend.entity.ResultVO;
 import com.dlust.sportbackend.entity.Team;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,6 +43,9 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Autowired
     private GroupTypeMapper groupTypeMapper;
+
+    @Autowired
+    private ResultService resultService;
 
     @Override
     public List<RegistrationVO> getBySportsMeetingId(Long sportsMeetingId) {
@@ -195,5 +201,26 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public void delete(Long id) {
         registrationMapper.deleteById(id);
+    }
+
+    @Override
+    public int promoteTopN(Long eventId, Long scheduleId, int topN) {
+        // 按成绩排序取前 topN 名（排序规则同 ResultMapper：径赛时间ASC/田赛距离DESC/趣味赛积分DESC）
+        List<ResultVO> results = resultService.getByEventAndSchedule(eventId, scheduleId);
+        List<Long> participantIds = results.stream()
+                .filter(r -> "趣味赛".equals(r.getCategory()) ? r.getPoints() != null : r.getScoreValue() != null)
+                .limit(topN)
+                .map(ResultVO::getParticipantId)
+                .collect(Collectors.toList());
+        int count = 0;
+        for (Long pid : participantIds) {
+            Registration reg = registrationMapper.selectByParticipantIdEventIdScheduleId(pid, eventId, scheduleId);
+            if (reg != null && reg.getStatus() != null && reg.getStatus() != 1) {
+                // 复用 update(id, 1) 触发 autoRegisterNextSchedule（下一赛次自动报名）
+                update(reg.getId(), 1);
+                count++;
+            }
+        }
+        return count;
     }
 }

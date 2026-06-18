@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
-import { getRegistrationListByEvent, addRegistration, updateRegistration, deleteRegistration } from '@/api/registration'
+import { getRegistrationListByEvent, addRegistration, updateRegistration, deleteRegistration, promoteTopN } from '@/api/registration'
 import type { RegistrationVO } from '@/api/registration'
 import { getParticipantList } from '@/api/participant'
 import type { Participant } from '@/api/participant'
@@ -49,8 +49,10 @@ function inputToScoreValue(val: string): number {
   return Math.round(n)
 }
 function formatScore(r?: ResultVO): string {
-  if (!r || r.scoreValue == null) return '录入'
+  if (!r) return '录入'
   const cat = eventInfo.value?.category || r.category
+  if (cat === '趣味赛') return r.points != null ? `${r.points}分` : '录入'
+  if (r.scoreValue == null) return '录入'
   if (cat === '径赛') {
     const totalMs = r.scoreValue
     const totalSeconds = Math.floor(totalMs / 1000)
@@ -81,7 +83,11 @@ async function fetchResults() {
 function startEdit(row: RegistrationVO) {
   editingId.value = row.participantId
   const existing = resultMap.value.get(row.participantId)
-  editingScore.value = scoreValueToInput(existing?.scoreValue)
+  if (eventInfo.value?.category === '趣味赛') {
+    editingScore.value = existing?.points != null ? String(existing.points) : ''
+  } else {
+    editingScore.value = scoreValueToInput(existing?.scoreValue)
+  }
 }
 
 function cancelEdit() {
@@ -101,19 +107,58 @@ async function saveScore(row: RegistrationVO) {
     return
   }
   const existing = resultMap.value.get(row.participantId)
+  const cat = eventInfo.value?.category
   try {
-    if (existing) {
-      // 修改成绩：直接用已有的 eventScheduleId，避免 Service 重查 event_schedule
-      // （update 不应改赛次；不传 scheduleId 则 resolveEventScheduleId 跳过）
-      await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, scoreValue: inputToScoreValue(val) })
+    if (cat === '趣味赛') {
+      // 趣味赛录入积分（points），不存成绩值
+      const points = Math.round(Number(val))
+      if (existing) {
+        await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, points })
+      } else {
+        await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: null, points })
+      }
     } else {
-      await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: inputToScoreValue(val) })
+      // 径赛/田赛录入成绩值
+      if (existing) {
+        await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, scoreValue: inputToScoreValue(val) })
+      } else {
+        await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: inputToScoreValue(val) })
+      }
     }
     ElMessage.success('保存成功')
     editingId.value = null
     fetchResults()
   } catch {
     ElMessage.error('保存失败')
+  }
+}
+
+// 名次映射：按成绩排序后的名次（仅有成绩的排名，无成绩显示'-'）
+const rankMap = computed(() => {
+  const map = new Map<number, number>()
+  results.value.forEach((r, i) => {
+    const hasScore = r.category === '趣味赛' ? r.points != null : r.scoreValue != null
+    if (hasScore) map.set(r.participantId, i + 1)
+  })
+  return map
+})
+
+// 一键晋级前N名
+const promoteDialogVisible = ref(false)
+const promoteTopNValue = ref(8)
+function openPromoteDialog() {
+  promoteTopNValue.value = 8
+  promoteDialogVisible.value = true
+}
+async function handlePromoteTopN() {
+  try {
+    const res: any = await promoteTopN(eventId, scheduleId, promoteTopNValue.value)
+    const count = res?.data?.promoted ?? res?.promoted ?? 0
+    ElMessage.success(`成功晋级 ${count} 人`)
+    promoteDialogVisible.value = false
+    fetchRegistrations()
+  } catch {
+    ElMessage.error('晋级失败')
   }
 }
 
@@ -257,13 +302,17 @@ onMounted(() => {
             <el-option label="已取消" :value="2" />
           </el-select>
         </div>
+        <el-button type="warning" size="small" @click="openPromoteDialog">一键晋级前N名</el-button>
         <el-button type="primary" size="small" @click="openAddDialog">+ 添加参赛人员</el-button>
       </div>
       <el-table v-if="filteredRegistrations.length > 0" :data="filteredRegistrations" stripe border size="small">
+        <el-table-column label="名次" width="70">
+          <template #default="{ row }">{{ rankMap.get(row.participantId) ?? '-' }}</template>
+        </el-table-column>
         <el-table-column prop="participantName" label="参赛者" width="120" />
         <el-table-column prop="eventName" label="项目" />
         <el-table-column prop="scheduleName" label="赛次" width="90" />
-        <el-table-column label="成绩" width="110">
+        <el-table-column :label="eventInfo?.category === '趣味赛' ? '积分' : '成绩'" width="110">
           <template #default="{ row }">
             <el-input
               v-if="editingId === row.participantId"
@@ -271,7 +320,7 @@ onMounted(() => {
               v-focus
               size="small"
               style="width:130px"
-              :placeholder="eventInfo?.category === '田赛' ? '米，如5.32' : '秒，如12.350'"
+              :placeholder="eventInfo?.category === '趣味赛' ? '积分，如8' : (eventInfo?.category === '田赛' ? '米，如5.32' : '秒，如12.350')"
               @keyup.enter="saveScore(row)"
               @keyup.esc="cancelEdit"
               @blur="saveScore(row)"
@@ -319,6 +368,24 @@ onMounted(() => {
         <el-button type="primary" :disabled="addSelectedIds.length === 0" @click="handleAddSubmit">
           确认添加 ({{ addSelectedIds.length }} 人)
         </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 弹窗：一键晋级前N名 -->
+    <el-dialog v-model="promoteDialogVisible" title="一键晋级前N名" width="380px" destroy-on-close>
+      <el-form label-width="90px">
+        <el-form-item label="晋级前">
+          <el-input-number v-model="promoteTopNValue" :min="1" :max="999" controls-position="right" style="width:140px" />
+          <span style="margin-left:8px">名</span>
+        </el-form-item>
+        <div style="color:#999;font-size:12px;margin:0 0 0 90px;line-height:1.6">
+          按当前赛次成绩排序（径赛时间短/田赛距离远/趣味赛积分高），前N名晋级到下一赛次。<br/>
+          已晋级或无成绩的自动跳过；已是最后一轮则不晋级。
+        </div>
+      </el-form>
+      <template #footer>
+        <el-button @click="promoteDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handlePromoteTopN">确定晋级</el-button>
       </template>
     </el-dialog>
   </div>
