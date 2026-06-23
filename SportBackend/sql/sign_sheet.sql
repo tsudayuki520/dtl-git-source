@@ -1,0 +1,7 @@
+-- 签名表（骨架占位表，业务字段待补充）
+CREATE TABLE IF NOT EXISTS sign_sheet (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '签名表ID',
+    sports_meeting_id BIGINT    NOT NULL COMMENT '所属运动会ID',
+    create_time       DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='签名表';
