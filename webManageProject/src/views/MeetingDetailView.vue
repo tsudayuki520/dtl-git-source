@@ -141,6 +141,14 @@ async function handleRefreshTotalScore() {
     refreshing.value = false
   }
 }
+const rankingList = computed(() =>
+  [...teams.value].sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
+)
+function getGroupTypeName(groupTypeId: number | null): string {
+  if (groupTypeId == null) return ''
+  const gt = groupTypes.value.find(g => g.id === groupTypeId)
+  return gt?.name || ''
+}
 const gtDialogVisible = ref(false)
 const gtForm = ref<Partial<GroupType>>({})
 const teamDialogVisible = ref(false)
@@ -615,6 +623,7 @@ function onTabChange(tab: string) {
   loadedTabs.add(tab)
   if (tab === 'schedule') { fetchSchedules(); fetchEvents(); fetchEventSchedules() }
   else if (tab === 'groupType') { fetchGroupTypes(); fetchTeams(); fetchParticipants() }
+  else if (tab === 'ranking') { fetchTeams(); fetchGroupTypes() }
   else if (tab === 'participant') fetchParticipants()
   else if (tab === 'notice') fetchNotices()
   else if (tab === 'result') { fetchResults(); fetchSchedules(); fetchEvents(); fetchEventSchedules(); fetchParticipants() }
@@ -731,6 +740,24 @@ onMounted(() => {
             </div>
           </el-collapse-item>
         </el-collapse>
+      </el-tab-pane>
+
+      <!-- ======== 总积分榜 ======== -->
+      <el-tab-pane label="总积分榜" name="ranking">
+        <el-table :data="rankingList" stripe border size="small">
+          <el-table-column label="排名" width="80" align="center">
+            <template #default="{ $index }">
+              <span v-if="$index < 3" :class="['rank-badge', `rank-${$index + 1}`]">{{ $index + 1 }}</span>
+              <span v-else>{{ $index + 1 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="代表队" />
+          <el-table-column label="组别" width="140">
+            <template #default="{ row }">{{ getGroupTypeName(row.groupTypeId) || '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="totalScore" label="总分" width="120" align="right" />
+        </el-table>
+        <el-empty v-if="rankingList.length === 0" description="暂无代表队" />
       </el-tab-pane>
 
       <!-- ======== 参赛人员 ======== -->
@@ -1218,6 +1245,21 @@ onMounted(() => {
   flex-direction: column;
   gap: 2px;
 }
+
+/* 总积分榜 Top3 徽章 */
+.rank-badge {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+.rank-1 { background: #f5c518; }  /* 金 */
+.rank-2 { background: #b8b8b8; }  /* 银 */
+.rank-3 { background: #cd7f32; }  /* 铜 */
 
 /* 赛程卡片列表 */
 .schedule-card-list {
