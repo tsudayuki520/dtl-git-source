@@ -4,6 +4,7 @@ export interface EventSchedule {
   id: number
   eventId: number
   scheduleId: number
+  allowRegister: number
 }
 
 export function getEventSchedules(eventId: number) {
@@ -24,4 +25,8 @@ export function saveEventSchedules(eventId: number, scheduleIds: number[]) {
 
 export function deleteEventSchedule(id: number) {
   return request.delete(`/admin/event-schedule/${id}`)
+}
+
+export function toggleEventScheduleAllow(eventId: number, scheduleId: number, allowRegister: number) {
+  return request.put('/admin/event-schedule/allow', { eventId, scheduleId, allowRegister })
 }

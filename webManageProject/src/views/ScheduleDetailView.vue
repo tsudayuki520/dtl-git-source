@@ -10,7 +10,7 @@ import { getEventList, addEvent, updateEvent, deleteEvent } from '@/api/event'
 import type { Event } from '@/api/event'
 import { getGroupTypeList } from '@/api/groupType'
 import type { GroupType } from '@/api/groupType'
-import { getEventSchedulesBySchedule, getEventSchedules, saveEventSchedules } from '@/api/eventSchedule'
+import { getEventSchedulesBySchedule, getEventSchedules, saveEventSchedules, toggleEventScheduleAllow } from '@/api/eventSchedule'
 import { getRegistrationList } from '@/api/registration'
 
 const route = useRoute()
@@ -24,6 +24,7 @@ const allSchedules = ref<Schedule[]>([])
 const events = ref<Event[]>([])
 const groupTypes = ref<GroupType[]>([])
 const regCountMap = ref<Record<string, number>>({})
+const allowRegisterMap = ref<Record<number, number>>({})
 const eventDialogVisible = ref(false)
 const eventForm = ref<Partial<Event>>({})
 const eventFormScheduleIds = ref<number[]>([])
@@ -51,6 +52,10 @@ async function fetchEvents() {
     const assocRes: any = await getEventSchedulesBySchedule(scheduleId)
     const associations: any[] = assocRes.data || assocRes || []
     const eventIds = new Set(associations.map((a: any) => a.eventId))
+    // 建立 eventId -> allowRegister 映射（当前轮次下的开关状态）
+    const allowMap: Record<number, number> = {}
+    associations.forEach((a: any) => { allowMap[a.eventId] = a.allowRegister ?? 0 })
+    allowRegisterMap.value = allowMap
     if (eventIds.size === 0) {
       events.value = []
       return
@@ -132,6 +137,18 @@ async function toggleScheduleStatus() {
   } catch { ElMessage.error('操作失败') }
 }
 
+async function handleToggleAllow(eventId: number, val: number) {
+  try {
+    await toggleEventScheduleAllow(eventId, scheduleId, val)
+    ElMessage.success(val === 1 ? '已开放该轮次报名' : '已关闭该轮次报名')
+    allowRegisterMap.value[eventId] = val
+  } catch {
+    // 失败时回滚 UI
+    allowRegisterMap.value[eventId] = val === 1 ? 0 : 1
+    ElMessage.error('操作失败')
+  }
+}
+
 function goBack() {
   router.push(`/meeting/${meetingId}`)
 }
@@ -176,8 +193,14 @@ onMounted(() => {
         <el-table-column prop="category" label="类别" width="80" />
         <el-table-column prop="gender" label="性别" width="70" />
         <el-table-column prop="groupTypeName" label="组别" width="80" />
-        <el-table-column label="开放报名" width="80">
-          <template #default="{ row }">{{ row.allowRegister === 1 ? '是' : '否' }}</template>
+        <el-table-column label="开放报名" width="100">
+          <template #default="{ row }">
+            <el-switch
+              :model-value="allowRegisterMap[row.id] === 1"
+              :disabled="row.allowRegister === 0"
+              @update:model-value="(v: boolean) => handleToggleAllow(row.id, v ? 1 : 0)"
+            />
+          </template>
         </el-table-column>
         <el-table-column label="报名/上限" width="100">
           <template #default="{ row }">{{ regCountMap[`${row.id}-${scheduleId}`] || 0 }} / {{ row.registerLimit === 0 ? '不限' : row.registerLimit }}</template>

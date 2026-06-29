@@ -11,6 +11,7 @@ export interface Event {
   allowRegister: number
   registerLimit: number
   status: number
+  currentOpenScheduleId: number | null
 }
 
 export function getEventList(params: { sportsMeetingId: number }) {
