@@ -49,14 +49,14 @@ public class UserRegisterController {
         String name = body.get("name").toString();
         log.info("报名参赛: sportsMeetingId={}, eventId={}, userCode={}, name={}", sportsMeetingId, eventId, userCode, name);
 
-        // 获取 scheduleId：前端传或取项目第一个赛次
+        // 获取 scheduleId：前端传，或取该项目「当前开放且 sort 最小」的轮次
         Long scheduleId = null;
         if (body.get("scheduleId") != null) {
             scheduleId = Long.valueOf(body.get("scheduleId").toString());
         } else {
-            List<Long> scheduleIds = eventScheduleService.getScheduleIdsByEventId(eventId);
-            if (scheduleIds != null && !scheduleIds.isEmpty()) {
-                scheduleId = scheduleIds.get(0);
+            scheduleId = eventScheduleService.getOpenScheduleIdByEventId(eventId);
+            if (scheduleId == null) {
+                return Result.error(400, "该项目当前未开放报名");
             }
         }
 
