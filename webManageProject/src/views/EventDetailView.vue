@@ -9,7 +9,7 @@ import type { RegistrationVO } from '@/api/registration'
 import { getParticipantList } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getResultsByEventAndSchedule, addResult, updateResult } from '@/api/result'
-import type { ResultVO } from '@/api/result'
+import type { ResultVO, ResultItem } from '@/api/result'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,36 +24,21 @@ const regFilterStatus = ref<number | undefined>(undefined)
 const regStatusMap: Record<number, string> = { 0: '已报名', 1: '已晋级', 2: '已取消' }
 const regStatusType: Record<number, string> = { 0: 'primary', 1: 'success', 2: 'info' }
 
-// ============ 成绩（行内编辑） ============
+// ============ 成绩（弹窗录入） ============
 // resultMap 必须用 computed 依赖响应式 results，
 // 否则成绩保存后（只更新 results）模板的成绩列不会重渲染。
 const results = ref<ResultVO[]>([])
 const resultMap = computed(() => new Map<number, ResultVO>(results.value.map(r => [r.participantId, r])))
-const editingId = ref<number | null>(null)
-const editingScore = ref('')
+const resultDialogVisible = ref(false)
+const resultForm = ref<Partial<ResultItem>>({})
+// 成绩录入临时输入：径赛/团队赛 分/秒/毫秒，田赛 米/厘米
+const resultInput = ref({ minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 })
 
-// 成绩值（径赛=毫秒，田赛=厘米）与录入值（径赛=秒，田赛=米）互转，并格式化显示
-function scoreValueToInput(scoreValue: number | null | undefined): string {
-  if (scoreValue == null) return ''
-  const cat = eventInfo.value?.category
-  if (cat === '径赛') return (scoreValue / 1000).toString()
-  if (cat === '田赛') return (scoreValue / 100).toString()
-  return String(scoreValue)
-}
-function inputToScoreValue(val: string): number {
-  const n = Number(val)
-  if (!Number.isFinite(n)) return 0
-  const cat = eventInfo.value?.category
-  if (cat === '径赛') return Math.round(n * 1000)
-  if (cat === '田赛') return Math.round(n * 100)
-  return Math.round(n)
-}
+// 成绩值按分类格式化显示（径赛/团队赛=毫秒→分秒毫秒，田赛=厘米→米）
 function formatScore(r?: ResultVO): string {
-  if (!r) return '录入'
+  if (!r || r.scoreValue == null) return '录入'
   const cat = eventInfo.value?.category || r.category
-  if (cat === '趣味赛') return r.points != null ? `${r.points}分` : '录入'
-  if (r.scoreValue == null) return '录入'
-  if (cat === '径赛') {
+  if (cat === '径赛' || cat === '团队赛') {
     const totalMs = r.scoreValue
     const totalSeconds = Math.floor(totalMs / 1000)
     const ms = totalMs % 1000
@@ -66,11 +51,34 @@ function formatScore(r?: ResultVO): string {
   return String(r.scoreValue)
 }
 
-// 自动聚焦指令：el-input 渲染时聚焦内部 input
-const vFocus = {
-  mounted: (el: HTMLElement) => {
-    el.querySelector('input')?.focus()
+// 录入控件值合并为 scoreValue（径赛/团队赛=毫秒，田赛=厘米）
+function buildScoreValue(): number | null {
+  const cat = eventInfo.value?.category
+  const i = resultInput.value
+  if (cat === '径赛' || cat === '团队赛') {
+    return i.minutes * 60000 + i.seconds * 1000 + i.millis
   }
+  if (cat === '田赛') {
+    return i.meters * 100 + i.centimeters
+  }
+  return null
+}
+
+// 编辑时把 scoreValue 拆成录入控件值
+function splitScoreValue(scoreValue: number | null) {
+  const i = { minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 }
+  const cat = eventInfo.value?.category
+  if (scoreValue == null || !cat) return i
+  if (cat === '径赛' || cat === '团队赛') {
+    i.minutes = Math.floor(scoreValue / 60000)
+    const rest = scoreValue % 60000
+    i.seconds = Math.floor(rest / 1000)
+    i.millis = rest % 1000
+  } else if (cat === '田赛') {
+    i.meters = Math.floor(scoreValue / 100)
+    i.centimeters = scoreValue % 100
+  }
+  return i
 }
 
 async function fetchResults() {
@@ -80,53 +88,45 @@ async function fetchResults() {
   } catch { /* ignore */ }
 }
 
-function startEdit(row: RegistrationVO) {
-  editingId.value = row.participantId
+// 点成绩单元格触发：回填 resultForm + resultInput
+function openScoreEdit(row: RegistrationVO) {
   const existing = resultMap.value.get(row.participantId)
-  if (eventInfo.value?.category === '趣味赛') {
-    editingScore.value = existing?.points != null ? String(existing.points) : ''
+  if (existing) {
+    resultForm.value = {
+      id: existing.id,
+      sportsMeetingId: meetingId,
+      eventId,
+      scheduleId,
+      eventScheduleId: existing.eventScheduleId ?? undefined,
+      participantId: row.participantId,
+      scoreValue: existing.scoreValue,
+      points: existing.points ?? 0,
+    }
+    resultInput.value = splitScoreValue(existing.scoreValue)
   } else {
-    editingScore.value = scoreValueToInput(existing?.scoreValue)
+    resultForm.value = {
+      sportsMeetingId: meetingId,
+      eventId,
+      scheduleId,
+      participantId: row.participantId,
+      scoreValue: null,
+      points: 0,
+    }
+    resultInput.value = { minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 }
   }
+  resultDialogVisible.value = true
 }
 
-function cancelEdit() {
-  editingId.value = null
-}
-
-async function saveScore(row: RegistrationVO) {
-  // 防止回车后 blur 重复触发
-  if (editingId.value !== row.participantId) return
-  const val = editingScore.value.trim()
-  if (val === '') {
-    editingId.value = null
-    return
-  }
-  if (!Number.isFinite(Number(val))) {
-    ElMessage.warning('请输入有效成绩')
-    return
-  }
-  const existing = resultMap.value.get(row.participantId)
-  const cat = eventInfo.value?.category
+async function handleScoreSubmit() {
+  resultForm.value.scoreValue = buildScoreValue()
   try {
-    if (cat === '趣味赛') {
-      // 趣味赛录入积分（points），不存成绩值
-      const points = Math.round(Number(val))
-      if (existing) {
-        await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, points })
-      } else {
-        await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: null, points })
-      }
+    if (resultForm.value.id) {
+      await updateResult(resultForm.value)
     } else {
-      // 径赛/田赛录入成绩值
-      if (existing) {
-        await updateResult({ id: existing.id, eventScheduleId: existing.eventScheduleId ?? undefined, scoreValue: inputToScoreValue(val) })
-      } else {
-        await addResult({ sportsMeetingId: meetingId, eventId, participantId: row.participantId, scheduleId, scoreValue: inputToScoreValue(val) })
-      }
+      await addResult(resultForm.value)
     }
     ElMessage.success('保存成功')
-    editingId.value = null
+    resultDialogVisible.value = false
     fetchResults()
   } catch {
     ElMessage.error('保存失败')
@@ -137,8 +137,7 @@ async function saveScore(row: RegistrationVO) {
 const rankMap = computed(() => {
   const map = new Map<number, number>()
   results.value.forEach((r, i) => {
-    const hasScore = r.category === '趣味赛' ? r.points != null : r.scoreValue != null
-    if (hasScore) map.set(r.participantId, i + 1)
+    if (r.scoreValue != null) map.set(r.participantId, i + 1)
   })
   return map
 })
@@ -320,23 +319,15 @@ onMounted(() => {
         <el-table-column v-if="eventInfo?.category === '团队赛'" prop="teamName" label="代表队" width="120" />
         <el-table-column prop="eventName" label="项目" />
         <el-table-column prop="scheduleName" label="赛次" width="90" />
-        <el-table-column :label="eventInfo?.category === '趣味赛' ? '积分' : '成绩'" width="110">
+        <el-table-column label="成绩" width="110">
           <template #default="{ row }">
-            <el-input
-              v-if="editingId === row.participantId"
-              v-model="editingScore"
-              v-focus
-              size="small"
-              style="width:130px"
-              :placeholder="eventInfo?.category === '趣味赛' ? '积分，如8' : (eventInfo?.category === '田赛' ? '米，如5.32' : '秒，如12.350')"
-              @keyup.enter="saveScore(row)"
-              @keyup.esc="cancelEdit"
-              @blur="saveScore(row)"
-            />
-            <el-button v-else link type="primary" size="small" @click="startEdit(row)">
+            <el-button link type="primary" size="small" @click="openScoreEdit(row)">
               {{ formatScore(resultMap.get(row.participantId)) }}
             </el-button>
           </template>
+        </el-table-column>
+        <el-table-column v-if="eventInfo?.category === '团队赛'" label="积分" width="80">
+          <template #default="{ row }">{{ resultMap.get(row.participantId)?.points ?? '-' }}</template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
@@ -387,13 +378,47 @@ onMounted(() => {
           <span style="margin-left:8px">名</span>
         </el-form-item>
         <div style="color:#999;font-size:12px;margin:0 0 0 90px;line-height:1.6">
-          按当前赛次成绩排序（径赛时间短/田赛距离远/趣味赛积分高），前N名晋级到下一赛次。<br/>
+          按当前赛次成绩排序（径赛/团队赛时间短，田赛距离远），前N名晋级到下一赛次。<br/>
           已晋级或无成绩的自动跳过；已是最后一轮则不晋级。
         </div>
       </el-form>
       <template #footer>
         <el-button @click="promoteDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handlePromoteTopN">确定晋级</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 弹窗：成绩录入 -->
+    <el-dialog v-model="resultDialogVisible" :title="resultForm.id ? '编辑成绩' : '录入成绩'" width="480px" destroy-on-close>
+      <el-form :model="resultForm" label-width="90px">
+        <el-form-item label="参赛者">
+          <span>{{ filteredRegistrations.find(r => r.participantId === resultForm.participantId)?.participantName || '-' }}</span>
+        </el-form-item>
+        <el-form-item label="成绩" v-if="eventInfo?.category === '径赛' || eventInfo?.category === '团队赛'">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.minutes" :min="0" :controls="false" style="width:64px" />
+            <span style="margin-right:8px">分</span>
+            <el-input-number v-model="resultInput.seconds" :min="0" :max="59" :controls="false" style="width:64px" />
+            <span style="margin-right:8px">秒</span>
+            <el-input-number v-model="resultInput.millis" :min="0" :max="999" :controls="false" style="width:84px" />
+            <span>毫秒</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="成绩" v-else-if="eventInfo?.category === '田赛'">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <el-input-number v-model="resultInput.meters" :min="0" :controls="false" style="width:96px" />
+            <span style="margin-right:8px">米</span>
+            <el-input-number v-model="resultInput.centimeters" :min="0" :max="99" :controls="false" style="width:72px" />
+            <span>厘米</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="积分">
+          <el-input-number v-model="resultForm.points" :min="0" controls-position="right" style="width:100%" placeholder="该成绩对应积分（用于代表队总分）" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="resultDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleScoreSubmit">确定</el-button>
       </template>
     </el-dialog>
   </div>
