@@ -51,7 +51,7 @@ async function handleAdjustmentSubmit() {
     })
     ElMessage.success('添加成功')
     adjustmentDialogVisible.value = false
-    fetchAdjustments()
+    await fetchAdjustments()
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.message || '添加失败')
   }
@@ -62,7 +62,7 @@ async function handleAdjustmentDelete(id: number) {
     await ElMessageBox.confirm('确定删除该调整记录？', '提示', { type: 'warning' })
     await deleteAdjustment(id)
     ElMessage.success('删除成功')
-    fetchAdjustments()
+    await fetchAdjustments()
   } catch { /* cancel */ }
 }
 
