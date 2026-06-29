@@ -91,4 +91,16 @@
         WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 0
     </update>
 
+    <select id="selectDeletedByEventIdAndScheduleId" resultType="EventSchedule">
+        SELECT * FROM event_schedule
+        WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 1
+        LIMIT 1
+    </select>
+
+    <update id="reviveByEventIdAndScheduleId">
+        UPDATE event_schedule
+        SET is_deleted = 0, allow_register = #{allowRegister}
+        WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 1
+    </update>
+
 </mapper>

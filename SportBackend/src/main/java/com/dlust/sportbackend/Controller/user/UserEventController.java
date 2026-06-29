@@ -57,6 +57,7 @@ public class UserEventController {
         if (event == null) {
             return Result.error(404, "项目不存在");
         }
+        event.setCurrentOpenScheduleId(eventScheduleService.getOpenScheduleIdByEventId(id));
         return Result.success(event);
     }
 }

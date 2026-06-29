@@ -15,7 +15,7 @@ class EventScheduleServiceImplTest {
     private static Map<Long, Integer> callSyncPlan(Map<Long, Integer> existing,
                                                    List<Long> selectedSorted,
                                                    boolean eventAllowRegister) {
-        return EventScheduleServiceImpl.syncPlanForTest(existing, selectedSorted, eventAllowRegister);
+        return EventScheduleServiceImpl.computeSyncPlan(existing, selectedSorted, eventAllowRegister);
     }
 
     @Test
@@ -57,5 +57,15 @@ class EventScheduleServiceImplTest {
         Map<Long, Integer> plan = callSyncPlan(existing, List.of(10L), true);
         assertTrue(plan.containsKey(10L));
         assertFalse(plan.containsKey(20L));
+    }
+
+    @Test
+    void editProject_clearAllRounds_returnsEmptyPlan() {
+        // 用户在编辑弹窗清空所有轮次 → plan 为空（调用方据此软删全部现有关联）
+        Map<Long, Integer> existing = new LinkedHashMap<>();
+        existing.put(10L, 1);
+        existing.put(20L, 0);
+        Map<Long, Integer> plan = callSyncPlan(existing, List.of(), true);
+        assertTrue(plan.isEmpty());
     }
 }

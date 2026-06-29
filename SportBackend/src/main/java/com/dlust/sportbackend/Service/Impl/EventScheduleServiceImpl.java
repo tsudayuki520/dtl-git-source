@@ -58,10 +58,11 @@ public class EventScheduleServiceImpl implements EventScheduleService {
             existingMap.put(es.getScheduleId(), es.getAllowRegister() == null ? 0 : es.getAllowRegister());
         }
 
-        // 2. 计算同步方案（selected 须按 sort 升序）
-        List<Long> selectedSorted = (scheduleIds == null) ? List.of() : sortByScheduleSort(scheduleIds);
+        // 2. 计算同步方案（selected 须按 sort 升序；空集合跳过排序避免 IN () 非法 SQL）
+        List<Long> selectedSorted = (scheduleIds == null || scheduleIds.isEmpty())
+                ? List.of() : sortByScheduleSort(scheduleIds);
         boolean eventAllowRegister = isEventAllowRegister(eventId);
-        Map<Long, Integer> plan = syncPlanForTest(existingMap, selectedSorted, eventAllowRegister);
+        Map<Long, Integer> plan = computeSyncPlan(existingMap, selectedSorted, eventAllowRegister);
 
         // 3. 删除：现有但不在 plan 里的
         for (Long sid : existingMap.keySet()) {
@@ -71,14 +72,21 @@ public class EventScheduleServiceImpl implements EventScheduleService {
         }
 
         // 4. 新增：plan 里 existing 没有的；保留的无需动作
+        //    若该 (eventId, scheduleId) 曾被软删，普通唯一键仍占位，直接 INSERT 会冲突；
+        //    因此先查软删行，有则复活并更新 allow_register，无才收集到批量插入。
         List<EventSchedule> toInsert = new ArrayList<>();
         for (Map.Entry<Long, Integer> e : plan.entrySet()) {
             if (!existingMap.containsKey(e.getKey())) {
-                EventSchedule es = new EventSchedule();
-                es.setEventId(eventId);
-                es.setScheduleId(e.getKey());
-                es.setAllowRegister(e.getValue());
-                toInsert.add(es);
+                EventSchedule tombstoned = eventScheduleMapper.selectDeletedByEventIdAndScheduleId(eventId, e.getKey());
+                if (tombstoned != null) {
+                    eventScheduleMapper.reviveByEventIdAndScheduleId(eventId, e.getKey(), e.getValue());
+                } else {
+                    EventSchedule es = new EventSchedule();
+                    es.setEventId(eventId);
+                    es.setScheduleId(e.getKey());
+                    es.setAllowRegister(e.getValue());
+                    toInsert.add(es);
+                }
             }
         }
         if (!toInsert.isEmpty()) {
@@ -108,7 +116,10 @@ public class EventScheduleServiceImpl implements EventScheduleService {
 
     @Override
     public void updateAllowRegister(Long eventId, Long scheduleId, Integer allowRegister) {
-        eventScheduleMapper.updateAllowRegister(eventId, scheduleId, allowRegister == null ? 0 : allowRegister);
+        int affected = eventScheduleMapper.updateAllowRegister(eventId, scheduleId, allowRegister == null ? 0 : allowRegister);
+        if (affected == 0) {
+            throw new RuntimeException("该轮次关联不存在或已被删除");
+        }
     }
 
     @Override
@@ -122,7 +133,7 @@ public class EventScheduleServiceImpl implements EventScheduleService {
      * - existing 非空（编辑）：保留已有关联的 allow_register；新增的默认 0。
      * - existing 中不在 selected 里的 scheduleId 不出现在返回 Map（调用方据此删除）。
      */
-    static Map<Long, Integer> syncPlanForTest(Map<Long, Integer> existing,
+    static Map<Long, Integer> computeSyncPlan(Map<Long, Integer> existing,
                                               List<Long> selectedSorted,
                                               boolean eventAllowRegister) {
         Map<Long, Integer> plan = new LinkedHashMap<>();
