@@ -39,4 +39,17 @@
         DELETE FROM team WHERE id = #{id}
     </delete>
 
+    <update id="recalculateTotalScoreBySportsMeetingId">
+        UPDATE team t
+        SET t.total_score = COALESCE((
+            SELECT SUM(r.points) FROM result r
+            JOIN participant p ON r.participant_id = p.id
+            WHERE p.team_id = t.id
+        ), 0) + COALESCE((
+            SELECT SUM(a.delta_amount) FROM team_score_adjustment a
+            WHERE a.team_id = t.id
+        ), 0)
+        WHERE t.sports_meeting_id = #{sportsMeetingId}
+    </update>
+
 </mapper>

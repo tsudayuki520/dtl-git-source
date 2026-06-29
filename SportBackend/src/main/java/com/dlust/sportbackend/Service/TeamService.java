@@ -10,4 +10,6 @@ public interface TeamService {
     void add(Team team);
     void update(Team team);
     void delete(Long id);
+
+    int refreshTotalScoreBySportsMeetingId(Long sportsMeetingId);
 }

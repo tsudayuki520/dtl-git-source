@@ -19,5 +19,7 @@ public interface TeamMapper {
 
     void updateById(Team team);
 
+    int recalculateTotalScoreBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
+
     void deleteById(@Param("id") Long id);
 }

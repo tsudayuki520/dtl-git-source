@@ -43,4 +43,12 @@ public class TeamServiceImpl implements TeamService {
     public void delete(Long id) {
         teamMapper.deleteById(id);
     }
+
+    @Override
+    public int refreshTotalScoreBySportsMeetingId(Long sportsMeetingId) {
+        if (sportsMeetingId == null) {
+            throw new RuntimeException("运动会 ID 不能为空");
+        }
+        return teamMapper.recalculateTotalScoreBySportsMeetingId(sportsMeetingId);
+    }
 }

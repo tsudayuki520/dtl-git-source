@@ -46,4 +46,11 @@ public class AdminTeamController {
         teamService.delete(id);
         return Result.success("删除成功");
     }
+
+    @PostMapping("/refreshTotalScore")
+    public Result<java.util.Map<String, Object>> refreshTotalScore(@RequestParam Long sportsMeetingId) {
+        log.info("刷新代表队总分: sportsMeetingId={}", sportsMeetingId);
+        int count = teamService.refreshTotalScoreBySportsMeetingId(sportsMeetingId);
+        return Result.success(java.util.Map.of("refreshedCount", count));
+    }
 }
