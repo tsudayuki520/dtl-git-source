@@ -464,7 +464,7 @@ function formatScore(row: ResultVO): string {
 function buildScoreValue(): number | null {
   const cat = selectedEventCategory.value
   const i = resultInput.value
-  if (cat === '径赛') {
+  if (cat === '径赛' || cat === '团队赛') {
     return i.minutes * 60000 + i.seconds * 1000 + i.millis
   }
   if (cat === '田赛') {
@@ -477,7 +477,7 @@ function buildScoreValue(): number | null {
 function splitScoreValue(scoreValue: number | null, category: string) {
   const i = { minutes: 0, seconds: 0, millis: 0, meters: 0, centimeters: 0 }
   if (scoreValue == null) return i
-  if (category === '径赛') {
+  if (category === '径赛' || category === '团队赛') {
     i.minutes = Math.floor(scoreValue / 60000)
     const rest = scoreValue % 60000
     i.seconds = Math.floor(rest / 1000)
@@ -987,7 +987,7 @@ onMounted(() => {
             <el-option v-for="p in participants" :key="p.id" :label="`${p.name}（${p.userCode}）`" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="成绩" v-if="selectedEventCategory === '径赛'">
+        <el-form-item label="成绩" v-if="selectedEventCategory === '径赛' || selectedEventCategory === '团队赛'">
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
             <el-input-number v-model="resultInput.minutes" :min="0" :controls="false" style="width:64px" />
             <span style="margin-right:8px">分</span>
@@ -1004,9 +1004,6 @@ onMounted(() => {
             <el-input-number v-model="resultInput.centimeters" :min="0" :max="99" :controls="false" style="width:72px" />
             <span>厘米</span>
           </div>
-        </el-form-item>
-        <el-form-item label="成绩" v-else>
-          <span style="color:#999">该项目（{{ selectedEventCategory || '未选择项目' }}）暂不支持直接录入成绩，可通过积分记录</span>
         </el-form-item>
         <el-form-item label="积分">
           <el-input-number v-model="resultForm.points" :min="0" controls-position="right" style="width:100%" placeholder="该成绩对应积分（用于代表队总分）" />

@@ -54,7 +54,7 @@ Page({
         if (res.data && res.data.code === 200) {
           const events = res.data.data || []
           // 按分类分组，不去重，同项目不同组别都展示
-          const categoryOrder = ['田赛', '径赛', '趣味赛']
+          const categoryOrder = ['田赛', '径赛', '团队赛']
           const map = {}
           events.forEach(e => {
             const cat = e.category || '径赛'

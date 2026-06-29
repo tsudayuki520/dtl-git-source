@@ -8,7 +8,7 @@ public class Event {
     private Long id;
     private Long sportsMeetingId;
     private String name;        // 项目名称：100米短跑、跳远等
-    private String category;    // 项目分类：田赛、径赛、趣味赛
+    private String category;    // 项目分类：田赛、径赛、团队赛
     private String gender;      // 性别限制：男、女、不限
     private Long groupTypeId;   // 组别ID（关联group_type表）
     private String groupTypeName; // 组别名称（JOIN group_type 带出）

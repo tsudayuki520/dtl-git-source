@@ -205,10 +205,10 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public int promoteTopN(Long eventId, Long scheduleId, int topN) {
-        // 按成绩排序取前 topN 名（排序规则同 ResultMapper：径赛时间ASC/田赛距离DESC/趣味赛积分DESC）
+        // 按成绩排序取前 topN 名（排序规则同 ResultMapper：径赛/团队赛时间ASC，田赛距离DESC）
         List<ResultVO> results = resultService.getByEventAndSchedule(eventId, scheduleId);
         List<Long> participantIds = results.stream()
-                .filter(r -> "趣味赛".equals(r.getCategory()) ? r.getPoints() != null : r.getScoreValue() != null)
+                .filter(r -> r.getScoreValue() != null)
                 .limit(topN)
                 .map(ResultVO::getParticipantId)
                 .collect(Collectors.toList());

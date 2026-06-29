@@ -16,7 +16,7 @@ export interface ResultVO {
   participantName: string
   eventName: string
   scheduleName: string
-  // 项目分类：田赛/径赛/趣味赛
+  // 项目分类：田赛/径赛/团队赛
   category: string
 }
 

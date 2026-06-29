@@ -35,10 +35,9 @@
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.event_id = #{eventId}
         ORDER BY
-            (CASE WHEN e.category = '趣味赛' THEN 0 ELSE IF(r.score_value IS NULL, 1, 0) END),
+            IF(r.score_value IS NULL, 1, 0),
             CASE
-                WHEN e.category = '田赛'    THEN -r.score_value
-                WHEN e.category = '趣味赛' THEN -r.points
+                WHEN e.category = '田赛' THEN -r.score_value
                 ELSE r.score_value
             END ASC
     </select>
@@ -58,10 +57,9 @@
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.event_id = #{eventId} AND es.schedule_id = #{scheduleId} AND es.is_deleted = 0
         ORDER BY
-            (CASE WHEN e.category = '趣味赛' THEN 0 ELSE IF(r.score_value IS NULL, 1, 0) END),
+            IF(r.score_value IS NULL, 1, 0),
             CASE
-                WHEN e.category = '田赛'    THEN -r.score_value
-                WHEN e.category = '趣味赛' THEN -r.points
+                WHEN e.category = '田赛' THEN -r.score_value
                 ELSE r.score_value
             END ASC
     </select>

@@ -20,7 +20,7 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200) {
           const events = (res.data.data || []).filter(e => e.allowRegister && e.currentOpenScheduleId)
-          const categoryOrder = ['田赛', '径赛', '趣味赛']
+          const categoryOrder = ['田赛', '径赛', '团队赛']
           const map = {}
           events.forEach(e => {
             const cat = e.category || '径赛'

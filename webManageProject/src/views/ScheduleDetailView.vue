@@ -232,7 +232,7 @@ onMounted(() => {
           <el-select v-model="eventForm.category" style="width:100%">
             <el-option label="径赛" value="径赛" />
             <el-option label="田赛" value="田赛" />
-            <el-option label="趣味赛" value="趣味赛" />
+            <el-option label="团队赛" value="团队赛" />
           </el-select>
         </el-form-item>
         <el-form-item label="性别限制">

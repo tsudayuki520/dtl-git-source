@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS event (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '项目ID',
     sports_meeting_id BIGINT                             NOT NULL COMMENT '所属运动会ID',
     name              VARCHAR(100)                       NOT NULL DEFAULT '' COMMENT '项目名称：100米短跑、跳远等',
-    category          VARCHAR(20)                        NOT NULL DEFAULT '径赛' COMMENT '项目分类：田赛、径赛、趣味赛',
+    category          VARCHAR(20)                        NOT NULL DEFAULT '径赛' COMMENT '项目分类：田赛、径赛、团队赛',
     gender            VARCHAR(10)                        NOT NULL DEFAULT '不限' COMMENT '性别限制：男、女、不限',
     group_type_id     BIGINT                             DEFAULT NULL COMMENT '组别ID（关联group_type表）',
     allow_register    TINYINT                            NOT NULL DEFAULT 1 COMMENT '是否支持报名：1-支持报名，0-不支持（仅晋级）',

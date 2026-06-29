@@ -22,6 +22,6 @@ public class ResultVO {
     private String participantName;
     private String eventName;
     private String scheduleName;
-    // 项目分类：田赛/径赛/趣味赛（决定 score_value 的单位与排序方向）
+    // 项目分类：田赛/径赛/团队赛（决定 score_value 的单位与排序方向）
     private String category;
 }
