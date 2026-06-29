@@ -9,6 +9,8 @@ import type { Team } from '@/api/team'
 import { getParticipantListByTeam, getParticipantList, updateParticipant, removeFromTeam } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { getGroupTypeList } from '@/api/groupType'
+import { getAdjustmentList, addAdjustment, deleteAdjustment } from '@/api/teamScoreAdjustment'
+import type { TeamScoreAdjustment } from '@/api/teamScoreAdjustment'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +21,50 @@ const meeting = ref<SportsMeeting | null>(null)
 const team = ref<Team | null>(null)
 const groupTypeName = ref('')
 const participants = ref<Participant[]>([])
+
+const adjustments = ref<TeamScoreAdjustment[]>([])
+const adjustmentDialogVisible = ref(false)
+const adjustmentForm = ref({ deltaAmount: 0, note: '' })
+
+async function fetchAdjustments() {
+  try {
+    const res: any = await getAdjustmentList(teamId)
+    adjustments.value = res.data || res || []
+  } catch { /* ignore */ }
+}
+
+function openAdjustmentAdd() {
+  adjustmentForm.value = { deltaAmount: 0, note: '' }
+  adjustmentDialogVisible.value = true
+}
+
+async function handleAdjustmentSubmit() {
+  if (!adjustmentForm.value.note.trim()) {
+    ElMessage.warning('请填写调整原因')
+    return
+  }
+  try {
+    await addAdjustment({
+      teamId,
+      deltaAmount: adjustmentForm.value.deltaAmount,
+      note: adjustmentForm.value.note.trim(),
+    })
+    ElMessage.success('添加成功')
+    adjustmentDialogVisible.value = false
+    fetchAdjustments()
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || '添加失败')
+  }
+}
+
+async function handleAdjustmentDelete(id: number) {
+  try {
+    await ElMessageBox.confirm('确定删除该调整记录？', '提示', { type: 'warning' })
+    await deleteAdjustment(id)
+    ElMessage.success('删除成功')
+    fetchAdjustments()
+  } catch { /* cancel */ }
+}
 
 // 分配人员弹窗
 const assignDialogVisible = ref(false)
@@ -124,10 +170,16 @@ function goBack() {
   router.push(`/meeting/${meetingId}`)
 }
 
+function formatDate(d: string) {
+  if (!d) return ''
+  return d.substring(0, 16).replace('T', ' ')
+}
+
 onMounted(() => {
   fetchMeeting()
   fetchTeam()
   fetchParticipants()
+  fetchAdjustments()
 })
 </script>
 
@@ -149,7 +201,7 @@ onMounted(() => {
       <div class="info-meta">
         <span v-if="team.leader">领队：{{ team.leader }}</span>
         <span v-if="team.coach">教练：{{ team.coach }}</span>
-        <span>总分：{{ team.totalScore ?? 0 }}</span>
+        <span>总分：{{ team.totalScore ?? 0 }} <span style="color:#999;font-size:12px">（刷新重算）</span></span>
         <span>{{ participants.length }} 名队员</span>
       </div>
     </div>
@@ -176,6 +228,33 @@ onMounted(() => {
       <el-empty v-else description="暂无队员，点击上方按钮分配人员" />
     </div>
 
+    <!-- 调整记录 -->
+    <div class="content-card" style="margin-top:20px">
+      <div class="tab-toolbar">
+        <span class="toolbar-hint">加减分调整（如作弊扣分、精神文明加分），重算总分时累加</span>
+        <el-button type="primary" size="small" @click="openAdjustmentAdd">+ 添加调整</el-button>
+      </div>
+      <el-table v-if="adjustments.length > 0" :data="adjustments" stripe border size="small">
+        <el-table-column label="数额" width="100">
+          <template #default="{ row }">
+            <span :style="{color: row.deltaAmount >= 0 ? '#67c23a' : '#f56c6c', fontWeight: 600}">
+              {{ row.deltaAmount >= 0 ? '+' : '' }}{{ row.deltaAmount }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="note" label="原因" />
+        <el-table-column label="时间" width="170">
+          <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="danger" size="small" @click="handleAdjustmentDelete(row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else description="暂无调整记录" :image-size="60" />
+    </div>
+
     <!-- 弹窗：编辑代表队 -->
     <el-dialog v-model="teamEditVisible" title="编辑代表队" width="480px" destroy-on-close>
       <el-form :model="teamEditForm" label-width="80px">
@@ -189,12 +268,30 @@ onMounted(() => {
           <el-input v-model="teamEditForm.coach" />
         </el-form-item>
         <el-form-item label="总分">
-          <el-input-number v-model="teamEditForm.totalScore" :precision="2" :min="0" />
+          <span>{{ teamEditForm.totalScore ?? 0 }} 分</span>
+          <span style="color:#999;font-size:12px;margin-left:8px">（点击组别管理页「刷新所有代表队总分」按钮重算）</span>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="teamEditVisible = false">取消</el-button>
         <el-button type="primary" @click="handleEditSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 弹窗：添加调整 -->
+    <el-dialog v-model="adjustmentDialogVisible" title="添加调整" width="480px" destroy-on-close>
+      <el-form :model="adjustmentForm" label-width="80px">
+        <el-form-item label="数额" required>
+          <el-input-number v-model="adjustmentForm.deltaAmount" :precision="2" :step="0.5" />
+          <span style="margin-left:8px;color:#999;font-size:12px">正=加分，负=扣分</span>
+        </el-form-item>
+        <el-form-item label="原因" required>
+          <el-input v-model="adjustmentForm.note" placeholder="如：xxx作弊扣5分" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adjustmentDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleAdjustmentSubmit">确定</el-button>
       </template>
     </el-dialog>
 
