@@ -326,7 +326,7 @@ onMounted(() => {
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column v-if="eventInfo?.category === '团队赛'" label="积分" width="80">
+        <el-table-column label="积分" width="80">
           <template #default="{ row }">{{ resultMap.get(row.participantId)?.points ?? '-' }}</template>
         </el-table-column>
         <el-table-column label="状态" width="100">

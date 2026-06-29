@@ -699,7 +699,10 @@ onMounted(() => {
                 <div v-for="team in getTeamsByGroupType(gt.id)" :key="team.id" class="team-card" @click="router.push(`/meeting/${meetingId}/team/${team.id}`)">
                   <div class="team-card-header">
                     <span class="team-card-name">{{ team.name }}</span>
-                    <el-tag type="info" size="small">{{ getTeamParticipants(team.id).length }} 人</el-tag>
+                    <div class="team-card-tags">
+                      <el-tag type="warning" size="small">{{ team.totalScore ?? 0 }} 分</el-tag>
+                      <el-tag type="info" size="small">{{ getTeamParticipants(team.id).length }} 人</el-tag>
+                    </div>
                   </div>
                   <div class="team-card-info">
                     <span v-if="team.leader">领队：{{ team.leader }}</span>
@@ -1184,6 +1187,11 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   color: #303133;
+}
+.team-card-tags {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 .team-card-info {
   font-size: 12px;
