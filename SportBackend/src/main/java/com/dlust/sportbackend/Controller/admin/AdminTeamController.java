@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -48,9 +49,9 @@ public class AdminTeamController {
     }
 
     @PostMapping("/refreshTotalScore")
-    public Result<java.util.Map<String, Object>> refreshTotalScore(@RequestParam Long sportsMeetingId) {
+    public Result<Map<String, Object>> refreshTotalScore(@RequestParam Long sportsMeetingId) {
         log.info("刷新代表队总分: sportsMeetingId={}", sportsMeetingId);
         int count = teamService.refreshTotalScoreBySportsMeetingId(sportsMeetingId);
-        return Result.success(java.util.Map.of("refreshedCount", count));
+        return Result.success(Map.of("refreshedCount", count));
     }
 }
