@@ -16,7 +16,7 @@ import { getNoticeList, addNotice, updateNotice, deleteNotice, uploadNoticeFile 
 import type { Notice } from '@/api/notice'
 import { getResultList, getResultListByEvent, addResult, updateResult, deleteResult } from '@/api/result'
 import type { ResultVO, ResultItem } from '@/api/result'
-import { getTeamList, addTeam, updateTeam } from '@/api/team'
+import { getTeamList, addTeam, updateTeam, refreshTotalScore } from '@/api/team'
 import type { Team } from '@/api/team'
 import { getGroupTypeList, addGroupType, updateGroupType, deleteGroupType, getLimitConfig, saveLimitConfig } from '@/api/groupType'
 import type { GroupType } from '@/api/groupType'
@@ -127,6 +127,20 @@ async function handleScheduleDelete(id: number) {
 // ============ 组别管理 (含代表队) ============
 const groupTypes = ref<GroupType[]>([])
 const teams = ref<Team[]>([])
+const refreshing = ref(false)
+async function handleRefreshTotalScore() {
+  refreshing.value = true
+  try {
+    const res: any = await refreshTotalScore(meetingId)
+    const count = res?.data?.refreshedCount ?? res?.refreshedCount ?? 0
+    ElMessage.success(`已刷新 ${count} 个代表队总分`)
+    fetchTeams()
+  } catch {
+    ElMessage.error('刷新失败')
+  } finally {
+    refreshing.value = false
+  }
+}
 const gtDialogVisible = ref(false)
 const gtForm = ref<Partial<GroupType>>({})
 const teamDialogVisible = ref(false)
@@ -673,7 +687,10 @@ onMounted(() => {
       <el-tab-pane label="组别管理" name="groupType">
         <div class="tab-toolbar">
           <span class="toolbar-hint">展开组别查看并管理其下的代表队</span>
-          <el-button type="primary" size="small" @click="openGtAdd">+ 新增组别</el-button>
+          <div style="display:flex;gap:8px">
+            <el-button type="success" size="small" :loading="refreshing" @click="handleRefreshTotalScore">刷新所有代表队总分</el-button>
+            <el-button type="primary" size="small" @click="openGtAdd">+ 新增组别</el-button>
+          </div>
         </div>
         <el-empty v-if="groupTypes.length === 0" description="暂无组别，请先创建" />
         <el-collapse v-else v-model="expandedGroupTypes" class="nested-collapse">
@@ -905,7 +922,8 @@ onMounted(() => {
           <el-input v-model="teamForm.coach" />
         </el-form-item>
         <el-form-item label="总分">
-          <el-input-number v-model="teamForm.totalScore" :precision="2" :min="0" />
+          <span>{{ teamForm.totalScore ?? 0 }} 分</span>
+          <span style="color:#999;font-size:12px;margin-left:8px">（点击组别管理页「刷新所有代表队总分」按钮重算）</span>
         </el-form-item>
       </el-form>
       <template #footer>
