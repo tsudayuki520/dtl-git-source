@@ -27,22 +27,27 @@ public class UserEventController {
                                         @RequestParam(required = false) Long sportsMeetingId,
                                         @RequestParam(required = false) Long groupTypeId) {
         log.info("获取项目列表: scheduleId={}, sportsMeetingId={}, groupTypeId={}", scheduleId, sportsMeetingId, groupTypeId);
+        List<Event> events;
         if (scheduleId != null) {
             List<Long> eventIds = eventScheduleService.getEventIdsByScheduleId(scheduleId);
             if (eventIds.isEmpty()) {
                 return Result.success(List.of());
             }
-            List<Event> events = eventIds.stream()
+            events = eventIds.stream()
                     .map(eventService::getById)
                     .filter(e -> e != null)
                     .filter(e -> groupTypeId == null || groupTypeId.equals(e.getGroupTypeId()))
                     .collect(Collectors.toList());
-            return Result.success(events);
+        } else if (sportsMeetingId != null) {
+            events = eventService.getBySportsMeetingId(sportsMeetingId);
+        } else {
+            return Result.error(400, "请传入 scheduleId 或 sportsMeetingId");
         }
-        if (sportsMeetingId != null) {
-            return Result.success(eventService.getBySportsMeetingId(sportsMeetingId));
+        // 装配 currentOpenScheduleId（当前开放且 sort 最小的轮次）
+        for (Event e : events) {
+            e.setCurrentOpenScheduleId(eventScheduleService.getOpenScheduleIdByEventId(e.getId()));
         }
-        return Result.error(400, "请传入 scheduleId 或 sportsMeetingId");
+        return Result.success(events);
     }
 
     @GetMapping("/{id}")

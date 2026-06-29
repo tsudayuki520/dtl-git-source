@@ -18,4 +18,5 @@ public class Event {
     private Integer isDeleted;  // 0-正常，1-已删除
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long currentOpenScheduleId; // 当前开放且 sort 最小的轮次ID（非持久化，VO 用，null 表示无开放轮次）
 }
