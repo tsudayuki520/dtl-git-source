@@ -138,13 +138,14 @@ async function toggleScheduleStatus() {
 }
 
 async function handleToggleAllow(eventId: number, val: number) {
+  const prev = allowRegisterMap.value[eventId] ?? 0
   try {
     await toggleEventScheduleAllow(eventId, scheduleId, val)
     ElMessage.success(val === 1 ? '已开放该轮次报名' : '已关闭该轮次报名')
     allowRegisterMap.value[eventId] = val
   } catch {
     // 失败时回滚 UI
-    allowRegisterMap.value[eventId] = val === 1 ? 0 : 1
+    allowRegisterMap.value[eventId] = prev
     ElMessage.error('操作失败')
   }
 }
