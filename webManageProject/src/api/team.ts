@@ -25,3 +25,7 @@ export function updateTeam(data: Partial<Team>) {
 export function deleteTeam(id: number) {
   return request.delete(`/admin/team/${id}`)
 }
+
+export function refreshTotalScore(sportsMeetingId: number) {
+  return request.post('/admin/team/refreshTotalScore', null, { params: { sportsMeetingId } })
+}
