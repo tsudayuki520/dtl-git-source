@@ -1,12 +1,15 @@
 package com.dlust.sportbackend.Service.Impl;
 
+import com.dlust.sportbackend.Mapper.EventMapper;
 import com.dlust.sportbackend.Mapper.EventScheduleMapper;
 import com.dlust.sportbackend.Service.EventScheduleService;
+import com.dlust.sportbackend.entity.Event;
 import com.dlust.sportbackend.entity.EventSchedule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +19,9 @@ public class EventScheduleServiceImpl implements EventScheduleService {
 
     @Autowired
     private EventScheduleMapper eventScheduleMapper;
+
+    @Autowired
+    private EventMapper eventMapper;
 
     @Override
     public List<EventSchedule> getByEventId(Long eventId) {
@@ -45,10 +51,49 @@ public class EventScheduleServiceImpl implements EventScheduleService {
     @Override
     @Transactional
     public void saveEventSchedules(Long eventId, List<Long> scheduleIds) {
-        eventScheduleMapper.deleteByEventId(eventId);
-        if (scheduleIds != null && !scheduleIds.isEmpty()) {
-            eventScheduleMapper.batchInsert(eventId, scheduleIds);
+        // 1. 现有关联（已带 allow_register）
+        List<EventSchedule> existing = eventScheduleMapper.selectByEventId(eventId);
+        Map<Long, Integer> existingMap = new LinkedHashMap<>();
+        for (EventSchedule es : existing) {
+            existingMap.put(es.getScheduleId(), es.getAllowRegister() == null ? 0 : es.getAllowRegister());
         }
+
+        // 2. 计算同步方案（selected 须按 sort 升序）
+        List<Long> selectedSorted = (scheduleIds == null) ? List.of() : sortByScheduleSort(scheduleIds);
+        boolean eventAllowRegister = isEventAllowRegister(eventId);
+        Map<Long, Integer> plan = syncPlanForTest(existingMap, selectedSorted, eventAllowRegister);
+
+        // 3. 删除：现有但不在 plan 里的
+        for (Long sid : existingMap.keySet()) {
+            if (!plan.containsKey(sid)) {
+                eventScheduleMapper.deleteByScheduleIdForEvent(eventId, sid);
+            }
+        }
+
+        // 4. 新增：plan 里 existing 没有的；保留的无需动作
+        List<EventSchedule> toInsert = new ArrayList<>();
+        for (Map.Entry<Long, Integer> e : plan.entrySet()) {
+            if (!existingMap.containsKey(e.getKey())) {
+                EventSchedule es = new EventSchedule();
+                es.setEventId(eventId);
+                es.setScheduleId(e.getKey());
+                es.setAllowRegister(e.getValue());
+                toInsert.add(es);
+            }
+        }
+        if (!toInsert.isEmpty()) {
+            eventScheduleMapper.batchInsertWithAllow(toInsert);
+        }
+    }
+
+    /** 按 schedule.sort 升序排列给定的 scheduleIds */
+    private List<Long> sortByScheduleSort(List<Long> scheduleIds) {
+        return eventScheduleMapper.selectScheduleIdsByEventIdOrdered(scheduleIds);
+    }
+
+    private boolean isEventAllowRegister(Long eventId) {
+        Event e = eventMapper.selectById(eventId);
+        return e != null && e.getAllowRegister() != null && e.getAllowRegister() == 1;
     }
 
     @Override
@@ -59,6 +104,16 @@ public class EventScheduleServiceImpl implements EventScheduleService {
     @Override
     public void deleteByScheduleId(Long scheduleId) {
         eventScheduleMapper.deleteByScheduleId(scheduleId);
+    }
+
+    @Override
+    public void updateAllowRegister(Long eventId, Long scheduleId, Integer allowRegister) {
+        eventScheduleMapper.updateAllowRegister(eventId, scheduleId, allowRegister == null ? 0 : allowRegister);
+    }
+
+    @Override
+    public Long getOpenScheduleIdByEventId(Long eventId) {
+        return eventScheduleMapper.selectOpenScheduleIdByEventId(eventId);
     }
 
     /**

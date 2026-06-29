@@ -20,4 +20,9 @@ public interface EventScheduleService {
     void deleteById(Long id);
 
     void deleteByScheduleId(Long scheduleId);
+
+    void updateAllowRegister(Long eventId, Long scheduleId, Integer allowRegister);
+
+    /** 取该 event 当前开放且 sort 最小的 scheduleId，无则 null */
+    Long getOpenScheduleIdByEventId(Long eventId);
 }
