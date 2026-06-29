@@ -76,4 +76,19 @@
         UPDATE event_schedule SET is_deleted = 1 WHERE schedule_id = #{scheduleId}
     </update>
 
+    <select id="selectScheduleIdsByEventIdOrdered" resultType="java.lang.Long">
+        SELECT s.id FROM schedule s
+        WHERE s.is_deleted = 0
+          AND s.id IN
+          <foreach collection="scheduleIds" item="sid" open="(" separator="," close=")">
+              #{sid}
+          </foreach>
+        ORDER BY s.sort ASC, s.create_time ASC
+    </select>
+
+    <update id="deleteByScheduleIdForEvent">
+        UPDATE event_schedule SET is_deleted = 1
+        WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 0
+    </update>
+
 </mapper>

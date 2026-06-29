@@ -23,9 +23,13 @@ public interface EventScheduleMapper {
 
     void insert(@Param("eventId") Long eventId, @Param("scheduleId") Long scheduleId);
 
-    void batchInsert(@Param("eventId") Long eventId, @Param("scheduleIds") List<Long> scheduleIds);
-
     void batchInsertWithAllow(@Param("list") List<EventSchedule> list);
+
+    /** 按给定 scheduleIds 集合，依 schedule.sort 升序返回 */
+    List<Long> selectScheduleIdsByEventIdOrdered(@Param("scheduleIds") List<Long> scheduleIds);
+
+    /** 软删除某 event 下的某个 schedule 关联 */
+    void deleteByScheduleIdForEvent(@Param("eventId") Long eventId, @Param("scheduleId") Long scheduleId);
 
     void updateAllowRegister(@Param("eventId") Long eventId,
                              @Param("scheduleId") Long scheduleId,
