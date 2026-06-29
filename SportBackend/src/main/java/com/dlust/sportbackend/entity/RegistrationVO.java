@@ -14,6 +14,7 @@ public class RegistrationVO {
     private LocalDateTime updateTime;
     // 关联字段
     private String participantName;
+    private String teamName;
     private String eventName;
     private String scheduleName;
 }

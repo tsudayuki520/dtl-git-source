@@ -174,6 +174,8 @@ async function fetchEvent() {
     const list: Event[] = res.data || res || []
     eventInfo.value = list.find(e => e.id === eventId) || null
   } catch { /* ignore */ }
+  // 类别加载后需重新排序（团队赛按代表队排序）
+  filterRegistrations()
 }
 
 async function fetchRegistrations() {
@@ -188,10 +190,15 @@ async function fetchRegistrations() {
 const filteredRegistrations = ref<RegistrationVO[]>([])
 
 function filterRegistrations() {
-  filteredRegistrations.value = registrations.value.filter(r => {
+  let list = registrations.value.filter(r => {
     if (regFilterStatus.value !== undefined && regFilterStatus.value !== null && r.status !== regFilterStatus.value) return false
     return true
   })
+  // 团队赛：按代表队名称排序，便于按队查看
+  if (eventInfo.value?.category === '团队赛') {
+    list = [...list].sort((a, b) => (a.teamName || '').localeCompare(b.teamName || ''))
+  }
+  filteredRegistrations.value = list
 }
 
 function formatDate(d: string) {
@@ -310,6 +317,7 @@ onMounted(() => {
           <template #default="{ row }">{{ rankMap.get(row.participantId) ?? '-' }}</template>
         </el-table-column>
         <el-table-column prop="participantName" label="参赛者" width="120" />
+        <el-table-column v-if="eventInfo?.category === '团队赛'" prop="teamName" label="代表队" width="120" />
         <el-table-column prop="eventName" label="项目" />
         <el-table-column prop="scheduleName" label="赛次" width="90" />
         <el-table-column :label="eventInfo?.category === '趣味赛' ? '积分' : '成绩'" width="110">

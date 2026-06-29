@@ -8,6 +8,7 @@ export interface RegistrationVO {
   status: number
   createTime: string
   participantName: string
+  teamName: string | null
   eventName: string
   scheduleName: string
 }
