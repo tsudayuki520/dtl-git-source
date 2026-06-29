@@ -744,6 +744,10 @@ onMounted(() => {
 
       <!-- ======== 总积分榜 ======== -->
       <el-tab-pane label="总积分榜" name="ranking">
+        <div class="tab-toolbar">
+          <span class="toolbar-hint">按总分降序排序，Top3 金银铜高亮（成绩/调整变更后请点刷新重算）</span>
+          <el-button type="success" size="small" :loading="refreshing" @click="handleRefreshTotalScore">刷新所有代表队总分</el-button>
+        </div>
         <el-table :data="rankingList" stripe border size="small">
           <el-table-column label="排名" width="80" align="center">
             <template #default="{ $index }">
