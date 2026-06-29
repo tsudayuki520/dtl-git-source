@@ -134,7 +134,7 @@ async function handleRefreshTotalScore() {
     const res: any = await refreshTotalScore(meetingId)
     const count = res?.data?.refreshedCount ?? res?.refreshedCount ?? 0
     ElMessage.success(`已刷新 ${count} 个代表队总分`)
-    fetchTeams()
+    await fetchTeams()
   } catch {
     ElMessage.error('刷新失败')
   } finally {
