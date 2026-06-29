@@ -50,9 +50,25 @@ public class AdminEventScheduleController {
         return Result.success("删除成功");
     }
 
+    @PutMapping("/allow")
+    public Result<String> toggleAllow(@RequestBody EventScheduleAllowRequest request) {
+        log.info("切换轮次开放报名: eventId={}, scheduleId={}, allowRegister={}",
+                request.getEventId(), request.getScheduleId(), request.getAllowRegister());
+        eventScheduleService.updateAllowRegister(
+                request.getEventId(), request.getScheduleId(), request.getAllowRegister());
+        return Result.success("更新成功");
+    }
+
     @Data
     public static class EventScheduleSaveRequest {
         private Long eventId;
         private List<Long> scheduleIds;
+    }
+
+    @Data
+    public static class EventScheduleAllowRequest {
+        private Long eventId;
+        private Long scheduleId;
+        private Integer allowRegister;
     }
 }
