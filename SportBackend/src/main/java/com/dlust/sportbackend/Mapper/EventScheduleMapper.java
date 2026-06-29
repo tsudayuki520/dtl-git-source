@@ -25,6 +25,15 @@ public interface EventScheduleMapper {
 
     void batchInsert(@Param("eventId") Long eventId, @Param("scheduleIds") List<Long> scheduleIds);
 
+    void batchInsertWithAllow(@Param("list") List<EventSchedule> list);
+
+    void updateAllowRegister(@Param("eventId") Long eventId,
+                             @Param("scheduleId") Long scheduleId,
+                             @Param("allowRegister") Integer allowRegister);
+
+    /** 取该 event 下 allow_register=1 且 sort 最小的 scheduleId；无则返回 null */
+    Long selectOpenScheduleIdByEventId(@Param("eventId") Long eventId);
+
     void deleteByEventId(@Param("eventId") Long eventId);
 
     void deleteById(@Param("id") Long id);

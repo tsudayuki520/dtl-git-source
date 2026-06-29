@@ -41,13 +41,28 @@
         VALUES (#{eventId}, #{scheduleId})
     </insert>
 
-    <insert id="batchInsert">
-        INSERT INTO event_schedule (event_id, schedule_id)
+    <insert id="batchInsertWithAllow">
+        INSERT INTO event_schedule (event_id, schedule_id, allow_register)
         VALUES
-        <foreach collection="scheduleIds" item="scheduleId" separator=",">
-            (#{eventId}, #{scheduleId})
+        <foreach collection="list" item="item" separator=",">
+            (#{item.eventId}, #{item.scheduleId}, #{item.allowRegister})
         </foreach>
     </insert>
+
+    <update id="updateAllowRegister">
+        UPDATE event_schedule
+        SET allow_register = #{allowRegister}
+        WHERE event_id = #{eventId} AND schedule_id = #{scheduleId} AND is_deleted = 0
+    </update>
+
+    <select id="selectOpenScheduleIdByEventId" resultType="java.lang.Long">
+        SELECT es.schedule_id FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE es.event_id = #{eventId} AND es.is_deleted = 0 AND s.is_deleted = 0
+          AND es.allow_register = 1
+        ORDER BY s.sort ASC, s.create_time ASC
+        LIMIT 1
+    </select>
 
     <update id="deleteByEventId">
         UPDATE event_schedule SET is_deleted = 1 WHERE event_id = #{eventId}
