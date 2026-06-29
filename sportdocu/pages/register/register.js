@@ -19,7 +19,7 @@ Page({
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {
-          const events = (res.data.data || []).filter(e => e.allowRegister)
+          const events = (res.data.data || []).filter(e => e.allowRegister && e.currentOpenScheduleId)
           const categoryOrder = ['田赛', '径赛', '趣味赛']
           const map = {}
           events.forEach(e => {
