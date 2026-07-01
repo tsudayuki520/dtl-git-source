@@ -21,7 +21,7 @@ function formatDate(d: string) {
 }
 
 function openAdd() {
-  form.value = { groupType: '', eventName: '', unit: '', name: '', score: null, recordTime: '', venue: '' }
+  form.value = { groupType: '', eventName: '', category: '', unit: '', name: '', score: null, scoreValue: null, recordTime: '' }
   dialogVisible.value = true
 }
 function openEdit(row: Record) {
@@ -62,15 +62,18 @@ onMounted(fetchRecords)
     <el-table :data="records" stripe border size="small">
       <el-table-column prop="groupType" label="组别" width="100" />
       <el-table-column prop="eventName" label="项目" width="120" />
+      <el-table-column prop="category" label="类别" width="90" />
       <el-table-column prop="unit" label="单位" width="140" />
       <el-table-column prop="name" label="姓名" width="100" />
       <el-table-column label="成绩" width="100">
         <template #default="{ row }">{{ row.score ?? '-' }}</template>
       </el-table-column>
+      <el-table-column label="内部值" width="100">
+        <template #default="{ row }">{{ row.scoreValue ?? '-' }}</template>
+      </el-table-column>
       <el-table-column label="时间" width="160">
         <template #default="{ row }">{{ formatDate(row.recordTime) }}</template>
       </el-table-column>
-      <el-table-column prop="venue" label="地点" />
       <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
@@ -88,6 +91,13 @@ onMounted(fetchRecords)
         <el-form-item label="项目">
           <el-input v-model="form.eventName" placeholder="如：100米、跳远" />
         </el-form-item>
+        <el-form-item label="类别">
+          <el-select v-model="form.category" placeholder="选择类别" style="width:100%">
+            <el-option label="径赛" value="径赛" />
+            <el-option label="田赛" value="田赛" />
+            <el-option label="团队赛" value="团队赛" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="单位">
           <el-input v-model="form.unit" placeholder="如：计算机学院" />
         </el-form-item>
@@ -97,11 +107,11 @@ onMounted(fetchRecords)
         <el-form-item label="成绩">
           <el-input-number v-model="form.score" :precision="2" :min="0" style="width:100%" />
         </el-form-item>
+        <el-form-item label="内部值">
+          <span>{{ form.scoreValue ?? '-' }}（{{ form.scoreValue == null ? '手动档案无内部值' : '毫秒/厘米' }}）</span>
+        </el-form-item>
         <el-form-item label="时间">
           <el-input v-model="form.recordTime" type="datetime-local" />
-        </el-form-item>
-        <el-form-item label="地点">
-          <el-input v-model="form.venue" />
         </el-form-item>
       </el-form>
       <template #footer>

@@ -12,8 +12,6 @@ export interface Record {
   scoreValue: number | null
   resultId: number | null
   recordTime: string
-  // 兼容 RecordView 现有地点字段（后端 record 表保留 venue 列）
-  venue?: string | null
   createTime: string
   updateTime: string
 }
