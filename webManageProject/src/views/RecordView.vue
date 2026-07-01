@@ -20,6 +20,19 @@ function formatDate(d: string) {
   return d.substring(0, 16).replace('T', ' ')
 }
 
+function formatScore(score: number | null | undefined, category: string | null | undefined): string {
+  if (score == null) return '-'
+  if (category === '田赛') return `${score}米`
+  if (category === '径赛' || category === '团队赛') return `${score}秒`
+  return `${score}`
+}
+
+function scoreUnit(category: string | null | undefined): string {
+  if (category === '田赛') return '米'
+  if (category === '径赛' || category === '团队赛') return '秒'
+  return ''
+}
+
 function openAdd() {
   form.value = { groupType: '', eventName: '', category: '', unit: '', name: '', score: null, scoreValue: null, recordTime: '' }
   dialogVisible.value = true
@@ -65,11 +78,8 @@ onMounted(fetchRecords)
       <el-table-column prop="category" label="类别" width="90" />
       <el-table-column prop="unit" label="单位" width="140" />
       <el-table-column prop="name" label="姓名" width="100" />
-      <el-table-column label="成绩" width="100">
-        <template #default="{ row }">{{ row.score ?? '-' }}</template>
-      </el-table-column>
-      <el-table-column label="内部值" width="100">
-        <template #default="{ row }">{{ row.scoreValue ?? '-' }}</template>
+      <el-table-column label="成绩" width="110">
+        <template #default="{ row }">{{ formatScore(row.score, row.category) }}</template>
       </el-table-column>
       <el-table-column label="时间" width="160">
         <template #default="{ row }">{{ formatDate(row.recordTime) }}</template>
@@ -105,10 +115,8 @@ onMounted(fetchRecords)
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="成绩">
-          <el-input-number v-model="form.score" :precision="2" :min="0" style="width:100%" />
-        </el-form-item>
-        <el-form-item label="内部值">
-          <span>{{ form.scoreValue ?? '-' }}（{{ form.scoreValue == null ? '手动档案无内部值' : '毫秒/厘米' }}）</span>
+          <el-input-number v-model="form.score" :precision="2" :min="0" style="width:100%" :placeholder="scoreUnit(form.category) ? `单位：${scoreUnit(form.category)}` : ''" />
+          <span v-if="scoreUnit(form.category)" style="margin-left:8px;color:#999;font-size:12px">{{ scoreUnit(form.category) }}</span>
         </el-form-item>
         <el-form-item label="时间">
           <el-input v-model="form.recordTime" type="datetime-local" />
