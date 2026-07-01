@@ -15,8 +15,8 @@ public class RecordServiceImpl implements RecordService {
     private RecordMapper recordMapper;
 
     @Override
-    public List<Record> getAll() {
-        return recordMapper.selectAll();
+    public List<Record> getAll(Long sportsMeetingId, String eventName, String category) {
+        return recordMapper.selectAll(sportsMeetingId, eventName, category);
     }
 
     @Override

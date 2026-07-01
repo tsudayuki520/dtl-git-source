@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface RecordService {
 
-    List<Record> getAll();
+    List<Record> getAll(Long sportsMeetingId, String eventName, String category);
 
     void add(Record record);
 

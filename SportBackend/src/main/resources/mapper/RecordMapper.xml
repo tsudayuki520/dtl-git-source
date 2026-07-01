@@ -5,6 +5,11 @@
 
     <select id="selectAll" resultType="Record">
         SELECT * FROM record
+        <where>
+            <if test="sportsMeetingId != null">AND sports_meeting_id = #{sportsMeetingId}</if>
+            <if test="eventName != null and eventName != ''">AND event_name = #{eventName}</if>
+            <if test="category != null and category != ''">AND category = #{category}</if>
+        </where>
         ORDER BY record_time DESC, create_time DESC
     </select>
 
@@ -13,20 +18,23 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO record (group_type, event_name, unit, name, score, record_time, venue)
-        VALUES (#{groupType}, #{eventName}, #{unit}, #{name}, #{score}, #{recordTime}, #{venue})
+        INSERT INTO record (sports_meeting_id, group_type, event_name, category, unit, name, score, score_value, result_id, record_time)
+        VALUES (#{sportsMeetingId}, #{groupType}, #{eventName}, #{category}, #{unit}, #{name}, #{score}, #{scoreValue}, #{resultId}, #{recordTime})
     </insert>
 
     <update id="updateById">
         UPDATE record
         <set>
+            <if test="sportsMeetingId != null">sports_meeting_id = #{sportsMeetingId},</if>
             <if test="groupType != null">group_type = #{groupType},</if>
             <if test="eventName != null">event_name = #{eventName},</if>
+            <if test="category != null">category = #{category},</if>
             <if test="unit != null">unit = #{unit},</if>
             <if test="name != null">name = #{name},</if>
             <if test="score != null">score = #{score},</if>
+            <if test="scoreValue != null">score_value = #{scoreValue},</if>
+            <if test="resultId != null">result_id = #{resultId},</if>
             <if test="recordTime != null">record_time = #{recordTime},</if>
-            <if test="venue != null">venue = #{venue},</if>
         </set>
         WHERE id = #{id}
     </update>

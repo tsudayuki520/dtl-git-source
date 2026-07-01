@@ -9,7 +9,9 @@ import java.util.List;
 @Mapper
 public interface RecordMapper {
 
-    List<Record> selectAll();
+    List<Record> selectAll(@Param("sportsMeetingId") Long sportsMeetingId,
+                           @Param("eventName") String eventName,
+                           @Param("category") String category);
 
     Record selectById(@Param("id") Long id);
 

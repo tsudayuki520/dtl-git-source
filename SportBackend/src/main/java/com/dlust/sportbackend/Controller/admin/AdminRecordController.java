@@ -18,9 +18,11 @@ public class AdminRecordController {
     private RecordService recordService;
 
     @GetMapping("/list")
-    public Result<List<Record>> list() {
-        log.info("查询全部记录");
-        return Result.success(recordService.getAll());
+    public Result<List<Record>> list(@RequestParam(required = false) Long sportsMeetingId,
+                                     @RequestParam(required = false) String eventName,
+                                     @RequestParam(required = false) String category) {
+        log.info("查询记录: sportsMeetingId={}, eventName={}, category={}", sportsMeetingId, eventName, category);
+        return Result.success(recordService.getAll(sportsMeetingId, eventName, category));
     }
 
     @PostMapping("/add")
