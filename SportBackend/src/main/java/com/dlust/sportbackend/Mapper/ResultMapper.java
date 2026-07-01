@@ -16,6 +16,10 @@ public interface ResultMapper {
 
     List<ResultVO> selectVOByEventAndSchedule(@Param("eventId") Long eventId, @Param("scheduleId") Long scheduleId);
 
+    Result selectById(@Param("id") Long id);
+
+    int updateRecordStatus(@Param("id") Long id, @Param("status") Integer status);
+
     void insert(Result result);
 
     void updateById(Result result);

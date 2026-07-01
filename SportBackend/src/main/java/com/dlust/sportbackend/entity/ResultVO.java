@@ -15,6 +15,8 @@ public class ResultVO {
     private Integer scoreValue;
     // 积分：用于代表队总分计算
     private Integer points;
+    // 破纪录审核状态：0=未审，1=通过已入册，2=拒绝
+    private Integer recordStatus;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

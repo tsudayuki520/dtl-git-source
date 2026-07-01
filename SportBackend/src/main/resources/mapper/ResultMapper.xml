@@ -5,7 +5,7 @@
 
     <select id="selectVOBySportsMeetingId" resultType="ResultVO">
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
-               r.participant_id, r.score_value, r.points, r.create_time, r.update_time,
+               r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
                p.name AS participant_name,
                e.name AS event_name,
@@ -22,7 +22,7 @@
 
     <select id="selectVOByEventId" resultType="ResultVO">
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
-               r.participant_id, r.score_value, r.points, r.create_time, r.update_time,
+               r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
                p.name AS participant_name,
                e.name AS event_name,
@@ -44,7 +44,7 @@
 
     <select id="selectVOByEventAndSchedule" resultType="ResultVO">
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
-               r.participant_id, r.score_value, r.points, r.create_time, r.update_time,
+               r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
                p.name AS participant_name,
                e.name AS event_name,
@@ -63,6 +63,14 @@
                 ELSE r.score_value
             END ASC
     </select>
+
+    <select id="selectById" resultType="Result">
+        SELECT * FROM result WHERE id = #{id}
+    </select>
+
+    <update id="updateRecordStatus">
+        UPDATE result SET record_status = #{status} WHERE id = #{id}
+    </update>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO result (sports_meeting_id, event_id, event_schedule_id, participant_id, score_value, points)

@@ -16,6 +16,7 @@ public class Result {
     private Integer scoreValue;
     // 积分：用于代表队总分计算
     private Integer points;
+    private Integer recordStatus;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }
