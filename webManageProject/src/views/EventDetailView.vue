@@ -51,6 +51,21 @@ function formatScore(r?: ResultVO): string {
   return String(r.scoreValue)
 }
 
+// 破纪录候选标记样式类（0=未审/候选，1=通过已入册，2=拒绝）
+function recordFlagClass(r?: ResultVO): string {
+  if (!r) return ''
+  if (r.recordStatus === 1) return 'record-flag-approved'
+  if (r.recordStatus === 2) return 'record-flag-rejected'
+  return 'record-flag-pending'
+}
+// 破纪录标记 tooltip 文案
+function recordTooltip(r?: ResultVO): string {
+  if (!r) return ''
+  if (r.recordStatus === 1) return '已通过审核，已入册校运会纪录'
+  if (r.recordStatus === 2) return '已拒绝（非破纪录）'
+  return '破纪录候选（赛次前 3），待审核'
+}
+
 // 录入控件值合并为 scoreValue（径赛/团队赛=毫秒，田赛=厘米）
 function buildScoreValue(): number | null {
   const cat = eventInfo.value?.category
@@ -324,6 +339,11 @@ onMounted(() => {
             <el-button link type="primary" size="small" @click="openScoreEdit(row)">
               {{ formatScore(resultMap.get(row.participantId)) }}
             </el-button>
+            <el-tooltip
+              v-if="rankMap.get(row.participantId) != null && rankMap.get(row.participantId)! <= 3"
+              :content="recordTooltip(resultMap.get(row.participantId))">
+              <span :class="['record-flag', recordFlagClass(resultMap.get(row.participantId))]">▲</span>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column label="积分" width="80">
@@ -440,4 +460,9 @@ onMounted(() => {
 }
 .tab-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .tab-toolbar-left { display: flex; gap: 8px; }
+/* 破纪录候选三角形标记（赛次前 3） */
+.record-flag { margin-left: 4px; font-size: 12px; font-weight: 600; }
+.record-flag-pending { color: #e6a23c; }   /* 金黄：待审 */
+.record-flag-approved { color: #67c23a; }  /* 绿：已通过入册 */
+.record-flag-rejected { color: #c0c4cc; }  /* 灰：已拒绝 */
 </style>
