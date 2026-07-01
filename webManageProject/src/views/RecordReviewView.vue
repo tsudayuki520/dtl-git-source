@@ -20,50 +20,77 @@ const eventId = ref<number | undefined>(undefined)
 const scheduleId = ref<number | undefined>(undefined)
 const statusFilter = ref<'all' | 0 | 1 | 2>('all')
 
+// 序号守卫：防止快速切换 select 时旧请求覆盖新结果
+let meetingsReqId = 0
+let eventsReqId = 0
+let schedulesReqId = 0
+let resultsReqId = 0
+
 async function fetchMeetings() {
+  const reqId = ++meetingsReqId
   try {
     const res: any = await getMeetingList()
+    if (reqId !== meetingsReqId) return
     meetings.value = res.data || res || []
     if (meetings.value.length > 0) {
       meetingId.value = meetings.value[0].id
       fetchEvents()
     }
-  } catch { ElMessage.error('加载运动会失败') }
+  } catch {
+    if (reqId !== meetingsReqId) return
+    ElMessage.error('加载运动会失败')
+  }
 }
 
 async function fetchEvents() {
   if (!meetingId.value) return
+  const reqId = ++eventsReqId
   eventId.value = undefined
   scheduleId.value = undefined
   schedules.value = []
   results.value = []
   try {
     const res: any = await getEventList({ sportsMeetingId: meetingId.value })
+    if (reqId !== eventsReqId) return
     events.value = res.data || res || []
-  } catch { events.value = [] }
+  } catch {
+    if (reqId !== eventsReqId) return
+    events.value = []
+  }
 }
 
 async function fetchSchedules() {
   if (!eventId.value) return
+  const reqId = ++schedulesReqId
   scheduleId.value = undefined
   results.value = []
   try {
     const res: any = await getRegistrationListByEvent(eventId.value)
+    if (reqId !== schedulesReqId) return
     const regs = res.data || res || []
     const map = new Map<number, string>()
     regs.forEach((r: any) => {
       if (r.scheduleId && !map.has(r.scheduleId)) map.set(r.scheduleId, r.scheduleName || `赛次${r.scheduleId}`)
     })
     schedules.value = [...map.entries()].map(([id, name]) => ({ id, name }))
-  } catch { schedules.value = [] }
+  } catch {
+    if (reqId !== schedulesReqId) return
+    schedules.value = []
+  }
 }
 
 async function fetchResults() {
   if (!eventId.value || !scheduleId.value) return
+  const reqId = ++resultsReqId
   try {
     const res: any = await getResultsByEventAndSchedule(eventId.value, scheduleId.value)
+    if (reqId !== resultsReqId) return
     results.value = res.data || res || []
-  } catch { results.value = [] }
+  } catch {
+    if (reqId !== resultsReqId) return
+    results.value = []
+    ElMessage.warning('加载成绩失败')
+  }
 }
 
 const category = computed(() => {
