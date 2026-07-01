@@ -465,7 +465,7 @@ const selectedEventCategory = computed(() => {
 // 成绩值按分类格式化显示
 function formatScore(row: ResultVO): string {
   if (row.scoreValue == null) return '-'
-  if (row.category === '径赛') {
+  if (row.category === '径赛' || row.category === '团队赛') {
     const totalMs = row.scoreValue
     const totalSeconds = Math.floor(totalMs / 1000)
     const ms = totalMs % 1000
