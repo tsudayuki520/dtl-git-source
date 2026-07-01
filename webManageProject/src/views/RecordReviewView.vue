@@ -120,7 +120,7 @@ function formatScore(r?: ResultVO): string {
   const ms = totalMs % 1000
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
-  if (minutes > 0) return `${minutes}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}`
+  if (minutes > 0) return `${minutes}分${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}秒`
   return `${seconds}.${String(ms).padStart(3, '0')}秒`
 }
 
