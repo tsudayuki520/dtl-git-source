@@ -11,6 +11,7 @@ export interface ResultVO {
   scoreValue: number | null
   // 积分（用于代表队总分计算）
   points: number
+  // 破纪录审核状态：0=未审，1=通过已入册，2=拒绝
   recordStatus: number
   createTime: string
   updateTime: string
