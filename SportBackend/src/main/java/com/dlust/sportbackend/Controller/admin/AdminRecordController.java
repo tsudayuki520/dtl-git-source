@@ -45,4 +45,13 @@ public class AdminRecordController {
         recordService.delete(id);
         return Result.success("删除成功");
     }
+
+    @PostMapping("/review")
+    public Result<String> review(@RequestBody java.util.Map<String, Object> body) {
+        Long resultId = body.get("resultId") == null ? null : Long.valueOf(body.get("resultId").toString());
+        String action = body.get("action") == null ? null : body.get("action").toString();
+        log.info("审核破纪录候选: resultId={}, action={}", resultId, action);
+        recordService.reviewRecord(resultId, action);
+        return Result.success("审核成功");
+    }
 }

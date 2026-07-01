@@ -12,4 +12,6 @@ public interface RecordService {
     void update(Record record);
 
     void delete(Long id);
+
+    void reviewRecord(Long resultId, String action);
 }
