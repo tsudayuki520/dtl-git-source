@@ -39,13 +39,9 @@ function formatScore(r?: ResultVO): string {
   if (!r || r.scoreValue == null) return '录入'
   const cat = eventInfo.value?.category || r.category
   if (cat === '径赛' || cat === '团队赛') {
-    const totalMs = r.scoreValue
-    const totalSeconds = Math.floor(totalMs / 1000)
-    const ms = totalMs % 1000
-    const minutes = Math.floor(totalSeconds / 60)
-    const seconds = totalSeconds % 60
-    if (minutes > 0) return `${minutes}分${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}秒`
-    return `${seconds}.${String(ms).padStart(3, '0')}秒`
+    const totalSeconds = Math.floor(r.scoreValue / 1000)
+    const ms = r.scoreValue % 1000
+    return `${totalSeconds}.${String(ms).padStart(3, '0')}秒`
   }
   if (cat === '田赛') return `${(r.scoreValue / 100).toFixed(2)}米`
   return String(r.scoreValue)

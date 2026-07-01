@@ -466,15 +466,9 @@ const selectedEventCategory = computed(() => {
 function formatScore(row: ResultVO): string {
   if (row.scoreValue == null) return '-'
   if (row.category === '径赛' || row.category === '团队赛') {
-    const totalMs = row.scoreValue
-    const totalSeconds = Math.floor(totalMs / 1000)
-    const ms = totalMs % 1000
-    const minutes = Math.floor(totalSeconds / 60)
-    const seconds = totalSeconds % 60
-    if (minutes > 0) {
-      return `${minutes}分${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}秒`
-    }
-    return `${seconds}.${String(ms).padStart(3, '0')}秒`
+    const totalSeconds = Math.floor(row.scoreValue / 1000)
+    const ms = row.scoreValue % 1000
+    return `${totalSeconds}.${String(ms).padStart(3, '0')}秒`
   }
   if (row.category === '田赛') {
     return `${(row.scoreValue / 100).toFixed(2)}米`

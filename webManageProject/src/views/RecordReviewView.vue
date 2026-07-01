@@ -115,13 +115,9 @@ function isTop3(id: number) {
 function formatScore(r?: ResultVO): string {
   if (!r || r.scoreValue == null) return '-'
   if (category.value === '田赛') return `${(r.scoreValue / 100).toFixed(2)}米`
-  const totalMs = r.scoreValue
-  const totalSeconds = Math.floor(totalMs / 1000)
-  const ms = totalMs % 1000
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  if (minutes > 0) return `${minutes}分${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}秒`
-  return `${seconds}.${String(ms).padStart(3, '0')}秒`
+  const totalSeconds = Math.floor(r.scoreValue / 1000)
+  const ms = r.scoreValue % 1000
+  return `${totalSeconds}.${String(ms).padStart(3, '0')}秒`
 }
 
 const statusMap: Record<number, string> = { 0: '待审', 1: '已通过', 2: '已拒绝' }
