@@ -36,6 +36,9 @@ function handleMenuClick(index: string) {
         <el-menu-item index="/record">
           <span>记录管理</span>
         </el-menu-item>
+        <el-menu-item index="/record-review">
+          <span>破纪录审核</span>
+        </el-menu-item>
         <el-menu-item index="/banner">
           <span>轮播图管理</span>
         </el-menu-item>

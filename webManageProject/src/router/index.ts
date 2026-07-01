@@ -51,6 +51,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '记录管理' },
       },
       {
+        path: 'record-review',
+        name: 'RecordReview',
+        component: () => import('@/views/RecordReviewView.vue'),
+        meta: { title: '破纪录审核' },
+      },
+      {
         path: 'banner',
         name: 'Banner',
         component: () => import('@/views/BannerView.vue'),
