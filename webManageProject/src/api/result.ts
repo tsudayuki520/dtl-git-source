@@ -11,6 +11,7 @@ export interface ResultVO {
   scoreValue: number | null
   // 积分（用于代表队总分计算）
   points: number
+  recordStatus: number
   createTime: string
   updateTime: string
   participantName: string

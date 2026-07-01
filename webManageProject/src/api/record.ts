@@ -2,19 +2,24 @@ import request from '@/utils/request'
 
 export interface Record {
   id: number
+  sportsMeetingId: number | null
   groupType: string
   eventName: string
+  category: string
   unit: string
   name: string
   score: number | null
+  scoreValue: number | null
+  resultId: number | null
   recordTime: string
-  venue: string
+  // 兼容 RecordView 现有地点字段（后端 record 表保留 venue 列）
+  venue?: string | null
   createTime: string
   updateTime: string
 }
 
-export function getRecordList() {
-  return request.get('/admin/record/list')
+export function getRecordList(params?: { sportsMeetingId?: number; eventName?: string; category?: string }) {
+  return request.get('/admin/record/list', { params })
 }
 
 export function addRecord(data: Partial<Record>) {
@@ -27,4 +32,8 @@ export function updateRecord(data: Partial<Record>) {
 
 export function deleteRecord(id: number) {
   return request.delete(`/admin/record/${id}`)
+}
+
+export function reviewRecord(resultId: number, action: 'approve' | 'reject') {
+  return request.post('/admin/record/review', { resultId, action })
 }
