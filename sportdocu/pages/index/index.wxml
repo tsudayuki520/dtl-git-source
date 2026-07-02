@@ -9,11 +9,15 @@
   </view>
 
   <!-- 轮播图 -->
-  <swiper class="banner-swiper" autoplay circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff" interval="3000" duration="500">
+  <swiper wx:if="{{banners.length > 0}}" class="banner-swiper" autoplay circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff" interval="3000" duration="500">
     <swiper-item wx:for="{{banners}}" wx:key="id">
       <image class="banner-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
     </swiper-item>
   </swiper>
+  <view wx:else class="banner-empty">
+    <text class="banner-empty-icon">🏅</text>
+    <text class="banner-empty-text">暂无轮播图，精彩内容即将上线</text>
+  </view>
 
   <!-- 通知横幅（点击进入通知列表） -->
   <view class="notice-bar" wx:if="{{notices.length > 0}}" bindtap="goToNoticeList">
