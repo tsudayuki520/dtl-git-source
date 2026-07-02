@@ -52,12 +52,52 @@ Page({
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {
-          this.setData({ events: res.data.data || [] })
+          const events = (res.data.data || []).map(e => ({
+            id: e.id,
+            name: e.name,
+            groupTypeName: e.groupTypeName,
+            status: e.status,
+            registerLimit: e.registerLimit
+          }))
+          this.setData({ events }, () => {
+            this.loadRegisterCount()
+          })
         }
       },
       fail: (err) => {
         console.error('获取项目列表失败', err)
       }
+    })
+  },
+
+  /** 拉取各项目已报名人数，回填到 events */
+  loadRegisterCount() {
+    const sportsMeetingId = this.data.sportsMeetingId
+    if (!sportsMeetingId) return
+    wx.request({
+      url: auth.BASE_URL + '/api/register/count?sportsMeetingId=' + sportsMeetingId,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          const countMap = res.data.data || {}
+          const events = this.data.events.map(evt => ({
+            ...evt,
+            registeredCount: countMap[evt.id] || 0
+          }))
+          this.setData({ events })
+        }
+      },
+      fail: (err) => {
+        console.error('获取报名人数失败', err)
+      }
+    })
+  },
+
+  /** 点击项目卡片：查看报名人员（只读） */
+  goToEventRegistrations(e) {
+    const { id, name } = e.currentTarget.dataset
+    wx.navigateTo({
+      url: '/pages/event-registrations/event-registrations?eventId=' + id + '&eventName=' + encodeURIComponent(name)
     })
   },
 

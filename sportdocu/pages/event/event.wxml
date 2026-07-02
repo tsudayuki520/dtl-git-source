@@ -14,13 +14,14 @@
   </view>
 
   <!-- 项目列表 -->
-  <view class="event-card" wx:for="{{events}}" wx:key="id">
+  <view class="event-card" wx:for="{{events}}" wx:key="id" bindtap="goToEventRegistrations" data-id="{{item.id}}" data-name="{{item.name}}">
     <view class="event-header">
       <text class="event-name">{{item.name}}</text>
       <text class="event-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
     </view>
     <view class="event-footer">
       <text class="event-group">{{item.groupTypeName}}</text>
+      <text class="event-reg-count">已报名 {{item.registeredCount || 0}}<text wx:if="{{item.registerLimit > 0}}"> / {{item.registerLimit}}</text><text wx:else> · 不限</text></text>
     </view>
   </view>
 
