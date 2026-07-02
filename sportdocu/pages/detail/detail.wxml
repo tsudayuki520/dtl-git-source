@@ -72,12 +72,13 @@
   <view wx:for="{{eventCategories}}" wx:key="category">
     <view class="category-label">{{item.category}}</view>
     <view class="event-grid">
-      <view class="event-tag" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
+      <view class="event-tag" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id" bindtap="goToEventRegistrations" data-id="{{evt.id}}" data-name="{{evt.name}}">
           <text class="event-name">{{evt.name}}</text>
           <view class="event-meta">
             <text class="event-info">{{evt.groupTypeName}} · {{evt.gender}}</text>
             <text class="event-badge {{evt.allowRegister ? 'badge-open' : 'badge-advance'}}">{{evt.allowRegister ? '可报名' : '仅晋级'}}</text>
           </view>
+          <view class="event-reg-count">已报名 {{evt.registeredCount || 0}}<text wx:if="{{evt.registerLimit > 0}}"> / {{evt.registerLimit}}</text><text wx:else> · 不限</text></view>
         </view>
     </view>
   </view>

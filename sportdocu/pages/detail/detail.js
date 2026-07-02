@@ -59,16 +59,42 @@ Page({
           events.forEach(e => {
             const cat = e.category || '径赛'
             if (!map[cat]) map[cat] = []
-            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupTypeName: e.groupTypeName, allowRegister: e.allowRegister })
+            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupTypeName: e.groupTypeName, allowRegister: e.allowRegister, registerLimit: e.registerLimit })
           })
           const eventCategories = categoryOrder
             .filter(cat => map[cat])
             .map(cat => ({ category: cat, events: map[cat] }))
-          this.setData({ eventCategories })
+          this.setData({ eventCategories }, () => {
+            this.loadRegisterCount(id)
+          })
         }
       },
       fail: (err) => {
         console.error('获取项目列表失败', err)
+      }
+    })
+  },
+
+  /** 拉取各项目已报名人数，回填到 eventCategories */
+  loadRegisterCount(sportsMeetingId) {
+    wx.request({
+      url: auth.BASE_URL + '/api/register/count?sportsMeetingId=' + sportsMeetingId,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          const countMap = res.data.data || {}
+          const eventCategories = this.data.eventCategories.map(group => ({
+            category: group.category,
+            events: group.events.map(evt => ({
+              ...evt,
+              registeredCount: countMap[evt.id] || 0
+            }))
+          }))
+          this.setData({ eventCategories })
+        }
+      },
+      fail: (err) => {
+        console.error('获取报名人数失败', err)
       }
     })
   },
@@ -100,6 +126,14 @@ Page({
 
   goToPlayerList() {
     wx.showToast({ title: '选手名单功能开发中', icon: 'none' })
+  },
+
+  /** 点击项目卡片：查看该项目的报名人员（只读） */
+  goToEventRegistrations(e) {
+    const { id, name } = e.currentTarget.dataset
+    wx.navigateTo({
+      url: '/pages/event-registrations/event-registrations?eventId=' + id + '&eventName=' + encodeURIComponent(name)
+    })
   },
 
   goToResult() {

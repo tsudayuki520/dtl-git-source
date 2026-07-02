@@ -1,0 +1,22 @@
+<!--event-registrations.wxml-->
+<scroll-view class="page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="summary-card">
+    <text class="summary-title">{{eventName}}</text>
+    <text class="summary-meta">已报名 {{registrations.length}} 人</text>
+  </view>
+
+  <view class="reg-list" wx:if="{{registrations.length > 0}}">
+    <view class="reg-item" wx:for="{{registrations}}" wx:key="id">
+      <view class="reg-index">{{index + 1}}</view>
+      <view class="reg-info">
+        <text class="reg-name">{{item.participantName || '-'}}</text>
+        <text class="reg-team" wx:if="{{item.teamName}}">{{item.teamName}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-tip" wx:if="{{loaded && registrations.length === 0}}">
+    <text class="empty-icon">📝</text>
+    <text class="empty-text">暂无报名人员</text>
+  </view>
+</scroll-view>

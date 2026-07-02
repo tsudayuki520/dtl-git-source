@@ -12,7 +12,8 @@
     "pages/event/event",
     "pages/notice/notice",
     "pages/notice-detail/notice-detail",
-    "pages/logs/logs"
+    "pages/logs/logs",
+    "pages/event-registrations/event-registrations"
   ],
   "window": {
     "navigationBarTextStyle": "black",

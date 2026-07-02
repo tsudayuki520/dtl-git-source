@@ -1,0 +1,53 @@
+/* event-registrations.wxss */
+.page { padding: 24rpx; box-sizing: border-box; }
+
+.summary-card {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+.summary-title { font-size: 34rpx; font-weight: 600; color: #303133; }
+.summary-meta { font-size: 26rpx; color: #909399; }
+
+.reg-list { display: flex; flex-direction: column; gap: 12rpx; }
+.reg-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx 28rpx;
+  gap: 24rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.04);
+}
+.reg-index {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #e8f4fd;
+  color: #2196F3;
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.reg-info { display: flex; flex-direction: column; gap: 6rpx; flex: 1; min-width: 0; }
+.reg-name { font-size: 30rpx; color: #303133; font-weight: 500; }
+.reg-team { font-size: 24rpx; color: #909399; }
+
+.empty-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  gap: 16rpx;
+}
+.empty-icon { font-size: 80rpx; }
+.empty-text { font-size: 28rpx; color: #909399; }
