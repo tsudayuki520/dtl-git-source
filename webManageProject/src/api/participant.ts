@@ -2,6 +2,7 @@ import request from '@/utils/request'
 
 export interface Participant {
   id: number
+  userId: number
   sportsMeetingId: number
   teamId: number | null
   teamName: string | null
@@ -36,4 +37,17 @@ export function deleteParticipant(id: number) {
 
 export function removeFromTeam(participantId: number) {
   return request.put('/admin/participant/clearTeam', null, { params: { participantId } })
+}
+
+export function importParticipants(file: File, sportsMeetingId: number) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('sportsMeetingId', String(sportsMeetingId))
+  return request.post('/admin/participant/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+export function downloadImportTemplate() {
+  return request.get('/admin/participant/import-template', { responseType: 'blob' })
 }

@@ -10,6 +10,7 @@ import { getEventSchedulesBySportsMeeting } from '@/api/eventSchedule'
 import type { EventSchedule } from '@/api/eventSchedule'
 import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
 import type { Participant } from '@/api/participant'
+import { resetPassword } from '@/api/user'
 import { getScheduleList, addSchedule, updateSchedule, deleteSchedule } from '@/api/schedule'
 import type { Schedule } from '@/api/schedule'
 import { getNoticeList, addNotice, updateNotice, deleteNotice, uploadNoticeFile } from '@/api/notice'
@@ -406,6 +407,20 @@ async function handleParticipantDelete(id: number) {
   } catch { /* cancel */ }
 }
 
+// 批量导入占位（Task 12 实现真正的弹窗）
+function onImportClick() {
+  ElMessage.info('导入功能开发中')
+}
+
+// 重置密码（账号化后 user 是账号主体）
+async function handleResetPassword(row: Participant) {
+  try {
+    await ElMessageBox.confirm('确定重置为默认密码 dlust123456？', '提示', { type: 'warning' })
+    const res: any = await resetPassword(row.userId)
+    ElMessage.success(res?.message || '已重置为默认密码 dlust123456')
+  } catch { /* cancel or error */ }
+}
+
 // ============ 公告通知 ============
 const notices = ref<Notice[]>([])
 const noticeDialogVisible = ref(false)
@@ -783,6 +798,7 @@ onMounted(() => {
         <div class="tab-toolbar">
           <el-input v-model="participantSearch" placeholder="搜索姓名/学号/学院" clearable style="width:220px" />
           <el-button type="primary" size="small" @click="openParticipantAdd">+ 新增人员</el-button>
+          <el-button type="success" size="small" @click="onImportClick">批量导入</el-button>
         </div>
         <el-table :data="filteredParticipants" stripe border size="small">
           <el-table-column prop="userCode" label="学号/工号" width="120" />
@@ -796,10 +812,11 @@ onMounted(() => {
           <el-table-column prop="teamName" label="代表队" width="120" />
           <el-table-column prop="college" label="学院" />
           <el-table-column prop="major" label="专业/单位" />
-          <el-table-column label="操作" width="160" fixed="right">
+          <el-table-column label="操作" width="240" fixed="right">
             <template #default="{ row }">
               <el-button link type="primary" size="small" @click="router.push(`/meeting/${meetingId}/participant/${row.id}`)">详情</el-button>
               <el-button link type="primary" size="small" @click="openParticipantEdit(row)">编辑</el-button>
+              <el-button link type="warning" size="small" @click="handleResetPassword(row)">重置密码</el-button>
               <el-button link type="danger" size="small" @click="handleParticipantDelete(row.id)">删除</el-button>
             </template>
           </el-table-column>
