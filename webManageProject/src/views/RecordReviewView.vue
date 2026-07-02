@@ -5,26 +5,23 @@ import { getMeetingList } from '@/api/meeting'
 import type { SportsMeeting } from '@/api/meeting'
 import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
-import { getRegistrationListByEvent } from '@/api/registration'
-import { getResultsByEventAndSchedule } from '@/api/result'
+import { getResultList } from '@/api/result'
 import type { ResultVO } from '@/api/result'
 import { reviewRecord } from '@/api/record'
 
 const meetings = ref<SportsMeeting[]>([])
 const events = ref<Event[]>([])
-const schedules = ref<{ id: number; name: string }[]>([])
-const results = ref<ResultVO[]>([])
+const allCandidates = ref<ResultVO[]>([])
 
 const meetingId = ref<number | undefined>(undefined)
-const eventId = ref<number | undefined>(undefined)
-const scheduleId = ref<number | undefined>(undefined)
+const categoryFilter = ref<'all' | '田赛' | '径赛' | '团队赛'>('all')
+const eventFilter = ref<number | 'all'>('all')
 const statusFilter = ref<'all' | 0 | 1 | 2>('all')
 
-// 序号守卫：防止快速切换 select 时旧请求覆盖新结果
+// 序号守卫：防止快速切换时旧请求覆盖新结果
 let meetingsReqId = 0
 let eventsReqId = 0
-let schedulesReqId = 0
-let resultsReqId = 0
+let candidatesReqId = 0
 
 async function fetchMeetings() {
   const reqId = ++meetingsReqId
@@ -35,6 +32,7 @@ async function fetchMeetings() {
     if (meetings.value.length > 0) {
       meetingId.value = meetings.value[0].id
       fetchEvents()
+      fetchAllCandidates()
     }
   } catch {
     if (reqId !== meetingsReqId) return
@@ -45,10 +43,6 @@ async function fetchMeetings() {
 async function fetchEvents() {
   if (!meetingId.value) return
   const reqId = ++eventsReqId
-  eventId.value = undefined
-  scheduleId.value = undefined
-  schedules.value = []
-  results.value = []
   try {
     const res: any = await getEventList({ sportsMeetingId: meetingId.value })
     if (reqId !== eventsReqId) return
@@ -59,62 +53,52 @@ async function fetchEvents() {
   }
 }
 
-async function fetchSchedules() {
-  if (!eventId.value) return
-  const reqId = ++schedulesReqId
-  scheduleId.value = undefined
-  results.value = []
+// 拿运动会下全部成绩，按 (项目,赛次) 分组，每组按成绩排序取前 3 作为候选
+async function fetchAllCandidates() {
+  if (!meetingId.value) return
+  const reqId = ++candidatesReqId
   try {
-    const res: any = await getRegistrationListByEvent(eventId.value)
-    if (reqId !== schedulesReqId) return
-    const regs = res.data || res || []
-    const map = new Map<number, string>()
-    regs.forEach((r: any) => {
-      if (r.scheduleId && !map.has(r.scheduleId)) map.set(r.scheduleId, r.scheduleName || `赛次${r.scheduleId}`)
-    })
-    schedules.value = [...map.entries()].map(([id, name]) => ({ id, name }))
+    const res: any = await getResultList(meetingId.value)
+    if (reqId !== candidatesReqId) return
+    const all: ResultVO[] = res.data || res || []
+    const groups = new Map<string, ResultVO[]>()
+    for (const r of all) {
+      if (r.scoreValue == null) continue
+      const key = `${r.eventId}_${r.scheduleId ?? r.eventScheduleId ?? 0}`
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(r)
+    }
+    const candidates: ResultVO[] = []
+    for (const group of groups.values()) {
+      const cat = group[0]?.category || ''
+      group.sort((a, b) => {
+        const av = a.scoreValue ?? 0
+        const bv = b.scoreValue ?? 0
+        if (cat === '田赛') return bv - av  // 距离远优先
+        return av - bv  // 径赛/团队赛：时间短优先
+      })
+      candidates.push(...group.slice(0, 3))
+    }
+    allCandidates.value = candidates
   } catch {
-    if (reqId !== schedulesReqId) return
-    schedules.value = []
+    if (reqId !== candidatesReqId) return
+    allCandidates.value = []
+    ElMessage.warning('加载候选失败')
   }
 }
 
-async function fetchResults() {
-  if (!eventId.value || !scheduleId.value) return
-  const reqId = ++resultsReqId
-  try {
-    const res: any = await getResultsByEventAndSchedule(eventId.value, scheduleId.value)
-    if (reqId !== resultsReqId) return
-    results.value = res.data || res || []
-  } catch {
-    if (reqId !== resultsReqId) return
-    results.value = []
-    ElMessage.warning('加载成绩失败')
-  }
-}
-
-const category = computed(() => {
-  const ev = events.value.find(e => e.id === eventId.value)
-  return ev?.category || ''
-})
-
-// 前 3 名 id 集合（results 已按成绩排序，取前 3 有成绩的）
-const top3Ids = computed(() =>
-  results.value.filter(r => r.scoreValue != null).slice(0, 3).map(r => r.id)
+const filteredResults = computed(() =>
+  allCandidates.value.filter(r => {
+    if (categoryFilter.value !== 'all' && r.category !== categoryFilter.value) return false
+    if (eventFilter.value !== 'all' && r.eventId !== eventFilter.value) return false
+    if (statusFilter.value !== 'all' && (r.recordStatus ?? 0) !== statusFilter.value) return false
+    return true
+  })
 )
-
-const filteredResults = computed(() => {
-  if (statusFilter.value === 'all') return results.value
-  return results.value.filter(r => (r.recordStatus ?? 0) === statusFilter.value)
-})
-
-function isTop3(id: number) {
-  return top3Ids.value.includes(id)
-}
 
 function formatScore(r?: ResultVO): string {
   if (!r || r.scoreValue == null) return '-'
-  if (category.value === '田赛') return `${(r.scoreValue / 100).toFixed(2)}米`
+  if (r.category === '田赛') return `${(r.scoreValue / 100).toFixed(2)}米`
   const totalSeconds = Math.floor(r.scoreValue / 1000)
   const ms = r.scoreValue % 1000
   return `${totalSeconds}.${String(ms).padStart(3, '0')}秒`
@@ -127,10 +111,16 @@ async function handleReview(id: number, action: 'approve' | 'reject') {
   try {
     await reviewRecord(id, action)
     ElMessage.success(action === 'approve' ? '已通过并入册' : '已拒绝')
-    await fetchResults()
+    await fetchAllCandidates()
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.message || '操作失败')
   }
+}
+
+function onMeetingChange() {
+  eventFilter.value = 'all'
+  fetchEvents()
+  fetchAllCandidates()
 }
 
 onMounted(fetchMeetings)
@@ -141,14 +131,18 @@ onMounted(fetchMeetings)
     <div class="content-card">
       <div class="tab-toolbar">
         <div class="tab-toolbar-left">
-          <el-select v-model="meetingId" placeholder="运动会" style="width:180px" @change="fetchEvents">
+          <el-select v-model="meetingId" placeholder="运动会" style="width:180px" @change="onMeetingChange">
             <el-option v-for="m in meetings" :key="m.id" :label="m.name" :value="m.id" />
           </el-select>
-          <el-select v-model="eventId" placeholder="项目" style="width:160px" @change="fetchSchedules">
-            <el-option v-for="e in events" :key="e.id" :label="e.name" :value="e.id" />
+          <el-select v-model="categoryFilter" style="width:120px">
+            <el-option label="全部分类" value="all" />
+            <el-option label="田赛" value="田赛" />
+            <el-option label="径赛" value="径赛" />
+            <el-option label="团队赛" value="团队赛" />
           </el-select>
-          <el-select v-model="scheduleId" placeholder="赛次" style="width:120px" @change="fetchResults">
-            <el-option v-for="s in schedules" :key="s.id" :label="s.name" :value="s.id" />
+          <el-select v-model="eventFilter" placeholder="项目" style="width:160px">
+            <el-option label="全部项目" value="all" />
+            <el-option v-for="e in events" :key="e.id" :label="e.name" :value="e.id" />
           </el-select>
           <el-select v-model="statusFilter" style="width:110px">
             <el-option label="全部状态" value="all" />
@@ -157,14 +151,13 @@ onMounted(fetchMeetings)
             <el-option label="已拒绝" :value="2" />
           </el-select>
         </div>
-        <span class="toolbar-hint">前 3 名自动标三角形候选；通过即入册校运会纪录档案</span>
+        <span class="toolbar-hint">展示各赛次前 3 名候选；通过即入册校运会纪录档案</span>
       </div>
 
-      <el-table v-if="eventId && scheduleId" :data="filteredResults" stripe border size="small">
+      <el-table :data="filteredResults" stripe border size="small">
         <el-table-column label="" width="40" align="center">
           <template #default="{ row }">
             <el-tooltip
-              v-if="isTop3(row.id)"
               :content="row.recordStatus === 1 ? '已通过入册' : row.recordStatus === 2 ? '已拒绝' : '破纪录候选（赛次前3）'">
               <span :class="['record-flag',
                 row.recordStatus === 1 ? 'record-flag-approved' :
@@ -174,6 +167,7 @@ onMounted(fetchMeetings)
         </el-table-column>
         <el-table-column prop="participantName" label="参赛者" width="120" />
         <el-table-column prop="eventName" label="项目" />
+        <el-table-column prop="category" label="分类" width="80" />
         <el-table-column prop="scheduleName" label="赛次" width="90" />
         <el-table-column label="成绩" width="120">
           <template #default="{ row }">{{ formatScore(row) }}</template>
@@ -195,7 +189,6 @@ onMounted(fetchMeetings)
           </template>
         </el-table-column>
       </el-table>
-      <el-empty v-else description="请选择项目和赛次查看候选" />
     </div>
   </div>
 </template>
