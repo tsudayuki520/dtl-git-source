@@ -26,4 +26,10 @@ public class ResultVO {
     private String scheduleName;
     // 项目分类：田赛/径赛/团队赛（决定 score_value 的单位与排序方向）
     private String category;
+    // 来自 JOIN user 表的字段（mapper 中 SELECT u.user_code/gender/phone/college/major）
+    private String userCode;
+    private String gender;
+    private String phone;
+    private String college;
+    private String major;
 }

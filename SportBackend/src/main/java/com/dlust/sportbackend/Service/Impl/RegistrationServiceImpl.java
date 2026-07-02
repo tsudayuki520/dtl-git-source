@@ -64,9 +64,11 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public void add(Long participantId, Long eventId, Long scheduleId) {
+        // admin 端使用：通过 selectByIdWithUser 加载参赛人员后走完整限额校验（资格 + 代表队/每人限报），
+        // 再委托给 add(Participant,...) 重载执行 checkRegisterLimit + insert
         Participant p = participantMapper.selectByIdWithUser(participantId);
         if (p == null) throw new RuntimeException("参赛人员不存在");
-        add(p, eventId, scheduleId);  // 委托给执行完整 checkRegisterLimit 的新重载
+        add(p, eventId, scheduleId);
     }
 
     @Override

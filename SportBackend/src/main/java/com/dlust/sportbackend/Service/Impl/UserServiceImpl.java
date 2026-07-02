@@ -29,20 +29,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getById(Long id) {
-        return userMapper.selectById(id);
-    }
-
-    @Override
-    public void updatePhone(Long userId, String phone) {
-        User user = userMapper.selectById(userId);
-        if (user != null) {
-            user.setPhone(phone);
-            userMapper.updateProfile(user);
-        }
-    }
-
-    @Override
     public void resetPassword(Long userId, String passwordHash) {
         userMapper.updatePassword(userId, passwordHash);
     }

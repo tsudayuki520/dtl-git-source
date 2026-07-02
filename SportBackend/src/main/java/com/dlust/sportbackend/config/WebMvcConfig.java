@@ -29,7 +29,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/register/submit",
                         "/api/register/cancel",
                         "/api/my/**",
-                        "/api/auth/change-password"
+                        "/api/auth/change-password",
+                        // notice 中需要 userId 的端点（@RequestAttribute）需经拦截器注入；
+                        // 全局/赛事公告 /api/notice/global、/api/notice/sports-meeting 保持游客可访问
+                        "/api/notice/list",
+                        "/api/notice/unread-count",
+                        "/api/notice/**/read"
                 );
     }
 }

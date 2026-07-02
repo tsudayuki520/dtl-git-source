@@ -10,10 +10,6 @@ public interface UserService {
      */
     User loginByUserCode(String userCode, String password);
 
-    User getById(Long id);
-
-    void updatePhone(Long userId, String phone);
-
     /**
      * 管理端重置密码：直接写入已哈希的密码。
      */

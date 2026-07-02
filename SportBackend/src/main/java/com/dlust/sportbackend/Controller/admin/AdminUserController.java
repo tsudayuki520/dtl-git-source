@@ -21,12 +21,11 @@ public class AdminUserController {
     private PasswordService passwordService;
 
     @PostMapping("/reset-password")
-    public Result<String> resetPassword(@RequestBody Map<String, Object> body) {
-        Object idObj = body.get("userId");
-        if (idObj == null) {
+    public Result<String> resetPassword(@RequestBody Map<String, Long> body) {
+        Long userId = body.get("userId");
+        if (userId == null) {
             return Result.error(400, "userId 缺失");
         }
-        Long userId = ((Number) idObj).longValue();
         log.info("重置用户密码: userId={}", userId);
         userService.resetPassword(userId, passwordService.encode("dlust123456"));
         return Result.success("已重置为默认密码 dlust123456");

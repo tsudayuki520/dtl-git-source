@@ -8,6 +8,7 @@ import com.dlust.sportbackend.entity.User;
 import com.dlust.sportbackend.util.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
+    @Transactional
     public void add(Participant participant) {
         Long sportsMeetingId = participant.getSportsMeetingId();
         String userCode = participant.getUserCode();
@@ -73,6 +75,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
+    @Transactional
     public void update(Participant participant) {
         if (participant.getId() == null) {
             throw new RuntimeException("participant id 缺失");

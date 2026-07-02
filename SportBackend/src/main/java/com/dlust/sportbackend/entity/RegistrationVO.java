@@ -17,4 +17,10 @@ public class RegistrationVO {
     private String teamName;
     private String eventName;
     private String scheduleName;
+    // 来自 JOIN user 表的字段（mapper 中 SELECT u.user_code/gender/phone/college/major）
+    private String userCode;
+    private String gender;
+    private String phone;
+    private String college;
+    private String major;
 }
