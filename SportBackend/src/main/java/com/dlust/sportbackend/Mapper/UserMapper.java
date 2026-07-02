@@ -11,6 +11,4 @@ public interface UserMapper {
     int insert(User user);
     int updatePassword(@Param("id") Long id, @Param("password") String password);
     int updateProfile(User user);  // 更新 name/gender/phone/college/major（不含 userCode/password）
-    // 迁移用
-    int insertForMigration(User user);
 }

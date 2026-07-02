@@ -5,7 +5,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Map;
 
 @Mapper
 public interface ParticipantMapper {
@@ -27,10 +26,4 @@ public interface ParticipantMapper {
     int clearTeamId(@Param("id") Long id);
 
     int deleteById(@Param("id") Long id);
-
-    // ===== 迁移期临时方法（Task 6 完成后删除） =====
-
-    List<Map<String, Object>> selectAllForMigration();
-
-    int updateUserIdForMigration(@Param("id") Long id, @Param("userId") Long userId);
 }

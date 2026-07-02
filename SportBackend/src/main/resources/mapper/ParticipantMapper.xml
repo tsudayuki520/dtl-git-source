@@ -54,14 +54,4 @@
         DELETE FROM participant WHERE id = #{id}
     </delete>
 
-    <!-- 迁移用：查所有旧 participant（迁移期专用，迁移后删） -->
-    <select id="selectAllForMigration" resultType="java.util.Map">
-        SELECT id, sports_meeting_id, team_id, user_code, name, phone, gender, college, major
-        FROM participant
-    </select>
-
-    <update id="updateUserIdForMigration">
-        UPDATE participant SET user_id = #{userId} WHERE id = #{id}
-    </update>
-
 </mapper>

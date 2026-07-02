@@ -18,11 +18,6 @@
         VALUES (#{userCode}, #{password}, #{name}, #{gender}, #{phone}, #{college}, #{major})
     </insert>
 
-    <insert id="insertForMigration" parameterType="com.dlust.sportbackend.entity.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (user_code, password, name, gender, phone, college, major)
-        VALUES (#{userCode}, #{password}, #{name}, #{gender}, #{phone}, #{college}, #{major})
-    </insert>
-
     <update id="updatePassword">
         UPDATE user SET password = #{password} WHERE id = #{id}
     </update>
