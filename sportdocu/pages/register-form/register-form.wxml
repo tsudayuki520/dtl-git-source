@@ -33,8 +33,8 @@
       <input class="form-input" placeholder="请输入学院" value="{{form.college}}" bindinput="onInputCollege" />
     </view>
     <view class="form-item">
-      <text class="form-label">专业</text>
-      <input class="form-input" placeholder="请输入专业" value="{{form.major}}" bindinput="onInputMajor" />
+      <text class="form-label">专业/单位</text>
+      <input class="form-input" placeholder="请输入专业或单位" value="{{form.major}}" bindinput="onInputMajor" />
     </view>
   </view>
 

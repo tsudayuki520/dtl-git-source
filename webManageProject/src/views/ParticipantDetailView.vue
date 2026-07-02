@@ -87,7 +87,7 @@ onMounted(() => {
         <span>性别：{{ participant.gender }}</span>
         <span v-if="participant.phone">电话：{{ participant.phone }}</span>
         <span v-if="participant.college">学院：{{ participant.college }}</span>
-        <span v-if="participant.major">专业：{{ participant.major }}</span>
+        <span v-if="participant.major">专业/单位：{{ participant.major }}</span>
         <span>已报项目：{{ groupedByEvent.length }} 个 / 共 {{ registrations.length }} 条记录</span>
       </div>
     </div>

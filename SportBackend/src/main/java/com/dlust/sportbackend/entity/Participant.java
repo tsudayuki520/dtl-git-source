@@ -14,7 +14,7 @@ public class Participant {
     private String phone;
     private String gender;
     private String college;
-    private String major;
+    private String major;       // 专业/单位
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

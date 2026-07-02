@@ -775,7 +775,7 @@ onMounted(() => {
           <el-table-column prop="phone" label="电话" width="130" />
           <el-table-column prop="teamName" label="代表队" width="120" />
           <el-table-column prop="college" label="学院" />
-          <el-table-column prop="major" label="专业" />
+          <el-table-column prop="major" label="专业/单位" />
           <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
               <el-button link type="primary" size="small" @click="router.push(`/meeting/${meetingId}/participant/${row.id}`)">详情</el-button>
@@ -979,7 +979,7 @@ onMounted(() => {
         <el-form-item label="学院">
           <el-input v-model="participantForm.college" />
         </el-form-item>
-        <el-form-item label="专业">
+        <el-form-item label="专业/单位">
           <el-input v-model="participantForm.major" />
         </el-form-item>
       </el-form>
@@ -1000,7 +1000,7 @@ onMounted(() => {
         <el-table-column prop="gender" label="性别" width="60" />
         <el-table-column prop="teamName" label="代表队" width="120" />
         <el-table-column prop="college" label="学院" />
-        <el-table-column prop="major" label="专业" />
+        <el-table-column prop="major" label="专业/单位" />
       </el-table>
       <template #footer>
         <el-button @click="assignDialogVisible = false">取消</el-button>

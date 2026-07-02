@@ -10,7 +10,7 @@ export interface Participant {
   phone: string
   gender: string
   college: string
-  major: string
+  major: string  // 专业/单位
   perPersonLimit?: number
 }
 

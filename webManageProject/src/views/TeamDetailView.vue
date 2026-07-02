@@ -218,7 +218,7 @@ onMounted(() => {
         <el-table-column prop="gender" label="性别" width="60" />
         <el-table-column prop="phone" label="电话" width="130" />
         <el-table-column prop="college" label="学院" />
-        <el-table-column prop="major" label="专业" />
+        <el-table-column prop="major" label="专业/单位" />
         <el-table-column label="操作" width="80" fixed="right">
           <template #default="{ row }">
             <el-button link type="danger" size="small" @click="handleRemoveFromTeam(row.id)">移出</el-button>
