@@ -49,10 +49,6 @@
       <view class="module-icon icon-schedule"></view>
       <text class="module-text">赛程</text>
     </view>
-    <view class="module-item" bindtap="goToPlayerList">
-      <view class="module-icon icon-player"></view>
-      <text class="module-text">选手名单</text>
-    </view>
     <view class="module-item" bindtap="goToResult">
       <view class="module-icon icon-result"></view>
       <text class="module-text">成绩公告</text>

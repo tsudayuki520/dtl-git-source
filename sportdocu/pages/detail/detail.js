@@ -120,10 +120,6 @@ Page({
     })
   },
 
-  goToPlayerList() {
-    wx.showToast({ title: '选手名单功能开发中', icon: 'none' })
-  },
-
   /** 点击项目卡片：查看该项目的报名人员（只读） */
   goToEventRegistrations(e) {
     const { id, name } = e.currentTarget.dataset

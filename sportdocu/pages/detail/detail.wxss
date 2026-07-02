@@ -160,13 +160,6 @@ page {
   content: "📋";
 }
 
-.icon-player {
-  background-color: #e8f5e9;
-}
-.icon-player::after {
-  content: "👥";
-}
-
 .icon-result {
   background-color: #fce4ec;
 }
