@@ -141,9 +141,29 @@ async function handleRefreshTotalScore() {
     refreshing.value = false
   }
 }
-const rankingList = computed(() =>
-  [...teams.value].sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
-)
+const groupedRanking = computed(() => {
+  // 按 groupTypeId 分组（null 归 0 = 未分组）
+  const map = new Map<number, Team[]>()
+  for (const t of teams.value) {
+    const key = t.groupTypeId ?? 0
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(t)
+  }
+  const result = Array.from(map.entries()).map(([gid, list]) => ({
+    key: gid,
+    groupName: gid === 0 ? '未分组' : (getGroupTypeName(gid) || '未分组'),
+    list: list.sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
+  }))
+  // 组顺序：按 groupTypes 配置顺序，未分组垫底
+  result.sort((a, b) => {
+    if (a.key === 0) return 1
+    if (b.key === 0) return -1
+    const ai = groupTypes.value.findIndex(g => g.id === a.key)
+    const bi = groupTypes.value.findIndex(g => g.id === b.key)
+    return ai - bi
+  })
+  return result
+})
 function getGroupTypeName(groupTypeId: number | null): string {
   if (groupTypeId == null) return ''
   const gt = groupTypes.value.find(g => g.id === groupTypeId)
@@ -739,23 +759,23 @@ onMounted(() => {
       <!-- ======== 总积分榜 ======== -->
       <el-tab-pane label="总积分榜" name="ranking">
         <div class="tab-toolbar">
-          <span class="toolbar-hint">按总分降序排序，Top3 金银铜高亮（成绩/调整变更后请点刷新重算）</span>
+          <span class="toolbar-hint">按组别分开排名，组内按总分降序，Top3 金银铜高亮（成绩/调整变更后请点刷新重算）</span>
           <el-button type="success" size="small" :loading="refreshing" @click="handleRefreshTotalScore">刷新所有代表队总分</el-button>
         </div>
-        <el-table :data="rankingList" stripe border size="small">
-          <el-table-column label="排名" width="80" align="center">
-            <template #default="{ $index }">
-              <span v-if="$index < 3" :class="['rank-badge', `rank-${$index + 1}`]">{{ $index + 1 }}</span>
-              <span v-else>{{ $index + 1 }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="name" label="代表队" />
-          <el-table-column label="组别" width="140">
-            <template #default="{ row }">{{ getGroupTypeName(row.groupTypeId) || '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="totalScore" label="总分" width="120" align="right" />
-        </el-table>
-        <el-empty v-if="rankingList.length === 0" description="暂无代表队" />
+        <div v-for="group in groupedRanking" :key="group.key" class="ranking-group">
+          <h4 class="ranking-group-title">{{ group.groupName }}（{{ group.list.length }} 队）</h4>
+          <el-table :data="group.list" stripe border size="small">
+            <el-table-column label="排名" width="80" align="center">
+              <template #default="{ $index }">
+                <span v-if="$index < 3" :class="['rank-badge', `rank-${$index + 1}`]">{{ $index + 1 }}</span>
+                <span v-else>{{ $index + 1 }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="name" label="代表队" />
+            <el-table-column prop="totalScore" label="总分" width="120" align="right" />
+          </el-table>
+        </div>
+        <el-empty v-if="groupedRanking.length === 0" description="暂无代表队" />
       </el-tab-pane>
 
       <!-- ======== 参赛人员 ======== -->
@@ -1258,6 +1278,17 @@ onMounted(() => {
 .rank-1 { background: #f5c518; }  /* 金 */
 .rank-2 { background: #b8b8b8; }  /* 银 */
 .rank-3 { background: #cd7f32; }  /* 铜 */
+
+/* 总积分榜分组 */
+.ranking-group { margin-bottom: 20px; }
+.ranking-group-title {
+  margin: 12px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  border-left: 3px solid #409eff;
+  padding-left: 8px;
+}
 
 /* 赛程卡片列表 */
 .schedule-card-list {
