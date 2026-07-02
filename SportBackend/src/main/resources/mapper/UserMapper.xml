@@ -1,29 +1,40 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.UserMapper">
 
-    <select id="selectByOpenid" resultType="User">
-        SELECT * FROM user WHERE openid = #{openid}
+    <select id="selectByUserCode" resultType="com.dlust.sportbackend.entity.User">
+        SELECT id, user_code, password, name, gender, phone, college, major, create_time, update_time
+        FROM user WHERE user_code = #{userCode}
     </select>
 
-    <select id="selectById" resultType="User">
-        SELECT * FROM user WHERE id = #{id}
+    <select id="selectById" resultType="com.dlust.sportbackend.entity.User">
+        SELECT id, user_code, password, name, gender, phone, college, major, create_time, update_time
+        FROM user WHERE id = #{id}
     </select>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (openid, union_id, nickname, avatar_url, phone, session_key)
-        VALUES (#{openid}, #{unionId}, #{nickname}, #{avatarUrl}, #{phone}, #{sessionKey})
+    <insert id="insert" parameterType="com.dlust.sportbackend.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (user_code, password, name, gender, phone, college, major)
+        VALUES (#{userCode}, #{password}, #{name}, #{gender}, #{phone}, #{college}, #{major})
     </insert>
 
-    <update id="updateById">
+    <insert id="insertForMigration" parameterType="com.dlust.sportbackend.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (user_code, password, name, gender, phone, college, major)
+        VALUES (#{userCode}, #{password}, #{name}, #{gender}, #{phone}, #{college}, #{major})
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE user SET password = #{password} WHERE id = #{id}
+    </update>
+
+    <update id="updateProfile" parameterType="com.dlust.sportbackend.entity.User">
         UPDATE user
         <set>
-            <if test="nickname != null">nickname = #{nickname},</if>
-            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
             <if test="phone != null">phone = #{phone},</if>
-            <if test="sessionKey != null">session_key = #{sessionKey},</if>
-            <if test="unionId != null">union_id = #{unionId},</if>
+            <if test="college != null">college = #{college},</if>
+            <if test="major != null">major = #{major},</if>
         </set>
         WHERE id = #{id}
     </update>

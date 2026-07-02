@@ -7,7 +7,12 @@
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
                r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                e.name AS event_name,
                e.category AS category,
                s.name AS schedule_name
@@ -15,6 +20,7 @@
         LEFT JOIN event_schedule es ON r.event_schedule_id = es.id
         LEFT JOIN schedule s ON es.schedule_id = s.id
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.sports_meeting_id = #{sportsMeetingId}
         ORDER BY r.create_time DESC
@@ -24,7 +30,12 @@
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
                r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                e.name AS event_name,
                e.category AS category,
                s.name AS schedule_name
@@ -32,6 +43,7 @@
         LEFT JOIN event_schedule es ON r.event_schedule_id = es.id
         LEFT JOIN schedule s ON es.schedule_id = s.id
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.event_id = #{eventId}
         ORDER BY
@@ -46,7 +58,12 @@
         SELECT r.id, r.sports_meeting_id, r.event_id, r.event_schedule_id,
                r.participant_id, r.score_value, r.points, r.record_status, r.create_time, r.update_time,
                es.schedule_id AS schedule_id,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                e.name AS event_name,
                e.category AS category,
                s.name AS schedule_name
@@ -54,6 +71,7 @@
         INNER JOIN event_schedule es ON r.event_schedule_id = es.id
         LEFT JOIN schedule s ON es.schedule_id = s.id
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN event e ON r.event_id = e.id
         WHERE r.event_id = #{eventId} AND es.schedule_id = #{scheduleId} AND es.is_deleted = 0
         ORDER BY

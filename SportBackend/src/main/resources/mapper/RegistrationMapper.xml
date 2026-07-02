@@ -37,12 +37,18 @@
 
     <select id="selectVOBySportsMeetingId" resultType="RegistrationVO">
         SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                t.name AS team_name,
                e.name AS event_name,
                s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN team t ON p.team_id = t.id
         LEFT JOIN event e ON r.event_id = e.id
         LEFT JOIN schedule s ON r.schedule_id = s.id
@@ -52,12 +58,18 @@
 
     <select id="selectVOByEventId" resultType="RegistrationVO">
         SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                t.name AS team_name,
                e.name AS event_name,
                s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN team t ON p.team_id = t.id
         LEFT JOIN event e ON r.event_id = e.id
         LEFT JOIN schedule s ON r.schedule_id = s.id
@@ -67,12 +79,18 @@
 
     <select id="selectVOByParticipantId" resultType="RegistrationVO">
         SELECT r.id, r.participant_id, r.event_id, r.schedule_id, r.status, r.create_time, r.update_time,
-               p.name AS participant_name,
+               u.name AS participant_name,
+               u.user_code AS user_code,
+               u.gender AS gender,
+               u.phone AS phone,
+               u.college AS college,
+               u.major AS major,
                t.name AS team_name,
                e.name AS event_name,
                s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN team t ON p.team_id = t.id
         LEFT JOIN event e ON r.event_id = e.id
         LEFT JOIN schedule s ON r.schedule_id = s.id

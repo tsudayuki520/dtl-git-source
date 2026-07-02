@@ -40,19 +40,20 @@ public class UserRegisterController {
 
     /**
      * 报名接口
+     * 身份来自 JWT 注入的 userId；不再接受前端传入的 userCode/name/phone 等身份字段。
+     * 参赛人员按 (userId, sportsMeetingId) 查找，不存在则自动创建（upsert）。
      */
     @PostMapping("/submit")
-    public Result<String> submit(@RequestBody Map<String, Object> body) {
-        Long sportsMeetingId = Long.valueOf(body.get("sportsMeetingId").toString());
-        Long eventId = Long.valueOf(body.get("eventId").toString());
-        String userCode = body.get("userCode").toString();
-        String name = body.get("name").toString();
-        log.info("报名参赛: sportsMeetingId={}, eventId={}, userCode={}, name={}", sportsMeetingId, eventId, userCode, name);
+    public Result<String> submit(@RequestAttribute("userId") Long userId,
+                                 @RequestBody Map<String, Object> body) {
+        Long sportsMeetingId = ((Number) body.get("sportsMeetingId")).longValue();
+        Long eventId = ((Number) body.get("eventId")).longValue();
+        log.info("报名参赛: userId={}, sportsMeetingId={}, eventId={}", userId, sportsMeetingId, eventId);
 
         // 获取 scheduleId：前端传，或取该项目「当前开放且 sort 最小」的轮次
         Long scheduleId = null;
         if (body.get("scheduleId") != null) {
-            scheduleId = Long.valueOf(body.get("scheduleId").toString());
+            scheduleId = ((Number) body.get("scheduleId")).longValue();
         } else {
             scheduleId = eventScheduleService.getOpenScheduleIdByEventId(eventId);
             if (scheduleId == null) {
@@ -75,23 +76,14 @@ public class UserRegisterController {
         if (meeting.getRegistrationEnd() != null && now.isAfter(meeting.getRegistrationEnd())) {
             return Result.error(400, "报名已截止");
         }
-        String phone = body.get("phone").toString();
-        String gender = body.get("gender").toString();
-        String college = body.getOrDefault("college", "") != null ? body.get("college").toString() : "";
-        String major = body.getOrDefault("major", "") != null ? body.get("major").toString() : "";
 
-        // 1. 查找或创建参赛人员
-        Participant participant = participantMapper.selectByUserCodeAndSportsMeetingId(userCode, sportsMeetingId);
+        // 1. upsert participant(userId + sports_meeting_id)
+        Participant participant = participantMapper.selectByUserIdAndSportsMeetingId(userId, sportsMeetingId);
         if (participant == null) {
             participant = new Participant();
             participant.setSportsMeetingId(sportsMeetingId);
-            participant.setUserCode(userCode);
-            participant.setName(name);
-            participant.setPhone(phone);
-            participant.setGender(gender);
-            participant.setCollege(college);
-            participant.setMajor(major);
-            participantMapper.insert(participant);
+            participant.setUserId(userId);
+            participantMapper.insert(participant); // useGeneratedKeys=true → id 回填
         }
 
         // 2. 检查是否已报名该项目该赛次
@@ -109,7 +101,7 @@ public class UserRegisterController {
 
         // 3. 插入报名记录（含每人限报校验）
         try {
-            registrationService.add(participant.getId(), eventId, scheduleId);
+            registrationService.add(participant, eventId, scheduleId);
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
         }

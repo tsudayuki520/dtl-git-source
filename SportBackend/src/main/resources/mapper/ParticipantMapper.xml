@@ -1,59 +1,67 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dlust.sportbackend.Mapper.ParticipantMapper">
 
-    <select id="selectById" resultType="Participant">
-        SELECT p.*, t.name AS team_name FROM participant p
+    <select id="selectBySportsMeetingId" resultType="com.dlust.sportbackend.entity.Participant">
+        SELECT p.id, p.sports_meeting_id, p.user_id, p.team_id, p.create_time, p.update_time,
+               u.user_code, u.name, u.gender, u.phone, u.college, u.major,
+               t.name AS team_name
+        FROM participant p
+        LEFT JOIN user u ON p.user_id = u.id
         LEFT JOIN team t ON p.team_id = t.id
+        WHERE p.sports_meeting_id = #{sportsMeetingId}
+        ORDER BY u.user_code ASC
+    </select>
+
+    <select id="selectByTeamId" resultType="com.dlust.sportbackend.entity.Participant">
+        SELECT p.id, p.sports_meeting_id, p.user_id, p.team_id, p.create_time, p.update_time,
+               u.user_code, u.name, u.gender, u.phone, u.college, u.major
+        FROM participant p
+        LEFT JOIN user u ON p.user_id = u.id
+        WHERE p.team_id = #{teamId}
+        ORDER BY u.user_code ASC
+    </select>
+
+    <select id="selectByUserIdAndSportsMeetingId" resultType="com.dlust.sportbackend.entity.Participant">
+        SELECT id, sports_meeting_id, user_id, team_id, create_time, update_time
+        FROM participant
+        WHERE user_id = #{userId} AND sports_meeting_id = #{sportsMeetingId}
+    </select>
+
+    <insert id="insert" parameterType="com.dlust.sportbackend.entity.Participant" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO participant (sports_meeting_id, user_id, team_id)
+        VALUES (#{sportsMeetingId}, #{userId}, #{teamId})
+    </insert>
+
+    <select id="selectByIdWithUser" resultType="com.dlust.sportbackend.entity.Participant">
+        SELECT p.id, p.sports_meeting_id, p.user_id, p.team_id, p.create_time, p.update_time,
+               u.user_code, u.name, u.gender, u.phone, u.college, u.major
+        FROM participant p
+        LEFT JOIN user u ON p.user_id = u.id
         WHERE p.id = #{id}
     </select>
 
-    <select id="selectByUserCodeAndSportsMeetingId" resultType="Participant">
-        SELECT p.*, t.name AS team_name FROM participant p
-        LEFT JOIN team t ON p.team_id = t.id
-        WHERE p.user_code = #{userCode} AND p.sports_meeting_id = #{sportsMeetingId}
-    </select>
+    <update id="updateTeamId">
+        UPDATE participant SET team_id = #{teamId} WHERE id = #{id}
+    </update>
 
-    <select id="selectBySportsMeetingId" resultType="Participant">
-        SELECT p.*, t.name AS team_name FROM participant p
-        LEFT JOIN team t ON p.team_id = t.id
-        WHERE p.sports_meeting_id = #{sportsMeetingId}
-        ORDER BY p.create_time DESC
-    </select>
-
-    <select id="selectByTeamId" resultType="Participant">
-        SELECT p.*, t.name AS team_name FROM participant p
-        LEFT JOIN team t ON p.team_id = t.id
-        WHERE p.team_id = #{teamId}
-        ORDER BY p.create_time DESC
-    </select>
-
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO participant (sports_meeting_id, team_id, user_code, name, phone, gender, college, major)
-        VALUES (#{sportsMeetingId}, #{teamId}, #{userCode}, #{name}, #{phone}, #{gender}, #{college}, #{major})
-    </insert>
-
-    <update id="updateById">
-        UPDATE participant
-        <set>
-            <if test="teamId != null">team_id = #{teamId},</if>
-            <if test="userCode != null">user_code = #{userCode},</if>
-            <if test="name != null">name = #{name},</if>
-            <if test="phone != null">phone = #{phone},</if>
-            <if test="gender != null">gender = #{gender},</if>
-            <if test="college != null">college = #{college},</if>
-            <if test="major != null">major = #{major},</if>
-        </set>
-        WHERE id = #{id}
+    <update id="clearTeamId">
+        UPDATE participant SET team_id = NULL WHERE id = #{id}
     </update>
 
     <delete id="deleteById">
         DELETE FROM participant WHERE id = #{id}
     </delete>
 
-    <update id="clearTeam">
-        UPDATE participant SET team_id = NULL WHERE id = #{id}
+    <!-- 迁移用：查所有旧 participant（迁移期专用，迁移后删） -->
+    <select id="selectAllForMigration" resultType="java.util.Map">
+        SELECT id, sports_meeting_id, team_id, user_code, name, phone, gender, college, major
+        FROM participant
+    </select>
+
+    <update id="updateUserIdForMigration">
+        UPDATE participant SET user_id = #{userId} WHERE id = #{id}
     </update>
 
 </mapper>

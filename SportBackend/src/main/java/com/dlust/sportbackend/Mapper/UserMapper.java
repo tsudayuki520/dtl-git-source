@@ -6,12 +6,11 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserMapper {
-
-    User selectByOpenid(@Param("openid") String openid);
-
+    User selectByUserCode(@Param("userCode") String userCode);
     User selectById(@Param("id") Long id);
-
-    void insert(User user);
-
-    void updateById(User user);
+    int insert(User user);
+    int updatePassword(@Param("id") Long id, @Param("password") String password);
+    int updateProfile(User user);  // 更新 name/gender/phone/college/major（不含 userCode/password）
+    // 迁移用
+    int insertForMigration(User user);
 }

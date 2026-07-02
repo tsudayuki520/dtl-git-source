@@ -33,10 +33,10 @@ public class RegistrationServiceImpl implements RegistrationService {
     private RegistrationMapper registrationMapper;
 
     @Autowired
-    private EventScheduleService eventScheduleService;
+    private ParticipantMapper participantMapper;
 
     @Autowired
-    private ParticipantMapper participantMapper;
+    private EventScheduleService eventScheduleService;
 
     @Autowired
     private TeamMapper teamMapper;
@@ -64,9 +64,16 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public void add(Long participantId, Long eventId, Long scheduleId) {
-        checkRegisterLimit(participantId, eventId);
+        Participant p = participantMapper.selectByIdWithUser(participantId);
+        if (p == null) throw new RuntimeException("参赛人员不存在");
+        add(p, eventId, scheduleId);  // 委托给执行完整 checkRegisterLimit 的新重载
+    }
+
+    @Override
+    public void add(Participant participant, Long eventId, Long scheduleId) {
+        checkRegisterLimit(participant, eventId);
         Registration reg = new Registration();
-        reg.setParticipantId(participantId);
+        reg.setParticipantId(participant.getId());
         reg.setEventId(eventId);
         reg.setScheduleId(scheduleId);
         reg.setStatus(0);
@@ -81,9 +88,9 @@ public class RegistrationServiceImpl implements RegistrationService {
      * ③ 规则B:每人限报项目数(per_person_limit),统计「每人选中集(person_limit_event_ids)」内
      *          已报不同 event 数(只算 status=0,忽略已晋级),含本次后超过 N 即拒绝。
      */
-    private void checkRegisterLimit(Long participantId, Long eventId) {
-        Participant p = participantMapper.selectById(participantId);
+    private void checkRegisterLimit(Participant p, Long eventId) {
         if (p == null) return;
+        Long participantId = p.getId();
 
         // ① 资格:参赛人员必须有代表队(participant→team→group_type)
         if (p.getTeamId() == null) {

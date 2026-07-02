@@ -7,14 +7,16 @@ import java.time.LocalDateTime;
 public class Participant {
     private Long id;
     private Long sportsMeetingId;
-    private Long teamId;           // 代表队ID（关联team表）
-    private String teamName;       // 代表队名称（JOIN查询）
-    private String userCode;
-    private String name;
-    private String phone;
-    private String gender;
-    private String college;
-    private String major;       // 专业/单位
+    private Long userId;       // 关联 user.id（替代原 userCode/name/...）
+    private Long teamId;       // 代表队（后续分配）
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    // 以下为 JOIN 查询时的扩展字段（非 participant 表字段）
+    private String userCode;   // JOIN user
+    private String name;       // JOIN user
+    private String gender;     // JOIN user
+    private String phone;      // JOIN user
+    private String college;    // JOIN user
+    private String major;      // JOIN user
+    private String teamName;   // JOIN team
 }

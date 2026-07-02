@@ -1,12 +1,14 @@
--- 用户表（通过微信登录自动创建）
+-- 用户表（账号主体）
 CREATE TABLE IF NOT EXISTS user (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
-    openid VARCHAR(64) NOT NULL UNIQUE COMMENT '微信openid（用户在小程序的唯一标识）',
-    union_id VARCHAR(64) DEFAULT NULL COMMENT '微信unionid（跨应用统一标识，可选）',
-    nickname VARCHAR(100) DEFAULT NULL COMMENT '昵称',
-    avatar_url VARCHAR(500) DEFAULT NULL COMMENT '头像URL',
-    phone VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-    session_key VARCHAR(128) DEFAULT NULL COMMENT '微信会话密钥（用于解密手机号等敏感信息）',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
+    user_code    VARCHAR(30)  NOT NULL COMMENT '学号/工号，登录账号',
+    password     VARCHAR(100) NOT NULL COMMENT 'BCrypt 哈希',
+    name         VARCHAR(50)  NOT NULL COMMENT '姓名',
+    gender       VARCHAR(4)   NOT NULL COMMENT '性别',
+    phone        VARCHAR(20)  DEFAULT NULL COMMENT '电话（非必须）',
+    college      VARCHAR(100) DEFAULT NULL COMMENT '学院',
+    major        VARCHAR(100) DEFAULT NULL COMMENT '专业/单位',
+    create_time  DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
+    update_time  DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_user_code (user_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表（账号主体）';

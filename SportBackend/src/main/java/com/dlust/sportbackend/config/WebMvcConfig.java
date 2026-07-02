@@ -26,13 +26,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns(
-                        "/api/notice/list",         // 用户通知列表需要 userId
-                        "/api/notice/unread-count",  // 未读数量需要 userId
-                        "/api/notice/*/read",        // 标记已读需要 userId
-                        "/api/auth/phone",           // 绑定手机号需要登录
-                        "/api/auth/info",            // 获取用户信息需要登录
-                        "/api/auth/avatar",          // 上传头像需要登录
-                        "/api/auth/nickname"         // 更新昵称需要登录
+                        "/api/register/submit",
+                        "/api/register/cancel",
+                        "/api/my/**",
+                        "/api/auth/change-password"
                 );
     }
 }

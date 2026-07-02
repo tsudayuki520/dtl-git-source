@@ -68,7 +68,7 @@ public class RecordServiceImpl implements RecordService {
         if (status == 1) {
             // 拼装 record 入册
             Event event = eventMapper.selectById(result.getEventId());
-            Participant participant = participantMapper.selectById(result.getParticipantId());
+            Participant participant = participantMapper.selectByIdWithUser(result.getParticipantId());
             Team team = participant != null && participant.getTeamId() != null
                     ? teamMapper.selectById(participant.getTeamId()) : null;
             GroupType groupType = event != null && event.getGroupTypeId() != null
