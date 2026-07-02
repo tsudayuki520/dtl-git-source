@@ -160,13 +160,6 @@ page {
   content: "📋";
 }
 
-.icon-sign {
-  background-color: #fff3e0;
-}
-.icon-sign::after {
-  content: "📝";
-}
-
 .icon-player {
   background-color: #e8f5e9;
 }
@@ -179,13 +172,6 @@ page {
 }
 .icon-result::after {
   content: "🏅";
-}
-
-.icon-appeal {
-  background-color: #f3e5f5;
-}
-.icon-appeal::after {
-  content: "📢";
 }
 
 .module-text {

@@ -120,10 +120,6 @@ Page({
     })
   },
 
-  goToSignSheet() {
-    wx.showToast({ title: '签名表功能开发中', icon: 'none' })
-  },
-
   goToPlayerList() {
     wx.showToast({ title: '选手名单功能开发中', icon: 'none' })
   },
@@ -138,10 +134,6 @@ Page({
 
   goToResult() {
     wx.showToast({ title: '成绩公告功能开发中', icon: 'none' })
-  },
-
-  goToAppeal() {
-    wx.showToast({ title: '申述功能开发中', icon: 'none' })
   },
 
   goToNoticeDetail(e) {
