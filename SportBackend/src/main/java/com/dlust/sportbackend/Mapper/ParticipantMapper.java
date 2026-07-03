@@ -16,6 +16,9 @@ public interface ParticipantMapper {
     Participant selectByUserIdAndSportsMeetingId(@Param("userId") Long userId,
                                                   @Param("sportsMeetingId") Long sportsMeetingId);
 
+    /** 查某 user 的所有 participant 记录（跨运动会），JOIN user/team/sports_meeting。 */
+    List<Participant> selectByUserId(@Param("userId") Long userId);
+
     /** 按 participant.id 查询并 JOIN user 表取 name/userCode 等（仅 RecordServiceImpl 入册时使用）。 */
     Participant selectByIdWithUser(@Param("id") Long id);
 

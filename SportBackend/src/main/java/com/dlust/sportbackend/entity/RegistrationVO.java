@@ -23,4 +23,5 @@ public class RegistrationVO {
     private String phone;
     private String college;
     private String major;
+    private String category;  // JOIN event（项目类别：男/女/混合 等）
 }

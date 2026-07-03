@@ -14,7 +14,9 @@
     "pages/notice-detail/notice-detail",
     "pages/logs/logs",
     "pages/event-registrations/event-registrations",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/my-registrations/my-registrations",
+    "pages/change-password/change-password"
   ],
   "window": {
     "navigationBarTextStyle": "black",

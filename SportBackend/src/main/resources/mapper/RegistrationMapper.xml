@@ -87,6 +87,7 @@
                u.major AS major,
                t.name AS team_name,
                e.name AS event_name,
+               e.category AS category,
                s.name AS schedule_name
         FROM registration r
         LEFT JOIN participant p ON r.participant_id = p.id

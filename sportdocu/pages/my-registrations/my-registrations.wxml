@@ -1,0 +1,18 @@
+<!--my-registrations.wxml-->
+<scroll-view class="mr-page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{groups.length === 0}}" class="empty">暂无参赛项目</view>
+  <view wx:else>
+    <view class="summary">累计参赛 {{totalCount}} 个项目</view>
+    <view class="meeting-group" wx:for="{{groups}}" wx:key="sportsMeetingId">
+      <view class="meeting-name">{{item.sportsMeetingName}}</view>
+      <view class="item-card" wx:for="{{item.items}}" wx:for-item="evt" wx:key="index">
+        <view class="item-header">
+          <text class="item-name">{{evt.eventName}}</text>
+          <text class="item-category">{{evt.category}}</text>
+        </view>
+        <text class="item-schedule">{{evt.scheduleName}}</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>

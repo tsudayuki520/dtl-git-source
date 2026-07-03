@@ -2,36 +2,31 @@
 <view class="profile-page">
 
   <!-- 未登录 -->
-  <view class="login-tip" wx:if="{{!userInfo}}">
-    <text class="login-text">请先登录</text>
+  <view wx:if="{{!userInfo}}" class="login-prompt">
+    <text class="login-prompt-text">请先登录查看个人信息</text>
+    <button class="login-btn" bindtap="goLogin">登录</button>
   </view>
 
   <!-- 已登录 -->
   <view wx:else>
-
-    <!-- 头像和昵称 -->
-    <view class="profile-header">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-        <image class="avatar" src="{{userInfo.avatarUrl || defaultAvatar}}" mode="aspectFill" />
-        <view class="avatar-edit">编辑</view>
-      </button>
-      <view class="nickname-area">
-        <input class="nickname-input" type="nickname" placeholder="点击设置昵称"
-               value="{{userInfo.nickname}}" bindblur="onNicknameConfirm" />
-      </view>
+    <view class="user-card">
+      <text class="user-name">{{userInfo.name}}</text>
+      <text class="user-code">{{userInfo.userCode}}</text>
     </view>
 
-    <!-- 用户信息 -->
-    <view class="info-card">
-      <view class="info-item">
-        <text class="info-label">手机号</text>
-        <text class="info-value">{{userInfo.phone || '未绑定'}}</text>
+    <view class="menu">
+      <view class="menu-item" bindtap="goMyRegistrations">
+        <text class="menu-text">我的参赛项目</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="changePassword">
+        <text class="menu-text">修改密码</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item logout" bindtap="onLogout">
+        <text class="menu-text">退出登录</text>
       </view>
     </view>
-
-    <!-- 退出登录 -->
-    <view class="logout-btn" bindtap="onLogout">退出登录</view>
-
   </view>
 
 </view>

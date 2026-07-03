@@ -29,6 +29,19 @@
         WHERE user_id = #{userId} AND sports_meeting_id = #{sportsMeetingId}
     </select>
 
+    <select id="selectByUserId" resultType="com.dlust.sportbackend.entity.Participant">
+        SELECT p.id, p.sports_meeting_id, p.user_id, p.team_id, p.create_time, p.update_time,
+               u.user_code, u.name, u.gender, u.phone, u.college, u.major,
+               t.name AS team_name,
+               sm.name AS sports_meeting_name
+        FROM participant p
+        LEFT JOIN user u ON p.user_id = u.id
+        LEFT JOIN team t ON p.team_id = t.id
+        LEFT JOIN sports_meeting sm ON p.sports_meeting_id = sm.id
+        WHERE p.user_id = #{userId}
+        ORDER BY p.sports_meeting_id DESC
+    </select>
+
     <insert id="insert" parameterType="com.dlust.sportbackend.entity.Participant" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO participant (sports_meeting_id, user_id, team_id)
         VALUES (#{sportsMeetingId}, #{userId}, #{teamId})

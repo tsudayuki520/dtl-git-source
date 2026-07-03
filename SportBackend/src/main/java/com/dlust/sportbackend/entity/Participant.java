@@ -19,4 +19,5 @@ public class Participant {
     private String college;    // JOIN user
     private String major;      // JOIN user
     private String teamName;   // JOIN team
+    private String sportsMeetingName;  // JOIN sports_meeting
 }
