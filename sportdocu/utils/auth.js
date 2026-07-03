@@ -30,6 +30,8 @@ function logout() {
   wx.removeStorageSync('userInfo')
 }
 
+let _isHandling401 = false   // 防护并发 401：只处理一次跳转
+
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = getToken()
@@ -44,12 +46,19 @@ function request(options) {
       },
       success: (res) => {
         if (res.statusCode === 401) {
-          logout()
-          // 跳登录页，带 redirect 回跳当前页
-          const pages = getCurrentPages()
-          const cur = pages[pages.length - 1]
-          const redirect = cur ? '/' + cur.route : ''
-          wx.redirectTo({ url: '/pages/login/login?redirect=' + encodeURIComponent(redirect) })
+          // 防护并发 401：只处理一次跳转
+          if (!_isHandling401) {
+            _isHandling401 = true
+            logout()
+            // 跳登录页，带 redirect 回跳当前页
+            const pages = getCurrentPages()
+            const cur = pages[pages.length - 1]
+            const redirect = cur ? '/' + cur.route : ''
+            wx.redirectTo({
+              url: '/pages/login/login?redirect=' + encodeURIComponent(redirect),
+              complete: () => { _isHandling401 = false }
+            })
+          }
           reject(new Error('未登录'))
           return
         }

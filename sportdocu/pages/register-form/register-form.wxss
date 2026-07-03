@@ -29,50 +29,6 @@ page {
   color: #2196F3;
 }
 
-/* 表单卡片 */
-.form-card {
-  background-color: #ffffff;
-  border-radius: 16rpx;
-  padding: 8rpx 32rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
-}
-
-.form-item {
-  display: flex;
-  align-items: center;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
-}
-
-.form-item:last-child {
-  border-bottom: none;
-}
-
-.form-label {
-  width: 160rpx;
-  font-size: 28rpx;
-  color: #333;
-  flex-shrink: 0;
-}
-
-.form-input {
-  flex: 1;
-  font-size: 28rpx;
-  color: #333;
-}
-
-.radio-group {
-  display: flex;
-  gap: 32rpx;
-}
-
-.radio-label {
-  font-size: 28rpx;
-  color: #333;
-  display: flex;
-  align-items: center;
-}
-
 /* 提交按钮 */
 .submit-btn {
   background-color: #4CAF50;
