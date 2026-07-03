@@ -1,14 +1,7 @@
 // app.js
-const auth = require('./utils/auth')
-
 App({
   onLaunch() {
-    // 静默登录：有 token 直接用，没有则 wx.login 换取
-    auth.ensureLogin().then(() => {
-      console.log('登录成功')
-    }).catch(err => {
-      console.error('自动登录失败', err)
-    })
+    // 账号化后游客模式，不自动登录；触发报名/查我的时才需登录
   },
 
   globalData: {

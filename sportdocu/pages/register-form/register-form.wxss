@@ -88,3 +88,7 @@ page {
 .submit-btn:active {
   opacity: 0.8;
 }
+
+.submit-btn.disabled {
+  opacity: 0.6;
+}

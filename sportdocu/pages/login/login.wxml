@@ -1,0 +1,9 @@
+<view class="login-page">
+  <view class="login-card">
+    <text class="login-title">参赛人员登录</text>
+    <input class="login-input" placeholder="学号/工号" value="{{userCode}}" bindinput="onInputCode" />
+    <input class="login-input" placeholder="密码" password value="{{password}}" bindinput="onInputPwd" />
+    <button class="login-btn" loading="{{loading}}" bindtap="handleLogin">登录</button>
+    <text class="login-hint">默认密码：dlust123456（首次登录请修改）</text>
+  </view>
+</view>

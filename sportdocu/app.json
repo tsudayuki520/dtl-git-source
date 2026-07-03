@@ -13,7 +13,8 @@
     "pages/notice/notice",
     "pages/notice-detail/notice-detail",
     "pages/logs/logs",
-    "pages/event-registrations/event-registrations"
+    "pages/event-registrations/event-registrations",
+    "pages/login/login"
   ],
   "window": {
     "navigationBarTextStyle": "black",
