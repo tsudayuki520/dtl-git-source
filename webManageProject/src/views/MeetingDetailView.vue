@@ -419,14 +419,27 @@ function openImportDialog() {
   importDialogVisible.value = true
 }
 
+function handleFileChange(e: globalThis.Event) {
+  const input = e.target as HTMLInputElement
+  const f = input.files && input.files[0]
+  if (f) importFile.value = f
+}
+
 async function handleImport() {
   importing.value = true
   try {
     const res: any = await importParticipants(importFile.value!, meetingId)
-    const result = res.data || res
+    const result = res.data // 拦截器返回 Result body，直接取 data
     importResult.value = result
-    ElMessage.success(`成功导入 ${result.successCount} 条`)
-    fetchParticipants() // 刷新列表
+    if (result.successCount > 0) {
+      ElMessage.success(`成功导入 ${result.successCount} 条`)
+      fetchParticipants() // 有新增人员才刷新列表
+    } else if (result.failedRows && result.failedRows.length > 0) {
+      ElMessage.error('全部行导入失败，请查看明细')
+    } else {
+      // 边界：空表之类，保持 success 提示
+      ElMessage.success(`成功导入 ${result.successCount} 条`)
+    }
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.message || '导入失败')
   } finally {
@@ -436,8 +449,8 @@ async function handleImport() {
 
 async function handleDownloadTemplate() {
   try {
-    const res: any = await downloadImportTemplate()
-    const blob = new Blob([res.data || res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    // 拦截器对 responseType:'blob' 的请求返回 Blob 本身（axios 类型仍是 AxiosResponse，需断言）
+    const blob = await downloadImportTemplate() as unknown as Blob
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -1073,7 +1086,7 @@ onMounted(() => {
       <div style="margin-bottom:12px">
         <el-link type="primary" @click="handleDownloadTemplate">下载导入模板</el-link>
       </div>
-      <input type="file" accept=".xlsx" @change="(e:any) => importFile = e.target.files[0]" />
+      <input type="file" accept=".xlsx" @change="handleFileChange" />
       <div v-if="importResult" style="margin-top:16px">
         <el-alert :title="`成功 ${importResult.successCount} 条`" type="success" :closable="false" />
         <div v-if="importResult.failedRows.length" style="margin-top:8px;color:#f56c6c;font-size:13px">
