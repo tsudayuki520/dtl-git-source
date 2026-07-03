@@ -8,7 +8,7 @@ import { getEventList } from '@/api/event'
 import type { Event } from '@/api/event'
 import { getEventSchedulesBySportsMeeting } from '@/api/eventSchedule'
 import type { EventSchedule } from '@/api/eventSchedule'
-import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant } from '@/api/participant'
+import { getParticipantList, getParticipantListByTeam, addParticipant, updateParticipant, deleteParticipant, importParticipants, downloadImportTemplate } from '@/api/participant'
 import type { Participant } from '@/api/participant'
 import { resetPassword } from '@/api/user'
 import { getScheduleList, addSchedule, updateSchedule, deleteSchedule } from '@/api/schedule'
@@ -407,18 +407,59 @@ async function handleParticipantDelete(id: number) {
   } catch { /* cancel */ }
 }
 
-// 批量导入占位（Task 12 实现真正的弹窗）
-function onImportClick() {
-  ElMessage.info('导入功能开发中')
+// 批量导入参赛人员
+const importDialogVisible = ref(false)
+const importFile = ref<File | null>(null)
+const importResult = ref<{ successCount: number; failedRows: { row: number; reason: string }[] } | null>(null)
+const importing = ref(false)
+
+function openImportDialog() {
+  importFile.value = null
+  importResult.value = null
+  importDialogVisible.value = true
+}
+
+async function handleImport() {
+  importing.value = true
+  try {
+    const res: any = await importParticipants(importFile.value!, meetingId)
+    const result = res.data || res
+    importResult.value = result
+    ElMessage.success(`成功导入 ${result.successCount} 条`)
+    fetchParticipants() // 刷新列表
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || '导入失败')
+  } finally {
+    importing.value = false
+  }
+}
+
+async function handleDownloadTemplate() {
+  try {
+    const res: any = await downloadImportTemplate()
+    const blob = new Blob([res.data || res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'participant-template.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('模板下载失败')
+  }
 }
 
 // 重置密码（账号化后 user 是账号主体）
 async function handleResetPassword(row: Participant) {
   try {
     await ElMessageBox.confirm('确定重置为默认密码 dlust123456？', '提示', { type: 'warning' })
+  } catch { return } // 用户取消
+  try {
     const res: any = await resetPassword(row.userId)
     ElMessage.success(res?.message || '已重置为默认密码 dlust123456')
-  } catch { /* cancel or error */ }
+  } catch {
+    ElMessage.error('重置失败')
+  }
 }
 
 // ============ 公告通知 ============
@@ -798,7 +839,7 @@ onMounted(() => {
         <div class="tab-toolbar">
           <el-input v-model="participantSearch" placeholder="搜索姓名/学号/学院" clearable style="width:220px" />
           <el-button type="primary" size="small" @click="openParticipantAdd">+ 新增人员</el-button>
-          <el-button type="success" size="small" @click="onImportClick">批量导入</el-button>
+          <el-button type="success" size="small" @click="openImportDialog">批量导入</el-button>
         </div>
         <el-table :data="filteredParticipants" stripe border size="small">
           <el-table-column prop="userCode" label="学号/工号" width="120" />
@@ -1023,6 +1064,25 @@ onMounted(() => {
       <template #footer>
         <el-button @click="participantDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleParticipantSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ======== 弹窗：批量导入参赛人员 ======== -->
+
+    <el-dialog v-model="importDialogVisible" title="批量导入参赛人员" width="500px">
+      <div style="margin-bottom:12px">
+        <el-link type="primary" @click="handleDownloadTemplate">下载导入模板</el-link>
+      </div>
+      <input type="file" accept=".xlsx" @change="(e:any) => importFile = e.target.files[0]" />
+      <div v-if="importResult" style="margin-top:16px">
+        <el-alert :title="`成功 ${importResult.successCount} 条`" type="success" :closable="false" />
+        <div v-if="importResult.failedRows.length" style="margin-top:8px;color:#f56c6c;font-size:13px">
+          失败行：<span v-for="f in importResult.failedRows" :key="f.row">第{{ f.row }}行({{ f.reason }}) </span>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">关闭</el-button>
+        <el-button type="primary" :disabled="!importFile" :loading="importing" @click="handleImport">导入</el-button>
       </template>
     </el-dialog>
 
