@@ -24,6 +24,11 @@ Page({
     wx.navigateTo({ url: '/pages/my-registrations/my-registrations' })
   },
 
+  goMyTeams() {
+    if (!auth.requireLogin('/pages/my-teams/my-teams')) return
+    wx.navigateTo({ url: '/pages/my-teams/my-teams' })
+  },
+
   changePassword() {
     if (!auth.requireLogin('/pages/change-password/change-password')) return
     wx.navigateTo({ url: '/pages/change-password/change-password' })

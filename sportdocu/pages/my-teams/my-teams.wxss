@@ -1,0 +1,35 @@
+/**my-teams.wxss**/
+page { background-color: #f5f5f5; }
+.mt-page { height: 100vh; padding: 24rpx; box-sizing: border-box; }
+.empty { text-align: center; padding: 80rpx 0; color: #909399; font-size: 28rpx; }
+.summary {
+  font-size: 26rpx; color: #2196F3; padding: 16rpx 8rpx;
+}
+.team-card {
+  background: #fff; border-radius: 16rpx; padding: 24rpx 28rpx;
+  margin-bottom: 20rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.team-header {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.team-name {
+  font-size: 32rpx; font-weight: bold; color: #303133;
+}
+.team-score-num {
+  font-size: 34rpx; font-weight: bold; color: #FF9800;
+}
+.team-score-unit {
+  font-size: 20rpx; color: #909399; margin-left: 4rpx;
+}
+.team-meeting {
+  display: block; font-size: 24rpx; color: #909399; margin-top: 8rpx;
+}
+.team-meta {
+  display: flex; flex-wrap: wrap;
+  margin-top: 16rpx; padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.team-meta-item {
+  font-size: 24rpx; color: #606266;
+  margin-right: 24rpx;
+}

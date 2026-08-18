@@ -2,9 +2,11 @@ package com.dlust.sportbackend.Controller.user;
 
 import com.dlust.sportbackend.Mapper.ParticipantMapper;
 import com.dlust.sportbackend.Mapper.RegistrationMapper;
+import com.dlust.sportbackend.Mapper.TeamMapper;
 import com.dlust.sportbackend.common.Result;
 import com.dlust.sportbackend.entity.Participant;
 import com.dlust.sportbackend.entity.RegistrationVO;
+import com.dlust.sportbackend.entity.TeamVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +26,9 @@ public class MyController {
 
     @Autowired
     private RegistrationMapper registrationMapper;
+
+    @Autowired
+    private TeamMapper teamMapper;
 
     @GetMapping("/registrations")
     public Result<List<Map<String, Object>>> myRegistrations(@RequestAttribute("userId") Long userId) {
@@ -57,5 +62,10 @@ public class MyController {
             result.add(group);
         }
         return Result.success(result);
+    }
+
+    @GetMapping("/teams")
+    public Result<List<TeamVO>> myTeams(@RequestAttribute("userId") Long userId) {
+        return Result.success(teamMapper.selectByUserId(userId));
     }
 }

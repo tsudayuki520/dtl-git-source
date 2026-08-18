@@ -39,6 +39,19 @@
         DELETE FROM team WHERE id = #{id}
     </delete>
 
+    <select id="selectByUserId" resultType="com.dlust.sportbackend.entity.TeamVO">
+        SELECT t.id, t.sports_meeting_id, t.name, t.leader, t.coach, t.total_score,
+               sm.name AS sports_meeting_name,
+               (SELECT COUNT(*) FROM participant p2 WHERE p2.team_id = t.id) AS member_count
+        FROM team t
+        JOIN sports_meeting sm ON t.sports_meeting_id = sm.id
+        WHERE EXISTS (
+            SELECT 1 FROM participant p
+            WHERE p.team_id = t.id AND p.user_id = #{userId}
+        )
+        ORDER BY t.sports_meeting_id DESC, t.id ASC
+    </select>
+
     <update id="recalculateTotalScoreBySportsMeetingId">
         UPDATE team t
         SET t.total_score = COALESCE((

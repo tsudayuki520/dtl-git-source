@@ -1,0 +1,23 @@
+<!--my-teams.wxml-->
+<scroll-view class="mt-page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{teams.length === 0}}" class="empty">暂未加入代表队</view>
+  <view wx:else>
+    <view class="summary">共加入 {{teams.length}} 支代表队</view>
+    <view class="team-card" wx:for="{{teams}}" wx:key="id">
+      <view class="team-header">
+        <text class="team-name">{{item.name}}</text>
+        <view class="team-score">
+          <text class="team-score-num">{{item.totalScore}}</text>
+          <text class="team-score-unit">分</text>
+        </view>
+      </view>
+      <text class="team-meeting">{{item.sportsMeetingName}}</text>
+      <view class="team-meta">
+        <text class="team-meta-item" wx:if="{{item.leader}}">领队：{{item.leader}}</text>
+        <text class="team-meta-item" wx:if="{{item.coach}}">教练：{{item.coach}}</text>
+        <text class="team-meta-item">成员：{{item.memberCount}} 人</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>

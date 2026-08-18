@@ -19,6 +19,10 @@
         <text class="menu-text">我的参赛项目</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" bindtap="goMyTeams">
+        <text class="menu-text">我的队伍</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" bindtap="changePassword">
         <text class="menu-text">修改密码</text>
         <text class="menu-arrow">›</text>
