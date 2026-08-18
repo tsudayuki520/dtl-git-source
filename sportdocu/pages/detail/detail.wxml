@@ -64,6 +64,7 @@
           <text class="event-name">{{evt.name}}</text>
           <view class="event-meta">
             <text class="event-info">{{evt.groupTypeName}} · {{evt.gender}}</text>
+            <text class="event-round {{evt.roundTag}}" wx:if="{{evt.roundName}}">{{evt.roundName}}</text>
             <text class="event-badge {{evt.allowRegister ? 'badge-open' : 'badge-advance'}}">{{evt.allowRegister ? '可报名' : '仅晋级'}}</text>
           </view>
           <view class="event-reg-count">已报名 {{evt.registeredCount || 0}}<text wx:if="{{evt.registerLimit > 0}}"> / {{evt.registerLimit}}</text><text wx:else> · 不限</text></view>

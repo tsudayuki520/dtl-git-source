@@ -47,32 +47,55 @@ Page({
   },
 
   loadEvents(id) {
-    wx.request({
-      url: auth.BASE_URL + '/api/event/list?sportsMeetingId=' + id,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.code === 200) {
-          const events = res.data.data || []
-          // 按分类分组，不去重，同项目不同组别都展示
-          const categoryOrder = ['田赛', '径赛', '团队赛']
-          const map = {}
-          events.forEach(e => {
-            const cat = e.category || '径赛'
-            if (!map[cat]) map[cat] = []
-            map[cat].push({ id: e.id, name: e.name, gender: e.gender, groupTypeName: e.groupTypeName, allowRegister: e.allowRegister, registerLimit: e.registerLimit })
-          })
-          const eventCategories = categoryOrder
-            .filter(cat => map[cat])
-            .map(cat => ({ category: cat, events: map[cat] }))
-          this.setData({ eventCategories }, () => {
-            this.loadRegisterCount(id)
-          })
+    Promise.all([
+      auth.request({ url: '/api/event/list?sportsMeetingId=' + id }),
+      auth.request({ url: '/api/schedule/list?sportsMeetingId=' + id }).catch(() => []),
+      auth.request({ url: '/api/admin/event-schedule/listBySportsMeeting?sportsMeetingId=' + id }).catch(() => []),
+    ]).then(([events, schedules, esList]) => {
+      // 轮次 id -> 名称（预选赛/复赛/决赛）
+      const scheduleNameById = {}
+      ;(schedules || []).forEach(s => { scheduleNameById[s.id] = s.name })
+      // event 行 -> 轮次名称：同项目不同赛次是多行 event，借此区分预/复/决
+      const eventRoundByName = {}
+      ;(esList || []).forEach(es => {
+        if (es.isDeleted === 0 && scheduleNameById[es.scheduleId]) {
+          eventRoundByName[es.eventId] = scheduleNameById[es.scheduleId]
         }
-      },
-      fail: (err) => {
-        console.error('获取项目列表失败', err)
-      }
+      })
+      // 按分类分组，不去重，同项目不同组别都展示
+      const categoryOrder = ['田赛', '径赛', '团队赛']
+      const map = {}
+      ;(events || []).forEach(e => {
+        const cat = e.category || '径赛'
+        if (!map[cat]) map[cat] = []
+        map[cat].push({
+          id: e.id,
+          name: e.name,
+          gender: e.gender,
+          groupTypeName: e.groupTypeName,
+          allowRegister: e.allowRegister,
+          registerLimit: e.registerLimit,
+          roundName: eventRoundByName[e.id] || '',
+          roundTag: this.roundTag(eventRoundByName[e.id]),
+        })
+      })
+      const eventCategories = categoryOrder
+        .filter(cat => map[cat])
+        .map(cat => ({ category: cat, events: map[cat] }))
+      this.setData({ eventCategories }, () => {
+        this.loadRegisterCount(id)
+      })
+    }).catch((err) => {
+      console.error('获取项目列表失败', err)
     })
+  },
+
+  roundTag(name) {
+    if (!name) return 'other'
+    if (name.indexOf('预') !== -1) return 'pre'
+    if (name.indexOf('复') !== -1 || name.indexOf('半') !== -1) return 'semi'
+    if (name.indexOf('决') !== -1) return 'final'
+    return 'other'
   },
 
   /** 拉取各项目已报名人数，回填到 eventCategories */
@@ -129,7 +152,9 @@ Page({
   },
 
   goToResult() {
-    wx.showToast({ title: '成绩公告功能开发中', icon: 'none' })
+    wx.navigateTo({
+      url: '/pages/result/result?sportsMeetingId=' + this.data.meetingId + '&name=' + encodeURIComponent(this.data.meeting.name || '')
+    })
   },
 
   goToNoticeDetail(e) {

@@ -1,4 +1,0 @@
-// referee.js
-Page({
-  data: {},
-})

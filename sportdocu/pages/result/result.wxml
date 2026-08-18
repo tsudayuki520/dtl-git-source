@@ -1,0 +1,30 @@
+<!--result.wxml - 团体总分排行-->
+<view class="ranking-page">
+
+  <view class="page-header">
+    <text class="page-title">团体总分排行</text>
+    <text class="page-sub" wx:if="{{meetingName}}">{{meetingName}}</text>
+  </view>
+
+  <view class="rank-list" wx:if="{{teams.length > 0}}">
+    <view class="rank-item" wx:for="{{teams}}" wx:key="id">
+      <view class="rank-col">
+        <text class="rank-badge {{index < 3 ? 'rank-' + index : ''}}">{{item.rank}}</text>
+      </view>
+      <view class="team-info">
+        <text class="team-name">{{item.name}}</text>
+        <text class="team-leader" wx:if="{{item.leader}}">领队：{{item.leader}}</text>
+      </view>
+      <view class="score-col">
+        <text class="team-score">{{item.totalScore}}</text>
+        <text class="score-unit">分</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-box" wx:else>
+    <text class="empty-icon">🏆</text>
+    <text class="empty-text">{{loading ? '加载中...' : '暂无团体总分数据'}}</text>
+  </view>
+
+</view>

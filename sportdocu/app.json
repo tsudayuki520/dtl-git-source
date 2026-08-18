@@ -2,7 +2,6 @@
   "pages": [
     "pages/index/index",
     "pages/match/match",
-    "pages/referee/referee",
     "pages/profile/profile",
     "pages/search/search",
     "pages/detail/detail",
@@ -16,7 +15,9 @@
     "pages/event-registrations/event-registrations",
     "pages/login/login",
     "pages/my-registrations/my-registrations",
-    "pages/change-password/change-password"
+    "pages/my-teams/my-teams",
+    "pages/change-password/change-password",
+    "pages/result/result"
   ],
   "window": {
     "navigationBarTextStyle": "black",
@@ -42,12 +43,6 @@
         "selectedIconPath": "images/match_active.png"
       },
       {
-        "pagePath": "pages/referee/referee",
-        "text": "裁判员",
-        "iconPath": "images/referee.png",
-        "selectedIconPath": "images/referee_active.png"
-      },
-      {
         "pagePath": "pages/profile/profile",
         "text": "我的",
         "iconPath": "images/profile.png",
@@ -56,7 +51,6 @@
     ]
   },
   "style": "v2",
-  "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"
 }

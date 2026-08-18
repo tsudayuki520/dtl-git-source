@@ -1,45 +1,80 @@
 <!--match.wxml-->
 <view class="match-page">
 
-  <view wx:if="{{meetings.length > 0}}">
-    <view class="match-card" wx:for="{{meetings}}" wx:key="id">
-      <!-- 运动会标题（点击展开/收起） -->
-      <view class="match-header" bindtap="toggleExpand" data-id="{{item.id}}">
-        <view class="match-header-left">
-          <text class="match-name">{{item.name}}</text>
-          <view class="match-meta">
-            <text class="match-meta-item">{{item.organizer}}</text>
-            <text class="match-meta-item">{{item.competitionDate}}</text>
-          </view>
-        </view>
-        <view class="match-arrow {{expandedId === item.id ? 'expanded' : ''}}">▼</view>
+  <!-- 顶部运动会切换 tab -->
+  <view class="meeting-tab-bar" wx:if="{{meetings.length > 0}}">
+    <scroll-view scroll-x class="meeting-tab-scroll" show-scrollbar="{{false}}">
+      <view class="meeting-tab {{activeMeetingId === item.id ? 'active' : ''}}"
+            wx:for="{{meetings}}" wx:key="id"
+            bindtap="onTabTap" data-id="{{item.id}}">
+        {{item.name}}
       </view>
+    </scroll-view>
+  </view>
 
-      <!-- 展开的项目列表 -->
-      <view class="match-expand" wx:if="{{expandedId === item.id}}">
-        <view class="expand-title">正在进行的项目</view>
+  <!-- 选中运动会的项目列表 -->
+  <view class="event-section" wx:if="{{activeMeetingId !== null}}">
+    <view class="section-title">全部项目</view>
 
-        <scroll-view scroll-x class="event-scroll" wx:if="{{item.events && item.events.length > 0}}">
-          <view class="event-scroll-inner">
-            <view class="event-card" wx:for="{{item.events}}" wx:for-item="evt" wx:key="id">
-              <text class="event-card-name">{{evt.name}}</text>
-              <text class="event-card-info">{{evt.groupTypeName}} · {{evt.gender}}</text>
-              <text class="event-card-cat">{{evt.category}}</text>
+    <view wx:if="{{events.length > 0}}">
+      <view class="event-card" wx:for="{{events}}" wx:key="key">
+        <!-- 项目头部（点击展开/收起成绩） -->
+        <view class="event-header" bindtap="onEventTap" data-key="{{item.key}}">
+          <view class="event-info">
+            <text class="event-name">{{item.name}}</text>
+            <view class="event-meta">
+              <text class="event-meta-item">{{item.groupTypeName}} · {{item.gender}}</text>
+              <text class="event-cat {{item.category === '田赛' ? 'field' : (item.category === '团队赛' ? 'team' : 'track')}}">{{item.category}}</text>
             </view>
           </view>
-        </scroll-view>
+          <view class="event-arrow {{expandedEventId === item.key ? 'expanded' : ''}}">▼</view>
+        </view>
 
-        <view class="expand-empty" wx:if="{{!item.events || item.events.length === 0}}">
-          <text>暂无正在进行中的项目</text>
+        <!-- 名次成绩积分（按预/复/决轮次分组） -->
+        <view class="event-results" wx:if="{{expandedEventId === item.key}}">
+          <view wx:if="{{item.results && item.results.length > 0}}">
+            <view class="round-block" wx:for="{{item.results}}" wx:for-item="round" wx:key="key">
+              <view class="round-title">
+                <text class="round-tag {{round.tag}}">{{round.scheduleName}}</text>
+                <text class="round-count">{{round.rows.length}}人</text>
+              </view>
+              <view class="result-table">
+                <view class="result-row result-head">
+                  <text class="col-rank">名次</text>
+                  <text class="col-name">选手</text>
+                  <text class="col-score">成绩</text>
+                  <text class="col-points">积分</text>
+                </view>
+                <view class="result-row" wx:for="{{round.rows}}" wx:for-item="rs" wx:key="key">
+                  <view class="col-rank">
+                    <text class="rank-badge {{index < 3 ? 'rank-' + index : ''}}">{{rs.rank || '—'}}</text>
+                  </view>
+                  <view class="col-name">
+                    <text class="result-name">{{rs.name}}</text>
+                    <text class="result-unit" wx:if="{{rs.unit}}">{{rs.unit}}</text>
+                  </view>
+                  <text class="col-score {{rs.hasScore ? '' : 'no-score'}}">{{rs.score}}</text>
+                  <text class="col-points">{{rs.points}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="results-empty" wx:else>
+            <text>{{resultsLoading ? '成绩加载中...' : '暂无成绩'}}</text>
+          </view>
         </view>
       </view>
     </view>
+
+    <view class="expand-empty" wx:else>
+      <text>{{eventsLoading ? '项目加载中...' : '暂无项目'}}</text>
+    </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty-box" wx:else>
+  <!-- 空状态：无进行中的运动会 -->
+  <view class="empty-box" wx:if="{{meetings.length === 0}}">
     <text class="empty-icon">🏟️</text>
-    <text class="empty-text">暂无进行中的运动会</text>
+    <text class="empty-text">{{loading ? '加载中...' : '暂无进行中的运动会'}}</text>
   </view>
 
 </view>

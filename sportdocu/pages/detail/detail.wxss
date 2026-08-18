@@ -210,6 +210,30 @@ page {
   color: #2196F3;
 }
 
+.event-round {
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 6rpx;
+  margin-left: 8rpx;
+  color: #ffffff;
+}
+
+.event-round.pre {
+  background: #2196F3;
+}
+
+.event-round.semi {
+  background: #FF9800;
+}
+
+.event-round.final {
+  background: #F44336;
+}
+
+.event-round.other {
+  background: #9E9E9E;
+}
+
 .event-badge {
   font-size: 18rpx;
   padding: 2rpx 10rpx;
