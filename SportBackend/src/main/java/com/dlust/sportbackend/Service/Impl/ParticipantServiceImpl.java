@@ -90,8 +90,13 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
         User user = new User();
         user.setId(loaded.getUserId());
-        applyProfileIfPresent(user, participant);
-        userMapper.updateProfile(user);
+        if (applyProfileIfPresent(user, participant)) {
+            userMapper.updateProfile(user);
+        }
+        // 代表队归属：请求携带 teamId 时更新 participant.team_id（清除请走 /clearTeam）
+        if (participant.getTeamId() != null) {
+            participantMapper.updateTeamId(participant.getId(), participant.getTeamId());
+        }
     }
 
     @Override

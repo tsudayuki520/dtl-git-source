@@ -53,8 +53,8 @@ public class AdminParticipantController {
     }
 
     /**
-     * 编辑参赛人员资料：实际更新对应 user 的 name/gender/phone/college/major。
-     * 请求体携带 id（participant.id）及上述字段。participant 行不变；team_id 不在此管理。
+     * 编辑参赛人员资料：实际更新对应 user 的 name/gender/phone/college/major；
+     * 若请求携带 teamId，同时更新 participant.team_id（代表队归属）。清除代表队请走 /clearTeam。
      */
     @PutMapping("/update")
     public Result<String> update(@RequestBody Participant participant) {
