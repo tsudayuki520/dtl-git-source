@@ -12,7 +12,7 @@ Page({
     try {
       await auth.login(userCode, password)
       wx.showToast({ title: '登录成功', icon: 'success' })
-      if (this.data.redirect) wx.redirectTo({ url: this.data.redirect })
+      if (this.data.redirect) wx.redirectTo({ url: encodeURI(this.data.redirect) })
       else wx.switchTab({ url: '/pages/profile/profile' })
     } catch (e) {
       wx.showToast({ title: e.message || '登录失败', icon: 'none' })

@@ -86,10 +86,9 @@ async function handleBatchDelete() {
   if (selectedIds.value.length === 0) return
   try {
     await ElMessageBox.confirm(`确认删除选中的 ${selectedIds.value.length} 张轮播图？此操作不可逆。`, '批量删除', { type: 'warning' })
-    let ok = 0, fail = 0
-    for (const id of selectedIds.value) {
-      try { await deleteBanner(id); ok++ } catch { fail++ }
-    }
+    const results = await Promise.allSettled(selectedIds.value.map(id => deleteBanner(id)))
+    const ok = results.filter(r => r.status === 'fulfilled').length
+    const fail = results.length - ok
     if (fail === 0) ElMessage.success(`成功删除 ${ok} 张轮播图`)
     else ElMessage.warning(`删除完成：成功 ${ok} 张，失败 ${fail} 张`)
     selectedIds.value = []
