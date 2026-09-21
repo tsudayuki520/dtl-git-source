@@ -16,6 +16,15 @@
         WHERE e.id = #{id} AND e.is_deleted = 0
     </select>
 
+    <select id="selectByIds" resultType="Event">
+        SELECT e.*, g.name AS group_type_name FROM event e
+        LEFT JOIN group_type g ON e.group_type_id = g.id
+        WHERE e.is_deleted = 0 AND e.id IN
+        <foreach collection="eventIds" item="eid" open="(" separator="," close=")">
+            #{eid}
+        </foreach>
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO event (sports_meeting_id, name, category, gender, group_type_id, allow_register, register_limit, status)
         VALUES (#{sportsMeetingId}, #{name}, #{category}, #{gender}, #{groupTypeId}, #{allowRegister}, #{registerLimit}, #{status})

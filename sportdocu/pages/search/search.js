@@ -12,8 +12,12 @@ Page({
   onLoad(options) {
     const keyword = options.keyword || ''
     this.setData({ keyword })
-    if (keyword) {
-      this.search(keyword)
+  },
+
+  // 每次进入/返回本页都按当前关键词重新搜索
+  onShow() {
+    if (this.data.keyword) {
+      this.search(this.data.keyword)
     }
   },
 

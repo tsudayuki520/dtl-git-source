@@ -1,5 +1,10 @@
 // schedule.js - 赛程轮次列表页
 const auth = require('../../utils/auth')
+const cache = require('../../utils/cache')
+
+const SCHEDULES_TTL = 5 * 60 * 1000
+const schedulesCacheKey = id => 'schedules:' + id
+
 
 Page({
   data: {
@@ -22,12 +27,18 @@ Page({
   },
 
   loadSchedules() {
+    const cacheKey = schedulesCacheKey(this.data.sportsMeetingId)
+    // 先用缓存渲染，随后仍然请求网络并覆盖（保证后台新增赛次后能立刻看到）
+    const cached = cache.get(cacheKey)
+    if (cached) this.setData({ schedules: cached })
     wx.request({
       url: auth.BASE_URL + '/api/schedule/list?sportsMeetingId=' + this.data.sportsMeetingId,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {
-          this.setData({ schedules: res.data.data || [] })
+          const schedules = res.data.data || []
+          cache.set(cacheKey, schedules, SCHEDULES_TTL)
+          this.setData({ schedules })
         }
       },
       fail: (err) => {

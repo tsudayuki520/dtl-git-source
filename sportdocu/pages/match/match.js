@@ -1,5 +1,8 @@
 // match.js
 const auth = require('../../utils/auth')
+const cache = require('../../utils/cache')
+
+const SCHEDULES_TTL = 5 * 60 * 1000
 
 Page({
   data: {
@@ -46,10 +49,16 @@ Page({
   },
 
   loadSchedules(sportsMeetingId) {
+    // 与 schedule.js 共用同一份缓存 key
+    const cacheKey = 'schedules:' + sportsMeetingId
+    const cached = cache.get(cacheKey)
+    if (cached) this.setData({ schedules: cached })
     auth.request({
       url: '/api/schedule/list?sportsMeetingId=' + sportsMeetingId,
     }).then((data) => {
-      this.setData({ schedules: data || [] })
+      const schedules = data || []
+      cache.set(cacheKey, schedules, SCHEDULES_TTL)
+      this.setData({ schedules })
     }).catch((err) => {
       console.error('获取轮次列表失败', err)
     })

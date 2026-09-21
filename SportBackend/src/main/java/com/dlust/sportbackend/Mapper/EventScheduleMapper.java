@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface EventScheduleMapper {
@@ -46,6 +47,16 @@ public interface EventScheduleMapper {
 
     /** 取该 event 下 allow_register=1 且 sort 最小的 scheduleId；无则返回 null */
     Long selectOpenScheduleIdByEventId(@Param("eventId") Long eventId);
+
+    /** 校验「指定的那一轮」是否真的开放报名（要求 schedule 未软删）；返回 1 表示开放，0 表示不可报 */
+    int countOpenByEventIdAndScheduleId(@Param("eventId") Long eventId,
+                                        @Param("scheduleId") Long scheduleId);
+
+    /** 批量版 selectOpenScheduleIdByEventId：返回 [{eventId, scheduleId}]，按 event_id, sort 升序 */
+    List<Map<String, Object>> selectOpenScheduleIdsByEventIds(@Param("eventIds") List<Long> eventIds);
+
+    /** 某运动会下 eventId -> 轮次名称，返回 [{eventId, scheduleName}]，按 event_id, sort 升序 */
+    List<Map<String, Object>> selectScheduleNameByEventIdForMeeting(@Param("sportsMeetingId") Long sportsMeetingId);
 
     void deleteByEventId(@Param("eventId") Long eventId);
 

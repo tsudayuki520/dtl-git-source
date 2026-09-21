@@ -9,6 +9,8 @@ public interface EventService {
 
     Event getById(Long id);
 
+    List<Event> getByIds(List<Long> ids);
+
     void add(Event event);
 
     void update(Event event);

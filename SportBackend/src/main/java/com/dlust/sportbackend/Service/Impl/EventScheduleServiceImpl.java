@@ -127,6 +127,43 @@ public class EventScheduleServiceImpl implements EventScheduleService {
         return eventScheduleMapper.selectOpenScheduleIdByEventId(eventId);
     }
 
+    @Override
+    public boolean isScheduleOpen(Long eventId, Long scheduleId) {
+        if (eventId == null || scheduleId == null) return false;
+        return eventScheduleMapper.countOpenByEventIdAndScheduleId(eventId, scheduleId) > 0;
+    }
+
+    @Override
+    public Map<Long, Long> getOpenScheduleIdsByEventIds(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) return Map.of();
+        // 已按 (event_id, sort) 升序返回，每个 eventId 取第一条即 sort 最小
+        Map<Long, Long> result = new LinkedHashMap<>();
+        for (Map<String, Object> row : eventScheduleMapper.selectOpenScheduleIdsByEventIds(eventIds)) {
+            Long eventId = toLong(row.get("eventId"));
+            if (eventId != null) {
+                result.putIfAbsent(eventId, toLong(row.get("scheduleId")));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<Long, String> getScheduleNameByEventIdForMeeting(Long sportsMeetingId) {
+        Map<Long, String> result = new LinkedHashMap<>();
+        for (Map<String, Object> row : eventScheduleMapper.selectScheduleNameByEventIdForMeeting(sportsMeetingId)) {
+            Long eventId = toLong(row.get("eventId"));
+            Object name = row.get("scheduleName");
+            if (eventId != null && name != null) {
+                result.putIfAbsent(eventId, name.toString());
+            }
+        }
+        return result;
+    }
+
+    private static Long toLong(Object v) {
+        return v == null ? null : Long.valueOf(v.toString());
+    }
+
     /**
      * 计算关联同步方案（纯逻辑，便于单测）。
      * - existing 为空（首次创建）：总闸开时只把 selected 第一个（sort 最小）设 1，其余 0；总闸关全 0。

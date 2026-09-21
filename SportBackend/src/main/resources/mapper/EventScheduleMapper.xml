@@ -64,6 +64,39 @@
         LIMIT 1
     </select>
 
+    <!-- 校验「指定的那一轮」是否真的开放报名：0 表示该关联不存在/已软删/轮次已软删/未开放 -->
+    <select id="countOpenByEventIdAndScheduleId" resultType="int">
+        SELECT COUNT(*) FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE es.event_id = #{eventId} AND es.schedule_id = #{scheduleId}
+          AND es.is_deleted = 0 AND s.is_deleted = 0
+          AND es.allow_register = 1
+    </select>
+
+    <select id="selectOpenScheduleIdsByEventIds" resultType="java.util.Map">
+        SELECT es.event_id AS eventId, es.schedule_id AS scheduleId
+        FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE es.is_deleted = 0 AND s.is_deleted = 0
+          AND es.allow_register = 1
+          AND es.event_id IN
+          <foreach collection="eventIds" item="eid" open="(" separator="," close=")">
+              #{eid}
+          </foreach>
+        ORDER BY es.event_id ASC, s.sort ASC, s.create_time ASC
+    </select>
+
+    <!-- 一个 event 可能关联多个赛次(预/半/决)，取「开放中且 sort 最小」的那轮名称；
+         没有开放轮次时退回 sort 最小的一轮。调用方按此顺序 putIfAbsent 取首条。 -->
+    <select id="selectScheduleNameByEventIdForMeeting" resultType="java.util.Map">
+        SELECT es.event_id AS eventId, s.name AS scheduleName
+        FROM event_schedule es
+        INNER JOIN schedule s ON es.schedule_id = s.id
+        WHERE s.sports_meeting_id = #{sportsMeetingId}
+          AND es.is_deleted = 0 AND s.is_deleted = 0
+        ORDER BY es.event_id ASC, es.allow_register DESC, s.sort ASC, s.create_time ASC
+    </select>
+
     <update id="deleteByEventId">
         UPDATE event_schedule SET is_deleted = 1 WHERE event_id = #{eventId}
     </update>

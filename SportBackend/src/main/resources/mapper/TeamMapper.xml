@@ -40,7 +40,7 @@
     </delete>
 
     <select id="selectByUserId" resultType="com.dlust.sportbackend.entity.TeamVO">
-        SELECT t.id, t.sports_meeting_id, t.name, t.leader, t.coach, t.total_score,
+        SELECT t.id, t.sports_meeting_id, t.group_type_id, t.name, t.leader, t.coach, t.total_score,
                sm.name AS sports_meeting_name,
                (SELECT COUNT(*) FROM participant p2 WHERE p2.team_id = t.id) AS member_count
         FROM team t

@@ -8,7 +8,8 @@ Page({
     loading: true,
   },
 
-  onLoad() {
+  // 每次进入/返回本页都重新拉取，报名后返回可立即看到新记录
+  onShow() {
     this.loadRegistrations()
   },
 

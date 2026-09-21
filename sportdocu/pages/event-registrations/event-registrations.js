@@ -15,7 +15,13 @@ Page({
     wx.setNavigationBarTitle({ title: eventName || '报名人员' })
     if (options.eventId) {
       this.setData({ eventId: options.eventId })
-      this.loadRegistrations(options.eventId)
+    }
+  },
+
+  // 每次进入/返回本页都重新拉取，最新报名人员立即可见
+  onShow() {
+    if (this.data.eventId) {
+      this.loadRegistrations(this.data.eventId)
     }
   },
 

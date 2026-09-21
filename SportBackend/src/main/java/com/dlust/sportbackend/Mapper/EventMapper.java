@@ -12,6 +12,8 @@ public interface EventMapper {
 
     Event selectById(@Param("id") Long id);
 
+    List<Event> selectByIds(@Param("eventIds") List<Long> eventIds);
+
     void insert(Event event);
 
     void updateById(Event event);

@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+*.iml
+*.iws
+HELP.md
+doc/
+backup_*.sql

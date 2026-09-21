@@ -1,5 +1,9 @@
 // index.js
 const auth = require('../../utils/auth')
+const img = require('../../utils/img')
+
+/** 轮播图展示宽度 750rpx，按 2x 屏取 1500px 已足够，再大只是浪费流量 */
+const BANNER_WIDTH = 1500
 
 Page({
   data: {
@@ -27,13 +31,25 @@ Page({
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200) {
-          this.setData({ banners: res.data.data })
+          const banners = (res.data.data || []).map(b => ({
+            ...b,
+            thumbUrl: img.resize(b.imageUrl, BANNER_WIDTH),
+          }))
+          this.setData({ banners })
         }
       },
       fail: (err) => {
         console.error('获取轮播图失败', err)
       }
     })
+  },
+
+  /** 桶未开通「图片处理」时缩放链接会 404，退回原图 */
+  onBannerError(e) {
+    const index = e.currentTarget.dataset.index
+    if (this.data.banners[index] && this.data.banners[index].thumbUrl) {
+      this.setData({ ['banners[' + index + '].thumbUrl']: '' })
+    }
   },
 
   loadNotices() {

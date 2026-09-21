@@ -7,7 +7,8 @@ Page({
     loading: true,
   },
 
-  onLoad() {
+  // 每次进入/返回本页都重新拉取
+  onShow() {
     this.loadTeams()
   },
 

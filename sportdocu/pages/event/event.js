@@ -1,5 +1,6 @@
 // event.js - 比赛项目列表页（带组别筛选）
 const auth = require('../../utils/auth')
+const cache = require('../../utils/cache')
 
 Page({
   data: {
@@ -15,6 +16,12 @@ Page({
     if (options.scheduleId) {
       const scheduleName = decodeURIComponent(options.scheduleName || '')
       this.setData({ scheduleId: options.scheduleId, scheduleName, sportsMeetingId: options.sportsMeetingId })
+    }
+  },
+
+  // 每次进入/返回本页都重新拉取；currentGroup 保留，筛选状态不丢
+  onShow() {
+    if (this.data.scheduleId) {
       this.loadGroupTypes()
       this.loadEvents()
     }
@@ -23,6 +30,10 @@ Page({
   loadGroupTypes() {
     const sportsMeetingId = this.data.sportsMeetingId
     if (!sportsMeetingId) return
+    const cacheKey = 'groupTypes:' + sportsMeetingId
+    // 先用缓存渲染，避免切页时筛选栏闪一下空白；随后仍然请求网络并覆盖
+    const cached = cache.get(cacheKey)
+    if (cached) this.setData({ groupTypes: cached })
     wx.request({
       url: auth.BASE_URL + '/api/group-type/list?sportsMeetingId=' + sportsMeetingId,
       method: 'GET',
@@ -30,6 +41,7 @@ Page({
         if (res.data && res.data.code === 200) {
           const list = res.data.data || []
           const groupTypes = [{ id: 0, name: '全部' }].concat(list.map(g => ({ id: g.id, name: g.name })))
+          cache.set(cacheKey, groupTypes, 10 * 60 * 1000)
           this.setData({ groupTypes })
         }
       },

@@ -13,9 +13,14 @@ Page({
   onLoad(options) {
     if (options.id) {
       this.setData({ meetingId: options.id })
-      this.loadDetail(options.id)
-      this.loadEvents(options.id)
-      this.loadNotices(options.id)
+    }
+  },
+
+  // 每次进入/返回本页都重新拉取，避免停留在旧快照（后台新增项目后小程序看不到）
+  onShow() {
+    const id = this.data.meetingId
+    if (id) {
+      this.loadDetail(id)
     }
   },
 
@@ -29,43 +34,14 @@ Page({
     return now >= start && now <= end
   },
 
+  /** 聚合接口：meeting + 项目(含轮次名/已报名人数) + 赛事通知，一次拿全 */
   loadDetail(id) {
-    wx.request({
-      url: auth.BASE_URL + '/api/sports-meeting/' + id,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.code === 200) {
-          const meeting = res.data.data
-          const regOpen = this.isRegistrationOpen(meeting)
-          this.setData({ meeting, regOpen })
-        }
-      },
-      fail: (err) => {
-        console.error('获取运动会详情失败', err)
-      }
-    })
-  },
-
-  loadEvents(id) {
-    Promise.all([
-      auth.request({ url: '/api/event/list?sportsMeetingId=' + id }),
-      auth.request({ url: '/api/schedule/list?sportsMeetingId=' + id }).catch(() => []),
-      auth.request({ url: '/api/admin/event-schedule/listBySportsMeeting?sportsMeetingId=' + id }).catch(() => []),
-    ]).then(([events, schedules, esList]) => {
-      // 轮次 id -> 名称（预选赛/复赛/决赛）
-      const scheduleNameById = {}
-      ;(schedules || []).forEach(s => { scheduleNameById[s.id] = s.name })
-      // event 行 -> 轮次名称：同项目不同赛次是多行 event，借此区分预/复/决
-      const eventRoundByName = {}
-      ;(esList || []).forEach(es => {
-        if (es.isDeleted === 0 && scheduleNameById[es.scheduleId]) {
-          eventRoundByName[es.eventId] = scheduleNameById[es.scheduleId]
-        }
-      })
+    auth.request({ url: '/api/sports-meeting/' + id + '/detail' }).then((data) => {
+      const meeting = data.meeting || {}
       // 按分类分组，不去重，同项目不同组别都展示
       const categoryOrder = ['田赛', '径赛', '团队赛']
       const map = {}
-      ;(events || []).forEach(e => {
+      ;(data.events || []).forEach(e => {
         const cat = e.category || '径赛'
         if (!map[cat]) map[cat] = []
         map[cat].push({
@@ -75,18 +51,22 @@ Page({
           groupTypeName: e.groupTypeName,
           allowRegister: e.allowRegister,
           registerLimit: e.registerLimit,
-          roundName: eventRoundByName[e.id] || '',
-          roundTag: this.roundTag(eventRoundByName[e.id]),
+          roundName: e.roundName || '',
+          roundTag: this.roundTag(e.roundName),
+          registeredCount: e.registeredCount || 0,
         })
       })
       const eventCategories = categoryOrder
         .filter(cat => map[cat])
         .map(cat => ({ category: cat, events: map[cat] }))
-      this.setData({ eventCategories }, () => {
-        this.loadRegisterCount(id)
+      this.setData({
+        meeting,
+        eventCategories,
+        notices: data.notices || [],
+        regOpen: this.isRegistrationOpen(meeting),
       })
     }).catch((err) => {
-      console.error('获取项目列表失败', err)
+      console.error('获取运动会详情失败', err)
     })
   },
 
@@ -96,45 +76,6 @@ Page({
     if (name.indexOf('复') !== -1 || name.indexOf('半') !== -1) return 'semi'
     if (name.indexOf('决') !== -1) return 'final'
     return 'other'
-  },
-
-  /** 拉取各项目已报名人数，回填到 eventCategories */
-  loadRegisterCount(sportsMeetingId) {
-    wx.request({
-      url: auth.BASE_URL + '/api/register/count?sportsMeetingId=' + sportsMeetingId,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.code === 200) {
-          const countMap = res.data.data || {}
-          const eventCategories = this.data.eventCategories.map(group => ({
-            category: group.category,
-            events: group.events.map(evt => ({
-              ...evt,
-              registeredCount: countMap[evt.id] || 0
-            }))
-          }))
-          this.setData({ eventCategories })
-        }
-      },
-      fail: (err) => {
-        console.error('获取报名人数失败', err)
-      }
-    })
-  },
-
-  loadNotices(id) {
-    wx.request({
-      url: auth.BASE_URL + '/api/notice/sports-meeting?sportsMeetingId=' + id,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.code === 200) {
-          this.setData({ notices: res.data.data })
-        }
-      },
-      fail: (err) => {
-        console.error('获取赛事通知失败', err)
-      }
-    })
   },
 
   goToSchedule() {

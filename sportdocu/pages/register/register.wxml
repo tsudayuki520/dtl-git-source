@@ -25,7 +25,7 @@
   </view>
 
   <view class="empty-tip" wx:if="{{!categoryGroups || categoryGroups.length === 0}}">
-    暂无可报名项目
+    {{emptyTip}}
   </view>
 
 </view>

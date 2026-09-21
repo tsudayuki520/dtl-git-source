@@ -11,7 +11,7 @@
   <!-- 轮播图 -->
   <swiper wx:if="{{banners.length > 0}}" class="banner-swiper" autoplay circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff" interval="3000" duration="500">
     <swiper-item wx:for="{{banners}}" wx:key="id">
-      <image class="banner-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
+      <image class="banner-image" src="{{item.thumbUrl || item.imageUrl}}" mode="aspectFill" binderror="onBannerError" data-index="{{index}}"></image>
     </swiper-item>
   </swiper>
   <view wx:else class="banner-empty">

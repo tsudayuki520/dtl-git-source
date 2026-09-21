@@ -24,6 +24,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<Event> getByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return eventMapper.selectByIds(ids);
+    }
+
+    @Override
     public void add(Event event) {
         eventMapper.insert(event);
     }
