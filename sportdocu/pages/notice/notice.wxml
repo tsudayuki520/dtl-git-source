@@ -1,11 +1,12 @@
 <!--notice.wxml-->
 <scroll-view class="page" scroll-y>
+  <view class="ui-intro"><text class="ui-eyebrow">赛场消息站</text><text class="ui-description">重要安排与最新通知，都在这里。</text></view>
   <!-- 顶部栏：未读筛选开关 -->
   <view class="top-bar">
     <text class="top-title">消息通知</text>
     <view class="switch-wrap" bindtap="toggleUnread">
       <text class="switch-label">{{onlyUnread ? '未读' : '全部'}}</text>
-      <switch checked="{{onlyUnread}}" color="#2196F3" />
+      <switch checked="{{onlyUnread}}" color="#326de5" />
     </view>
   </view>
 

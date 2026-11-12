@@ -1,36 +1,40 @@
-<!--profile.wxml-->
 <view class="profile-page">
-
-  <!-- 未登录 -->
-  <view wx:if="{{!userInfo}}" class="login-prompt">
-    <text class="login-prompt-text">请先登录查看个人信息</text>
-    <button class="login-btn" bindtap="goLogin">登录</button>
-  </view>
-
-  <!-- 已登录 -->
-  <view wx:else>
-    <view class="user-card">
-      <text class="user-name">{{userInfo.name}}</text>
-      <text class="user-code">{{userInfo.userCode}}</text>
-    </view>
-
-    <view class="menu">
-      <view class="menu-item" bindtap="goMyRegistrations">
-        <text class="menu-text">我的参赛项目</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="goMyTeams">
-        <text class="menu-text">我的队伍</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="changePassword">
-        <text class="menu-text">修改密码</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item logout" bindtap="onLogout">
-        <text class="menu-text">退出登录</text>
+  <view class="ui-intro"><text class="ui-eyebrow">我的运动空间</text><text class="ui-page-title">每一步，都算数。</text></view>
+  <view class="identity-card">
+    <view class="identity-main">
+      <view class="avatar"><image src="/images/ui/user.svg" /></view>
+      <view class="identity-info">
+        <text class="user-name">{{userInfo ? userInfo.name : '欢迎来到赛场'}}</text>
+        <text class="user-code">{{userInfo ? '学号 / 工号  ' + userInfo.userCode : '登录后，开启你的参赛旅程'}}</text>
       </view>
     </view>
+    <view class="identity-footer" wx:if="{{userInfo}}"><text class="identity-badge">参赛人员</text><text>享受运动，奔赴热爱</text></view>
+    <button wx:else class="login-btn" bindtap="goLogin" hover-class="ui-pressed">登录账号<text class="ui-chevron"></text></button>
   </view>
 
+  <view class="ui-section-heading"><text class="ui-section-title">我的赛事</text></view>
+  <view class="personal-grid">
+    <button class="personal-card" bindtap="goMyRegistrations" hover-class="ui-pressed">
+      <view class="ui-icon-box"><image class="ui-icon" src="/images/ui/calendar.svg" /></view>
+      <text class="personal-title">参赛项目</text><text class="personal-desc">查看报名与比赛轮次</text><text class="personal-link">进入查看 →</text>
+    </button>
+    <button class="personal-card" bindtap="goMyTeams" hover-class="ui-pressed">
+      <view class="ui-icon-box team-icon"><image class="ui-icon" src="/images/ui/team.svg" /></view>
+      <text class="personal-title">我的队伍</text><text class="personal-desc">和队友一起，为荣誉而战</text><text class="personal-link">进入查看 →</text>
+    </button>
+  </view>
+
+  <view class="ui-section-heading"><text class="ui-section-title">常用服务</text></view>
+  <view class="account-menu">
+    <button class="menu-item" bindtap="goNotices" hover-class="ui-pressed">
+      <view class="menu-icon"><image class="ui-icon" src="/images/ui/bell.svg" /></view>
+      <view class="menu-copy"><text class="menu-title">赛事通知</text><text class="menu-desc">查看比赛安排与最新消息</text></view><text class="ui-chevron"></text>
+    </button>
+    <button class="menu-item" bindtap="changePassword" hover-class="ui-pressed">
+      <view class="menu-icon"><image class="ui-icon" src="/images/ui/shield.svg" /></view>
+      <view class="menu-copy"><text class="menu-title">修改密码</text><text class="menu-desc">管理你的账号安全</text></view><text class="ui-chevron"></text>
+    </button>
+  </view>
+  <button wx:if="{{userInfo}}" class="logout-button" bindtap="onLogout" hover-class="ui-pressed">退出登录</button>
+  <text class="ui-footer">运动不止于赛场，热爱不止于此刻</text>
 </view>

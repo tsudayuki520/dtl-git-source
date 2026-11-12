@@ -1,5 +1,6 @@
 <!--my-teams.wxml-->
 <scroll-view class="mt-page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="ui-intro"><text class="ui-eyebrow">我的队伍</text><text class="ui-page-title">并肩，为荣誉而战</text><text class="ui-description">和队友一起，创造更多可能。</text></view>
   <view wx:if="{{loading}}" class="empty">加载中...</view>
   <view wx:elif="{{teams.length === 0}}" class="empty">暂未加入代表队</view>
   <view wx:else>

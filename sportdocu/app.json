@@ -21,14 +21,15 @@
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "运动会管理",
-    "navigationBarBackgroundColor": "#ffffff"
+    "navigationBarTitleText": "校园运动会",
+    "navigationBarBackgroundColor": "#f5f8fe",
+    "backgroundColor": "#f5f8fe"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#2196F3",
+    "color": "#63758f",
+    "selectedColor": "#326de5",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",

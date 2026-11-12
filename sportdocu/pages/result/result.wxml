@@ -2,6 +2,8 @@
 <view class="ranking-page">
 
   <view class="page-header">
+    <view class="ui-track-art"></view>
+    <text class="ranking-kicker">团队荣誉榜</text>
     <text class="page-title">团体总分排行</text>
     <text class="page-sub" wx:if="{{meetingName}}">{{meetingName}}</text>
   </view>
@@ -23,7 +25,7 @@
   </view>
 
   <view class="empty-box" wx:else>
-    <text class="empty-icon">🏆</text>
+    <image class="ui-empty-icon" src="/images/ui/trophy.svg" />
     <text class="empty-text">{{loading ? '加载中...' : '暂无团体总分数据'}}</text>
   </view>
 

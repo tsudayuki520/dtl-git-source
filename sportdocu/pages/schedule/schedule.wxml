@@ -1,5 +1,6 @@
 <!--schedule.wxml - 赛程轮次列表-->
 <scroll-view class="schedule-page" scroll-y>
+  <view class="ui-intro"><text class="ui-eyebrow">赛事日程</text><text class="ui-page-title">每一轮，都全力以赴</text><text class="ui-description">选择比赛轮次，查看项目与参赛信息。</text></view>
   <!-- 轮次列表 -->
   <view
     class="schedule-card"
@@ -11,10 +12,10 @@
   >
     <view class="schedule-header">
       <text class="schedule-name">{{item.name}}</text>
-      <text class="schedule-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
+      <text class="ui-status {{item.status === 0 ? 'ui-status-2' : 'ui-status-3'}}">{{statusMap[item.status]}}</text>
     </view>
     <view class="schedule-footer">
-      <text class="schedule-arrow">查看项目 ></text>
+      <text class="schedule-arrow">查看比赛项目 →</text>
     </view>
   </view>
 

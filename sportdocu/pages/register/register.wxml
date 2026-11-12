@@ -1,7 +1,7 @@
 <!--register.wxml-->
 <view class="register-page">
 
-  <view class="register-title">选择报名项目：</view>
+  <view class="ui-intro"><text class="ui-eyebrow">报名参赛</text><text class="ui-page-title">选择你的挑战</text><text class="ui-description">找到适合自己的项目，在赛场上尽情发挥。</text></view>
 
   <view wx:for="{{categoryGroups}}" wx:key="category">
     <view class="category-label">{{item.category}}</view>

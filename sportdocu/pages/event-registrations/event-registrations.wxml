@@ -1,5 +1,6 @@
 <!--event-registrations.wxml-->
 <scroll-view class="page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="ui-intro"><text class="ui-eyebrow">赛场同行者</text><text class="ui-page-title">参赛人员</text></view>
   <view class="summary-card">
     <text class="summary-title">{{eventName}}</text>
     <text class="summary-meta">已报名 {{registrations.length}} 人</text>
@@ -16,7 +17,7 @@
   </view>
 
   <view class="empty-tip" wx:if="{{loaded && registrations.length === 0}}">
-    <text class="empty-icon">📝</text>
+    <image class="ui-empty-icon" src="/images/ui/team.svg" />
     <text class="empty-text">暂无报名人员</text>
   </view>
 </scroll-view>

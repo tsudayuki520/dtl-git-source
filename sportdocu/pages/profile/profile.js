@@ -34,6 +34,11 @@ Page({
     wx.navigateTo({ url: '/pages/change-password/change-password' })
   },
 
+  goNotices() {
+    if (!auth.requireLogin('/pages/notice/notice')) return
+    wx.navigateTo({ url: '/pages/notice/notice' })
+  },
+
   onLogout() {
     wx.showModal({
       title: '提示',

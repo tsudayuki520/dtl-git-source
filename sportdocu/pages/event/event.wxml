@@ -1,5 +1,6 @@
 <!--event.wxml - 比赛项目列表-->
 <scroll-view class="event-page" scroll-y>
+  <view class="ui-intro"><text class="ui-eyebrow">比赛项目</text><text class="ui-page-title">{{scheduleName || '找到你的赛场'}}</text><text class="ui-description">按组别浏览项目，查看参赛人员。</text></view>
   <!-- 组别筛选 Tab -->
   <view class="group-tabs">
     <view
@@ -17,7 +18,7 @@
   <view class="event-card" wx:for="{{events}}" wx:key="id" bindtap="goToEventRegistrations" data-id="{{item.id}}" data-name="{{item.name}}">
     <view class="event-header">
       <text class="event-name">{{item.name}}</text>
-      <text class="event-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
+      <text class="ui-status {{item.status === 0 ? 'ui-status-2' : 'ui-status-3'}}">{{statusMap[item.status]}}</text>
     </view>
     <view class="event-footer">
       <text class="event-group">{{item.groupTypeName}}</text>

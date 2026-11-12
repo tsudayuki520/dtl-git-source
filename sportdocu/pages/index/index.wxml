@@ -1,54 +1,50 @@
-<!--index.wxml-->
 <scroll-view class="scrollarea" scroll-y type="list">
-  <!-- 搜索框 -->
-  <view class="search-bar">
-    <view class="search-wrap">
-      <image class="search-icon" src="/images/search.png" mode="aspectFit" />
-      <input class="search-input" placeholder="搜索运动会" placeholder-style="color:#bbb;" confirm-type="search" bindconfirm="onSearch" />
+  <view class="home-page">
+    <view class="home-heading">
+      <view><text class="ui-eyebrow">校园运动会</text><text class="home-title">今天，去赛场。</text></view>
     </view>
-  </view>
+    <view class="search-wrap">
+      <image class="search-icon" src="/images/ui/search.svg" aria-hidden="true" />
+      <input class="search-input" placeholder="搜索运动会名称" placeholder-class="ui-input-placeholder" confirm-type="search" bindconfirm="onSearch" aria-label="搜索运动会" />
+    </view>
 
-  <!-- 轮播图 -->
-  <swiper wx:if="{{banners.length > 0}}" class="banner-swiper" autoplay circular indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff" interval="3000" duration="500">
-    <swiper-item wx:for="{{banners}}" wx:key="id">
-      <image class="banner-image" src="{{item.thumbUrl || item.imageUrl}}" mode="aspectFill" binderror="onBannerError" data-index="{{index}}"></image>
-    </swiper-item>
-  </swiper>
-  <view wx:else class="banner-empty">
-    <text class="banner-empty-icon">🏅</text>
-    <text class="banner-empty-text">暂无轮播图，精彩内容即将上线</text>
-  </view>
-
-  <!-- 通知横幅（点击进入通知列表） -->
-  <view class="notice-bar" wx:if="{{notices.length > 0}}" bindtap="goToNoticeList">
-    <text class="notice-icon">📢</text>
-    <swiper class="notice-swiper" vertical autoplay circular interval="3000" duration="500">
-      <swiper-item wx:for="{{notices}}" wx:key="id">
-        <text class="notice-text">{{item.title}}</text>
+    <swiper wx:if="{{banners.length > 0}}" class="banner-swiper" autoplay circular indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#ffffff" interval="5000" duration="400">
+      <swiper-item wx:for="{{banners}}" wx:key="id">
+        <image class="banner-image" src="{{item.thumbUrl || item.imageUrl}}" mode="aspectFill" binderror="onBannerError" data-index="{{index}}" />
       </swiper-item>
     </swiper>
-  </view>
-
-  <!-- 运动会列表 -->
-  <view class="section">
-    <view class="section-title">运动会</view>
-    <view class="meeting-list">
-      <view class="meeting-card" wx:for="{{meetings}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}">
-        <view class="meeting-header">
-          <text class="meeting-name">{{item.name}}</text>
-          <text class="meeting-status" style="background-color: {{statusColor[item.status]}}">{{statusMap[item.status]}}</text>
-        </view>
-        <view class="meeting-info">
-          <text class="info-item">主办：{{item.organizer}}</text>
-        </view>
-        <view class="meeting-info">
-          <text class="info-item">地点：{{item.venue}}</text>
-        </view>
-        <view class="meeting-info">
-          <text class="info-item">比赛日期：{{item.competitionDate}}</text>
-        </view>
-      </view>
+    <view wx:else class="home-hero">
+      <view class="ui-track-art"></view>
+      <text class="hero-kicker">{{heroMeeting ? statusMap[heroMeeting.status] : '奔赴赛场 · 尽情闪耀'}}</text>
+      <text class="hero-title">{{heroMeeting ? heroMeeting.name : '每一份热爱，都有主场'}}</text>
+      <text class="hero-caption">{{heroMeeting ? heroMeeting.competitionDate : '发现赛事，记录你的运动时刻'}}</text>
+      <text class="hero-venue" wx:if="{{heroMeeting.venue}}">{{heroMeeting.venue}}</text>
+      <button wx:if="{{heroMeeting}}" class="hero-button" bindtap="goToDetail" data-id="{{heroMeeting.id}}" hover-class="ui-pressed">查看赛事与项目<text class="ui-chevron"></text></button>
+      <button wx:else class="hero-button" bindtap="goToMatch" hover-class="ui-pressed">查看赛事成绩<text class="ui-chevron"></text></button>
     </view>
-    <view class="empty-tip" wx:if="{{meetings.length === 0}}">暂无运动会信息</view>
+
+    <view class="quick-grid">
+      <button class="quick-item" bindtap="goToMatch" hover-class="ui-pressed"><view class="quick-icon blue"><image class="ui-icon" src="/images/ui/chart.svg" /></view><text class="quick-name">赛事成绩</text><text class="quick-caption">关注赛场表现</text></button>
+      <button class="quick-item" bindtap="goToNoticeList" hover-class="ui-pressed"><view class="quick-icon green"><image class="ui-icon" src="/images/ui/bell.svg" /></view><text class="quick-name">赛事通知</text><text class="quick-caption">掌握最新安排</text></button>
+      <button class="quick-item" bindtap="goToProfile" hover-class="ui-pressed"><view class="quick-icon amber"><image class="ui-icon" src="/images/ui/user.svg" /></view><text class="quick-name">我的参赛</text><text class="quick-caption">查看参赛信息</text></button>
+    </view>
+
+    <view class="notice-bar" wx:if="{{notices.length > 0}}" bindtap="goToNoticeList" hover-class="ui-pressed" role="button" aria-label="查看赛事通知">
+      <text class="notice-label">公告</text>
+      <swiper class="notice-swiper" vertical autoplay circular interval="5000" duration="400">
+        <swiper-item wx:for="{{notices}}" wx:key="id"><text class="notice-text">{{item.title}}</text></swiper-item>
+      </swiper>
+      <text class="ui-chevron"></text>
+    </view>
+
+    <view class="ui-section-heading"><text class="ui-section-title">发现赛事</text><text class="ui-section-caption">{{meetings.length}} 场运动会</text></view>
+    <view class="meeting-card" wx:for="{{meetings}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}" hover-class="card-pressed" role="button" aria-label="查看{{item.name}}">
+      <view class="meeting-header"><text class="meeting-name">{{item.name}}</text><text class="ui-status ui-status-{{item.status}}">{{statusMap[item.status]}}</text></view>
+      <text class="meeting-organizer">{{item.organizer}}</text>
+      <view class="meeting-location"><image src="/images/ui/pin.svg" /><text>{{item.venue}}</text></view>
+      <view class="meeting-footer"><view class="meeting-date"><image src="/images/ui/calendar.svg" /><text>{{item.competitionDate}}</text></view><view class="meeting-link">查看详情<text class="ui-chevron"></text></view></view>
+    </view>
+    <view class="empty-tip" wx:if="{{meetings.length === 0}}"><image class="ui-empty-icon" src="/images/ui/calendar.svg" /><text>新的赛事正在路上</text><text class="empty-caption">赛事公布后，就能在这里查看和报名</text></view>
+    <text class="ui-footer">在赛场相遇，让热爱发光</text>
   </view>
 </scroll-view>

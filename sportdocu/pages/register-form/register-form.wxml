@@ -1,13 +1,11 @@
-<!--register-form.wxml-->
 <view class="form-page">
-
-  <!-- 项目信息 -->
+  <view class="ui-intro"><text class="ui-eyebrow">报名参赛</text><text class="ui-page-title">向赛场，迈出一步</text><text class="ui-description">确认下方比赛项目，准备好就出发。</text></view>
   <view class="event-info">
+    <view class="ui-icon-box"><image src="/images/ui/calendar.svg" class="ui-icon" /></view>
+    <text class="event-label">你选择的项目</text>
     <text class="event-info-name">{{eventName}}</text>
     <text class="event-info-meta">{{eventGroupType}} · {{eventGender}}</text>
   </view>
-
-  <!-- 提交按钮 -->
-  <view class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submit">{{submitting ? '提交中...' : '确认报名'}}</view>
-
+  <button class="ui-primary-button" disabled="{{submitting}}" loading="{{submitting}}" bindtap="submit" hover-class="ui-pressed">{{submitting ? '正在提交' : '确认报名'}}</button>
+  <text class="ui-footer">报名成功后，可在“我的参赛项目”中查看</text>
 </view>

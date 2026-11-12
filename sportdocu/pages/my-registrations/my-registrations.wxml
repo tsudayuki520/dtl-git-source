@@ -1,5 +1,6 @@
 <!--my-registrations.wxml-->
 <scroll-view class="mr-page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="ui-intro"><text class="ui-eyebrow">我的赛事</text><text class="ui-page-title">记录每一次上场</text><text class="ui-description">你的参赛项目与比赛轮次。</text></view>
   <view wx:if="{{loading}}" class="empty">加载中...</view>
   <view wx:elif="{{groups.length === 0}}" class="empty">暂无参赛项目</view>
   <view wx:else>

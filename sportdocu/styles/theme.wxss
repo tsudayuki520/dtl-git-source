@@ -1,0 +1,50 @@
+/* 全局视觉变量与基础组件，供所有原生小程序页面复用。 */
+page {
+  --sport-primary: #326de5;
+  --sport-primary-soft: #eaf1ff;
+  --sport-ink: #162b4d;
+  --sport-muted: #63758f;
+  --sport-border: #e6edf8;
+  --sport-bg: #f5f8fe;
+  --sport-surface: #ffffff;
+  --sport-radius: 28rpx;
+  --sport-shadow: 0 8rpx 28rpx rgba(29, 54, 96, .045);
+  background: var(--sport-bg);
+  color: var(--sport-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+button { font-family: inherit; }
+button::after { border: none; }
+button[disabled] { opacity: .55; }
+.ui-pressed { opacity: .72; }
+.ui-eyebrow { display: block; color: var(--sport-primary); font-size: 24rpx; font-weight: 600; letter-spacing: 3rpx; }
+.ui-page-title { display: block; color: var(--sport-ink); font-size: 44rpx; font-weight: 700; line-height: 1.35; margin-top: 12rpx; }
+.ui-description { display: block; color: var(--sport-muted); font-size: 26rpx; line-height: 1.7; margin-top: 12rpx; }
+.ui-intro { padding: 12rpx 4rpx 36rpx; }
+.ui-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; margin: 36rpx 0 24rpx; }
+.ui-section-title { font-size: 34rpx; font-weight: 700; color: var(--sport-ink); }
+.ui-section-caption { color: var(--sport-muted); font-size: 24rpx; }
+.ui-icon { width: 44rpx; height: 44rpx; flex-shrink: 0; }
+.ui-icon-box { width: 92rpx; height: 92rpx; border-radius: 28rpx; background: var(--sport-primary-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ui-chevron { display: inline-block; width: 12rpx; height: 12rpx; border-top: 3rpx solid currentColor; border-right: 3rpx solid currentColor; transform: rotate(45deg); flex-shrink: 0; margin-right: 6rpx; }
+.ui-primary-button { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 96rpx; min-height: max(96rpx, 44px); box-sizing: border-box; border-radius: 20rpx; background: var(--sport-primary); color: #fff; font-size: 30rpx; font-weight: 600; padding: 20rpx 32rpx; line-height: 1.5; margin: 0; }
+.ui-field-label { display: block; color: var(--sport-ink); font-size: 28rpx; font-weight: 600; margin-bottom: 16rpx; }
+.ui-input { width: 100%; box-sizing: border-box; height: 100rpx; min-height: 48px; border: 1rpx solid var(--sport-border); background: #f7f9fc; border-radius: 18rpx; padding: 0 24rpx; font-size: 28rpx; }
+.ui-input-placeholder { color: var(--sport-muted); }
+.ui-footer { display: block; text-align: center; color: var(--sport-muted); font-size: 24rpx; padding: 40rpx 8rpx; }
+.ui-track-art { position: absolute; width: 350rpx; height: 460rpx; right: -130rpx; top: -50rpx; border: 2rpx solid rgba(255,255,255,.15); border-radius: 180rpx; transform: rotate(32deg); pointer-events: none; }
+.ui-track-art::before, .ui-track-art::after { content: ""; position: absolute; border: 2rpx solid rgba(255,255,255,.15); border-radius: inherit; }
+.ui-track-art::before { inset: 24rpx; }
+.ui-track-art::after { inset: 48rpx; }
+.ui-status { display: inline-block; flex-shrink: 0; padding: 7rpx 16rpx; border-radius: 10rpx; font-size: 24rpx; font-weight: 500; background: #eef1f6; color: #58677d; white-space: nowrap; }
+.ui-status-1 { background: #eaf7ef; color: #247249; }
+.ui-status-2 { background: #edf3ff; color: #245ac1; }
+.ui-status-3 { background: #eef1f6; color: #58677d; }
+.ui-empty-icon { display: block; width: 100rpx; height: 100rpx; padding: 24rpx; border-radius: 32rpx; background: var(--sport-primary-soft); margin: 0 auto 24rpx; box-sizing: content-box; }
+@media (max-width: 350px) {
+  .ui-eyebrow, .ui-section-caption, .ui-status, .ui-footer { font-size: 12px; }
+  .ui-description { font-size: 13px; }
+  .ui-field-label, .ui-input { font-size: 14px; }
+}

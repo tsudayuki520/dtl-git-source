@@ -1,190 +1,206 @@
-// match.js
 const auth = require('../../utils/auth')
-const cache = require('../../utils/cache')
-
-const SCHEDULES_TTL = 5 * 60 * 1000
+const { groupEvents, filterEvents, buildResults } = require('../../utils/match')
 
 Page({
   data: {
-    meetings: [],
-    activeMeetingId: null,
-    schedules: [],
-    events: [],
-    expandedEventId: null,
-    loading: false,
-    eventsLoading: false,
-    resultsLoading: false,
+    meetingStatus: 2,
+    meetings: [], meetingOptions: [], activeMeetingId: null, activeMeeting: null,
+    meetingIndex: 0, events: [], eventCount: 0, scheduleCount: 0,
+    keyword: '', category: '', categories: ['全部', '径赛', '田赛', '团队赛'],
+    groupOptions: [{ key: null, name: '全部组别' }], groupIndex: 0,
+    expandedEventId: null, loading: false, eventsLoading: false,
+    pageError: '', eventsError: '', scheduleError: '', updatedAt: '',
+  },
+
+  onLoad() {
+    this._groups = []
+    this._schedules = []
+    this._meetingVersion = 0
+    this._selectionVersion = 0
   },
 
   onShow() {
-    this.loadOngoing()
+    this._disposed = false
+    return this.loadMeetings()
   },
 
-  loadOngoing() {
-    this.setData({ loading: true, meetings: [], schedules: [], events: [], activeMeetingId: null, expandedEventId: null })
-    auth.request({
-      url: '/api/sports-meeting/list?status=2',
-    }).then((data) => {
-      const meetings = data || []
-      this.setData({ meetings, loading: false })
-      if (meetings.length > 0) {
-        this.selectMeeting(meetings[0].id)
+  onUnload() {
+    this._disposed = true
+    this._meetingVersion++
+    this._selectionVersion++
+  },
+
+  onPullDownRefresh() {
+    return this.loadMeetings().finally(() => wx.stopPullDownRefresh())
+  },
+
+  async loadMeetings() {
+    const version = ++this._meetingVersion
+    this.setData({ loading: true, pageError: '' })
+    try {
+      const data = await auth.request({ url: '/api/sports-meeting/list' })
+      if (this._disposed || version !== this._meetingVersion) return
+      const meetings = (data || []).filter(meeting => [2, 3].includes(meeting.status))
+      this.setData({ meetings })
+      await this.showMeetingOptions()
+    } catch (error) {
+      if (!this._disposed && version === this._meetingVersion) {
+        this.setData({ pageError: '运动会加载失败，请检查网络后重试' })
       }
-    }).catch((err) => {
-      console.error('获取赛况失败', err)
-      this.setData({ loading: false })
-    })
-  },
-
-  onTabTap(e) {
-    const id = Number(e.currentTarget.dataset.id)
-    if (id === this.data.activeMeetingId) return
-    this.selectMeeting(id)
-  },
-
-  selectMeeting(id) {
-    this.setData({ activeMeetingId: id, schedules: [], events: [], expandedEventId: null })
-    this.loadEvents(id)
-    this.loadSchedules(id)
-  },
-
-  loadSchedules(sportsMeetingId) {
-    // 与 schedule.js 共用同一份缓存 key
-    const cacheKey = 'schedules:' + sportsMeetingId
-    const cached = cache.get(cacheKey)
-    if (cached) this.setData({ schedules: cached })
-    auth.request({
-      url: '/api/schedule/list?sportsMeetingId=' + sportsMeetingId,
-    }).then((data) => {
-      const schedules = data || []
-      cache.set(cacheKey, schedules, SCHEDULES_TTL)
-      this.setData({ schedules })
-    }).catch((err) => {
-      console.error('获取轮次列表失败', err)
-    })
-  },
-
-  loadEvents(sportsMeetingId) {
-    this.setData({ eventsLoading: true })
-    auth.request({
-      url: '/api/event/list?sportsMeetingId=' + sportsMeetingId,
-    }).then((data) => {
-      const raw = data || []
-      // 同一项目（名称/性别/分类/组别相同）可能按赛次存了多行 event，归并为一个卡片
-      const map = {}
-      const groups = []
-      raw.forEach(e => {
-        const key = e.name + '|' + e.gender + '|' + e.category + '|' + e.groupTypeName
-        if (!map[key]) {
-          map[key] = {
-            key,
-            name: e.name,
-            gender: e.gender,
-            category: e.category,
-            groupTypeName: e.groupTypeName,
-            rounds: [],
-          }
-          groups.push(map[key])
-        }
-        map[key].rounds.push(e)
-      })
-      // 展示全部项目（不再按是否进行中筛选）
-      this.setData({ events: groups, eventsLoading: false })
-    }).catch((err) => {
-      console.error('获取项目失败', err)
-      this.setData({ eventsLoading: false })
-    })
-  },
-
-  onEventTap(e) {
-    const key = e.currentTarget.dataset.key
-    const expandedEventId = this.data.expandedEventId === key ? null : key
-    this.setData({ expandedEventId })
-    if (expandedEventId !== null) {
-      this.loadResults(key)
+    } finally {
+      if (!this._disposed && version === this._meetingVersion) this.setData({ loading: false })
     }
   },
 
-  loadResults(groupKey) {
-    const groups = this.data.events
-    const group = groups.find(g => g.key === groupKey)
-    if (!group || group.results) return // 已加载过则不重复请求
-    this.setData({ resultsLoading: true })
-    // 该项目每个赛次是一行 event，分别拉取其成绩后合并
-    const reqs = group.rounds.map(r =>
-      auth.request({ url: '/api/admin/result/listByEvent?eventId=' + r.id })
-        .then(d => d || [])
-        .catch(() => [])
-    )
-    Promise.all(reqs).then((arrays) => {
-      const rows = [].concat.apply([], arrays)
-      // 轮次排序依据：schedule.sort 越小越靠前（预→复→决）
-      const sortMap = {}
-      ;(this.data.schedules || []).forEach(s => { sortMap[s.id] = s.sort == null ? 0 : s.sort })
+  showMeetingOptions() {
+    const meetingOptions = this.data.meetings.filter(meeting => meeting.status === this.data.meetingStatus)
+    const selected = meetingOptions.find(meeting => meeting.id === this.data.activeMeetingId) || meetingOptions[0]
+    this.setData({ meetingOptions })
+    if (selected) return this.selectMeeting(selected.id)
+    this._selectionVersion++
+    this._groups = []
+    this._schedules = []
+    this.setData({ activeMeetingId: null, activeMeeting: null, events: [], eventCount: 0,
+      scheduleCount: 0, expandedEventId: null, eventsLoading: false, eventsError: '',
+      scheduleError: '', updatedAt: '' })
+    return Promise.resolve()
+  },
 
-      // 按轮次（scheduleId）分组
-      const groupMap = {}
-      const groupOrder = []
-      rows.forEach(r => {
-        const sid = r.scheduleId
-        const key = sid == null ? '__none' : sid
-        if (!groupMap[key]) {
-          groupMap[key] = {
-            scheduleId: sid,
-            scheduleName: r.scheduleName || (sid == null ? '成绩' : '第' + sid + '轮'),
-            rows: [],
-          }
-          groupOrder.push(key)
-        }
-        groupMap[key].rows.push(r)
-      })
-      groupOrder.sort((a, b) =>
-        (sortMap[groupMap[a].scheduleId] ?? 999) - (sortMap[groupMap[b].scheduleId] ?? 999))
+  onStatusTap(event) {
+    const status = Number(event.currentTarget.dataset.status)
+    if (status === this.data.meetingStatus) return
+    this.setData({ meetingStatus: status })
+    return this.showMeetingOptions()
+  },
 
-      // 每组内按返回顺序编号名次（后端已按田赛大/径赛小排序，轮内相对顺序正确）
-      const results = groupOrder.map((key, gi) => {
-        const g = groupMap[key]
-        return {
-          key: 's' + gi,
-          scheduleId: g.scheduleId,
-          scheduleName: g.scheduleName,
-          tag: this.roundTag(g.scheduleName),
-          rows: g.rows.map((r, i) => ({
-            key: key + '_' + i,
-            rank: r.scoreValue == null ? '' : i + 1,
-            name: r.participantName || r.userCode || '未知选手',
-            unit: r.college || '',
-            score: this.formatScore(r.scoreValue, r.category),
-            hasScore: r.scoreValue != null,
-            points: r.points || 0,
-          })),
-        }
+  onMeetingChange(event) {
+    const meeting = this.data.meetingOptions[Number(event.detail.value)]
+    if (meeting && meeting.id !== this.data.activeMeetingId) return this.selectMeeting(meeting.id)
+  },
+
+  async selectMeeting(id) {
+    const version = ++this._selectionVersion
+    const changed = id !== this.data.activeMeetingId
+    const activeMeeting = this.data.meetingOptions.find(meeting => meeting.id === id)
+    if (!activeMeeting) return
+    if (changed) {
+      this._groups = []
+      this._schedules = []
+      this.setData({ keyword: '', category: '', groupIndex: 0,
+        groupOptions: [{ key: null, name: '全部组别' }], events: [], eventCount: 0,
+        scheduleCount: 0, expandedEventId: null, updatedAt: '' })
+    }
+    this.setData({ activeMeetingId: id, activeMeeting,
+      meetingIndex: this.data.meetingOptions.findIndex(meeting => meeting.id === id),
+      eventsLoading: true, eventsError: '', scheduleError: '' })
+    // 等轮次与项目均就绪再拉取成绩，避免轮次接口慢时排序错误。
+    const [events, schedules] = await Promise.all([
+      auth.request({ url: '/api/event/list?sportsMeetingId=' + id })
+        .then(data => ({ data: data || [] })).catch(() => ({ error: true })),
+      auth.request({ url: '/api/schedule/list?sportsMeetingId=' + id })
+        .then(data => ({ data: data || [] })).catch(() => ({ error: true })),
+    ])
+    if (!this.isCurrent(version)) return
+    if (!schedules.error) this._schedules = schedules.data
+    this.setData({ scheduleCount: this._schedules.length,
+      scheduleError: schedules.error ? '轮次信息未更新，成绩暂按已有轮次展示' : '' })
+    if (events.error) {
+      this._groups.forEach(group => {
+        if (group.resultState === 'loading') group.resultState = 'idle'
       })
-      const current = this.data.events
-      const idx = current.findIndex(g => g.key === groupKey)
-      if (idx !== -1) {
-        this.setData({ ['events[' + idx + '].results']: results })
+      this.publishEvents()
+      this.setData({ eventsLoading: false, eventsError: '项目更新失败，请重试' })
+      return
+    }
+    this._groups = groupEvents(events.data)
+    const options = [{ key: null, name: '全部组别' }]
+    this._groups.forEach(group => {
+      if (!options.some(option => option.key === group.groupKey)) {
+        options.push({ key: group.groupKey, name: group.groupTypeName })
       }
-      this.setData({ resultsLoading: false })
-    }).catch((err) => {
-      console.error('获取成绩失败', err)
-      this.setData({ resultsLoading: false })
     })
+    const previous = this.data.groupOptions[this.data.groupIndex]
+    const groupIndex = Math.max(0, options.findIndex(option => previous && option.key === previous.key))
+    const expandedEventId = this._groups.some(group => group.key === this.data.expandedEventId)
+      ? this.data.expandedEventId : null
+    const now = new Date()
+    this.setData({ groupOptions: options, groupIndex, expandedEventId,
+      eventCount: this._groups.length, eventsLoading: false,
+      updatedAt: [now.getHours(), now.getMinutes()].map(value => String(value).padStart(2, '0')).join(':') })
+    this.publishEvents()
+    if (expandedEventId) await this.loadResults(expandedEventId)
   },
 
-  roundTag(name) {
-    if (!name) return 'other'
-    if (name.indexOf('预') !== -1) return 'pre'
-    if (name.indexOf('复') !== -1 || name.indexOf('半') !== -1) return 'semi'
-    if (name.indexOf('决') !== -1) return 'final'
-    return 'other'
+  isCurrent(version) {
+    return !this._disposed && version === this._selectionVersion
   },
 
-  formatScore(scoreValue, category) {
-    if (scoreValue == null) return '未录入'
-    if (category === '田赛') return (scoreValue / 100).toFixed(2) + '米'
-    const totalSeconds = Math.floor(scoreValue / 1000)
-    const ms = scoreValue % 1000
-    return totalSeconds + '.' + String(ms).padStart(3, '0') + '秒'
+  publishEvents() {
+    const group = this.data.groupOptions[this.data.groupIndex]
+    this.setData({ events: filterEvents(this._groups, this.data.keyword,
+      this.data.category, group ? group.key : null) })
+  },
+
+  onSearchInput(event) {
+    this.setData({ keyword: event.detail.value })
+    this.publishEvents()
+  },
+
+  onCategoryTap(event) {
+    const category = event.currentTarget.dataset.category
+    this.setData({ category: category === '全部' ? '' : category })
+    this.publishEvents()
+  },
+
+  onGroupChange(event) {
+    this.setData({ groupIndex: Number(event.detail.value) })
+    this.publishEvents()
+  },
+
+  clearFilters() {
+    this.setData({ keyword: '', category: '', groupIndex: 0 })
+    this.publishEvents()
+  },
+
+  onEventTap(event) {
+    const key = event.currentTarget.dataset.key
+    const expandedEventId = this.data.expandedEventId === key ? null : key
+    this.setData({ expandedEventId })
+    if (expandedEventId && !this.data.eventsLoading) return this.loadResults(key)
+  },
+
+  retryEvents() {
+    return this.selectMeeting(this.data.activeMeetingId)
+  },
+
+  retryResults(event) {
+    if (!this.data.eventsLoading) return this.loadResults(event.currentTarget.dataset.key)
+  },
+
+  async loadResults(key) {
+    const group = this._groups.find(item => item.key === key)
+    if (!group || group.resultState === 'loading' || group.resultState === 'ready') return
+    const version = this._selectionVersion
+    group.resultState = 'loading'
+    group.resultError = ''
+    this.publishEvents()
+    try {
+      const arrays = await Promise.all(group.rounds.map(round =>
+        auth.request({ url: '/api/result/listByEvent?eventId=' + round.id })))
+      if (!this.isCurrent(version)) return
+      group.results = buildResults([].concat(...arrays.map(rows => rows || [])), this._schedules, group.category)
+      group.resultState = 'ready'
+    } catch (error) {
+      if (!this.isCurrent(version)) return
+      group.resultState = 'error'
+      group.resultError = '成绩加载失败，请重试'
+    }
+    this.publishEvents()
+  },
+
+  goToRanking() {
+    const meeting = this.data.activeMeeting
+    if (meeting) wx.navigateTo({ url: '/pages/result/result?sportsMeetingId=' + meeting.id
+      + '&name=' + encodeURIComponent(meeting.name) })
   },
 })

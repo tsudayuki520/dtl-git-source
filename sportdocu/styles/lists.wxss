@@ -1,0 +1,34 @@
+/* 列表与详情页的共同语言。页面自己的样式只负责布局差异。 */
+.page, .schedule-page, .event-page, .mr-page, .mt-page {
+  height: 100vh; box-sizing: border-box; padding: 32rpx 28rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+}
+.meeting-card, .schedule-card, .event-card, .notice-card, .team-card, .meeting-group,
+.summary-card, .detail-card, .reg-item {
+  background: var(--sport-surface); border: 1rpx solid var(--sport-border);
+  border-radius: var(--sport-radius); padding: 30rpx; margin-bottom: 20rpx;
+  box-shadow: var(--sport-shadow); box-sizing: border-box;
+}
+.meeting-header, .schedule-header, .event-header, .team-header, .item-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20rpx;
+}
+.meeting-name, .schedule-name, .event-name, .team-name, .summary-title {
+  display: block; flex: 1; min-width: 0; font-size: 32rpx; font-weight: 600;
+  color: var(--sport-ink); line-height: 1.6; word-break: break-all;
+}
+.meeting-info { margin-top: 12rpx; }
+.info-item, .summary-meta, .reg-team, .team-meeting, .item-schedule {
+  display: block; font-size: 26rpx; color: var(--sport-muted); line-height: 1.7;
+}
+.empty, .empty-tip, .empty-box {
+  padding: 96rpx 24rpx; text-align: center; color: var(--sport-muted);
+  font-size: 28rpx; line-height: 1.8;
+}
+.summary { font-size: 26rpx; color: var(--sport-primary); margin-bottom: 24rpx; }
+.event-group, .item-category {
+  font-size: 24rpx; color: var(--sport-primary); background: var(--sport-primary-soft);
+  padding: 6rpx 16rpx; border-radius: 10rpx; flex-shrink: 0;
+}
+@media (max-width: 350px) {
+  .info-item, .summary-meta, .reg-team, .team-meeting, .item-schedule, .summary, .event-group, .item-category { font-size: 12px; }
+}

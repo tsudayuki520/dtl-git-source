@@ -1,10 +1,11 @@
 <!--detail.wxml-->
 <scroll-view class="detail-page" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="ui-intro"><text class="ui-eyebrow">赛事档案</text><text class="ui-page-title">奔赴你的主场</text></view>
   <!-- 运动会基本信息 -->
   <view class="detail-card" wx:if="{{meeting.id}}">
     <view class="detail-header">
       <text class="detail-name">{{meeting.name}}</text>
-      <text class="detail-status" style="background-color: {{statusColor[meeting.status]}}">{{statusMap[meeting.status]}}</text>
+      <text class="ui-status ui-status-{{meeting.status}}">{{statusMap[meeting.status]}}</text>
     </view>
 
     <view class="info-group">
@@ -43,15 +44,15 @@
   </view>
 
   <!-- 功能模块 -->
-  <view class="section-title">功能模块</view>
+  <view class="section-title">赛事指南</view>
   <view class="module-grid">
     <view class="module-item" bindtap="goToSchedule">
-      <view class="module-icon icon-schedule"></view>
-      <text class="module-text">赛程</text>
+      <image class="module-icon" src="/images/ui/calendar.svg" />
+      <view class="module-copy"><text class="module-text">比赛赛程</text><text class="module-hint">查看各轮安排</text></view>
     </view>
     <view class="module-item" bindtap="goToResult">
-      <view class="module-icon icon-result"></view>
-      <text class="module-text">成绩公告</text>
+      <image class="module-icon" src="/images/ui/trophy.svg" />
+      <view class="module-copy"><text class="module-text">团体总分</text><text class="module-hint">见证团队荣誉</text></view>
     </view>
   </view>
 
@@ -86,7 +87,7 @@
   <view class="empty-tip" wx:else>暂无赛事通知</view>
 
   <!-- 底部留白，防止横幅遮挡 -->
-  <view style="height: 160rpx;"></view>
+  <view class="detail-bottom-space"></view>
 </scroll-view>
 
 <!-- 固定底部横幅 -->
