@@ -24,6 +24,8 @@ public interface RegistrationMapper {
 
     int countByEventId(@Param("eventId") Long eventId);
 
+    int countByEventExcluding(@Param("eventId") Long eventId, @Param("excludeId") Long excludeId);
+
     List<Map<String, Object>> countBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
 
     List<RegistrationVO> selectVOBySportsMeetingId(@Param("sportsMeetingId") Long sportsMeetingId);
@@ -36,11 +38,13 @@ public interface RegistrationMapper {
 
     int countDistinctEventByParticipantInEvents(@Param("participantId") Long participantId,
                                                  @Param("eventIds") List<Long> eventIds,
-                                                 @Param("statuses") List<Integer> statuses);
+                                                 @Param("statuses") List<Integer> statuses,
+                                                 @Param("excludeId") Long excludeId);
 
     int countDistinctParticipantByTeamAndEvent(@Param("teamId") Long teamId,
                                                 @Param("eventId") Long eventId,
-                                                @Param("statuses") List<Integer> statuses);
+                                                @Param("statuses") List<Integer> statuses,
+                                                @Param("excludeId") Long excludeId);
 
     void deleteById(@Param("id") Long id);
 }

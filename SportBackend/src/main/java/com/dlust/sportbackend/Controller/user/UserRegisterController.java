@@ -35,7 +35,7 @@ public class UserRegisterController {
      * 其余在 RegistrationService.add(Participant,...) 内按序执行：
      *   ① 运动会报名窗口（本方法）
      *   ② 项目静态校验：存在且未软删、属于本运动会、未结束（Service）
-     *   ③ 资格：必须有代表队(participant→team→group_type)（Service）
+     *   ③ 资格：有代表队/组别时执行相应规则，缺失时只执行项目自身规则（Service）
      *   ④ 组别匹配：项目必须面向报名人所在组别（Service）
      *   ⑤ 轮次：显式传入的轮次也必须确实开放（Service）
      *   ⑥ 是否已报名（Service）
@@ -57,7 +57,7 @@ public class UserRegisterController {
         if (meeting == null) {
             return Result.error(404, "运动会不存在");
         }
-        if (meeting.getStatus() != 1) {
+        if (!Integer.valueOf(1).equals(meeting.getStatus())) {
             return Result.error(400, "当前不在报名时间内");
         }
         LocalDateTime now = LocalDateTime.now();

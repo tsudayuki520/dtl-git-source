@@ -5,6 +5,9 @@ import com.dlust.sportbackend.Mapper.GroupTypeMapper;
 import com.dlust.sportbackend.Mapper.ParticipantMapper;
 import com.dlust.sportbackend.Mapper.RegistrationMapper;
 import com.dlust.sportbackend.Mapper.TeamMapper;
+import com.dlust.sportbackend.Mapper.SportsMeetingMapper;
+import com.dlust.sportbackend.concurrency.RegistrationWriteExecutor;
+import com.dlust.sportbackend.entity.SportsMeeting;
 import com.dlust.sportbackend.Service.EventScheduleService;
 import com.dlust.sportbackend.Service.RegistrationService;
 import com.dlust.sportbackend.Service.ResultService;
@@ -26,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -53,6 +58,12 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Autowired
     private ResultService resultService;
+
+    @Autowired
+    private RegistrationWriteExecutor writeExecutor;
+
+    @Autowired
+    private SportsMeetingMapper sportsMeetingMapper;
 
     @Override
     public List<RegistrationVO> getBySportsMeetingId(Long sportsMeetingId) {
@@ -87,22 +98,74 @@ public class RegistrationServiceImpl implements RegistrationService {
         // 其余（项目有效、代表队资格、限报规则）照常执行
         Participant p = participantMapper.selectByIdWithUser(participantId);
         if (p == null) throw new RuntimeException("参赛人员不存在");
-        Long resolvedScheduleId = checkRegisterLimit(p, eventId, scheduleId, false);
-        insertRegistration(p.getId(), eventId, resolvedScheduleId);
+        writeExecutor.execute(List.of(requireUserId(p)), eventId, () -> {
+            Participant fresh = requireParticipant(participantId, p.getUserId());
+            Long resolved = checkRegisterLimit(fresh, eventId, scheduleId, false, null);
+            insertRegistration(fresh.getId(), eventId, resolved);
+            return null;
+        });
     }
 
     @Override
     public void add(Participant participant, Long eventId, Long scheduleId) {
-        // 小程序端入口：含「项目必须面向报名人所在组别」校验
-        Long resolvedScheduleId = checkRegisterLimit(participant, eventId, scheduleId, true);
-        // 校验全部通过后才落库，避免报名失败时留下无代表队的孤儿 participant
-        if (participant.getId() == null) {
-            participantMapper.insert(participant);
+        Long userId = requireUserId(participant);
+        Long meetingId = participant.getSportsMeetingId();
+        writeExecutor.execute(List.of(userId), eventId, () -> {
+            checkMeetingWindow(meetingId);
+            // Never trust the Controller's pre-lock snapshot (another request may have inserted it).
+            Participant fresh = participantMapper.selectByUserIdAndSportsMeetingId(userId, meetingId);
+            if (fresh == null) {
+                fresh = new Participant();
+                fresh.setUserId(userId);
+                fresh.setSportsMeetingId(meetingId);
+            }
+            Long resolved = checkRegisterLimit(fresh, eventId, scheduleId, true, null);
+            if (fresh.getId() == null) participantMapper.insert(fresh);
+            insertRegistration(fresh.getId(), eventId, resolved);
+            return null;
+        });
+    }
+
+    private Long requireUserId(Participant p) {
+        if (p == null || p.getUserId() == null) throw new RuntimeException("参赛人员未关联有效用户");
+        return p.getUserId();
+    }
+
+    private Participant requireParticipant(Long id, Long userId) {
+        Participant fresh = participantMapper.selectByIdWithUser(id);
+        if (fresh == null || !Objects.equals(fresh.getUserId(), userId)) {
+            throw new RuntimeException("参赛人员已变更，请刷新后重试");
         }
-        insertRegistration(participant.getId(), eventId, resolvedScheduleId);
+        return fresh;
+    }
+
+    private void checkMeetingWindow(Long meetingId) {
+        SportsMeeting meeting = sportsMeetingMapper.selectById(meetingId);
+        if (meeting == null || !Integer.valueOf(1).equals(meeting.getStatus())) {
+            throw new RuntimeException("当前不在报名时间内");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (meeting.getRegistrationStart() != null && now.isBefore(meeting.getRegistrationStart())) {
+            throw new RuntimeException("报名尚未开始");
+        }
+        if (meeting.getRegistrationEnd() != null && now.isAfter(meeting.getRegistrationEnd())) {
+            throw new RuntimeException("报名已截止");
+        }
+    }
+
+    private Registration findRegistration(Long participantId, Long eventId, Long scheduleId) {
+        return scheduleId == null
+                ? registrationMapper.selectByParticipantIdAndEventId(participantId, eventId)
+                : registrationMapper.selectByParticipantIdEventIdScheduleId(participantId, eventId, scheduleId);
     }
 
     private void insertRegistration(Long participantId, Long eventId, Long scheduleId) {
+        Registration existing = findRegistration(participantId, eventId, scheduleId);
+        if (existing != null) {
+            if (!Integer.valueOf(2).equals(existing.getStatus())) throw new RuntimeException("您已报名该项目");
+            registrationMapper.updateStatus(existing.getId(), 0);
+            return;
+        }
         Registration reg = new Registration();
         reg.setParticipantId(participantId);
         reg.setEventId(eventId);
@@ -130,7 +193,7 @@ public class RegistrationServiceImpl implements RegistrationService {
      * @param strict 小程序端为 true（多做③组别匹配与④轮次开放校验）；管理端为 false
      * @return 最终要报名的 scheduleId
      */
-    private Long checkRegisterLimit(Participant p, Long eventId, Long scheduleId, boolean strict) {
+    private Long checkRegisterLimit(Participant p, Long eventId, Long scheduleId, boolean strict, Long excludeId) {
         if (p == null) throw new RuntimeException("参赛人员不存在");
         Long participantId = p.getId();
 
@@ -174,10 +237,9 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         // ⑤ 是否已报名（放在名额检查之前：重复点击时报「已报名」比报「名额已满」准确）
         if (participantId != null) {
-            Registration existing = (resolvedScheduleId != null)
-                    ? registrationMapper.selectByParticipantIdEventIdScheduleId(participantId, eventId, resolvedScheduleId)
-                    : registrationMapper.selectByParticipantIdAndEventId(participantId, eventId);
-            if (existing != null) {
+            Registration existing = findRegistration(participantId, eventId, resolvedScheduleId);
+            if (existing != null && !Objects.equals(existing.getId(), excludeId)
+                    && !Integer.valueOf(2).equals(existing.getStatus())) {
                 throw new RuntimeException("您已报名该项目");
             }
         }
@@ -189,8 +251,10 @@ public class RegistrationServiceImpl implements RegistrationService {
             if (m != null && m > 0 && teamEventIds != null && !teamEventIds.isEmpty()
                     && teamEventIds.contains(eventId)) {
                 int counted = registrationMapper.countDistinctParticipantByTeamAndEvent(
-                        p.getTeamId(), eventId, Arrays.asList(0, 1));
-                if (counted >= m) {
+                        p.getTeamId(), eventId, Arrays.asList(0, 1), excludeId);
+                boolean alreadyCounted = participantId != null && registrationMapper.countDistinctEventByParticipantInEvents(
+                        participantId, List.of(eventId), Arrays.asList(0, 1), excludeId) > 0;
+                if (!alreadyCounted && counted >= m) {
                     throw new RuntimeException("超出限报:该代表队在此项目最多报 " + m + " 人");
                 }
             }
@@ -201,9 +265,9 @@ public class RegistrationServiceImpl implements RegistrationService {
             if (n != null && n > 0 && personEventIds != null && !personEventIds.isEmpty()
                     && personEventIds.contains(eventId)) {
                 int counted = registrationMapper.countDistinctEventByParticipantInEvents(
-                        participantId, personEventIds, Arrays.asList(0));
+                        participantId, personEventIds, Arrays.asList(0), excludeId);
                 boolean alreadyActive = registrationMapper.countDistinctEventByParticipantInEvents(
-                        participantId, Arrays.asList(eventId), Arrays.asList(0)) > 0;
+                        participantId, Arrays.asList(eventId), Arrays.asList(0), excludeId) > 0;
                 int after = alreadyActive ? counted : counted + 1;
                 if (after > n) {
                     throw new RuntimeException("超出限报:每人最多报 " + n + " 个项目");
@@ -214,7 +278,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         // ⑧ 规则C:项目自身报名上限(register_limit,0 表示不限)；复用①已加载的 event
         if (event.getRegisterLimit() != null && event.getRegisterLimit() > 0) {
             int cap = event.getRegisterLimit();
-            if (registrationMapper.countByEventId(eventId) >= cap) {
+            if (registrationMapper.countByEventExcluding(eventId, excludeId) >= cap) {
                 throw new RuntimeException("超出限报:该项目最多报 " + cap + " 人");
             }
         }
@@ -228,24 +292,49 @@ public class RegistrationServiceImpl implements RegistrationService {
             return MAPPER.readValue(json, new TypeReference<List<Long>>() {});
         } catch (Exception e) {
             log.warn("解析limitEventIds失败: {}", json, e);
-            return null;
+            throw new RuntimeException("限报规则配置无效，请联系管理员", e);
         }
     }
 
     @Override
     public void update(Long id, Integer status) {
+        if (status == null || status < 0 || status > 2) throw new RuntimeException("报名状态非法");
+        Registration snapshot = requireRegistration(id);
+        Participant p = participantMapper.selectByIdWithUser(snapshot.getParticipantId());
+        writeExecutor.execute(List.of(requireUserId(p)), snapshot.getEventId(), () -> {
+            Registration fresh = requireSameRegistration(snapshot);
+            updateLocked(fresh, status, requireParticipant(fresh.getParticipantId(), p.getUserId()));
+            return null;
+        });
+    }
+
+    private Registration requireRegistration(Long id) {
         Registration reg = registrationMapper.selectById(id);
-        Integer oldStatus = (reg != null) ? reg.getStatus() : null;
+        if (reg == null) throw new RuntimeException("报名记录不存在");
+        return reg;
+    }
 
-        registrationMapper.updateStatus(id, status);
-
-        if (status == 1) {
-            autoRegisterNextSchedule(id);
+    private Registration requireSameRegistration(Registration snapshot) {
+        Registration fresh = requireRegistration(snapshot.getId());
+        if (!Objects.equals(fresh.getEventId(), snapshot.getEventId())
+                || !Objects.equals(fresh.getParticipantId(), snapshot.getParticipantId())) {
+            throw new RuntimeException("报名记录已变更，请刷新后重试");
         }
+        return fresh;
+    }
 
-        if (oldStatus != null && oldStatus == 1 && status != 1) {
-            removeNextScheduleRegistration(reg);
+    private void updateLocked(Registration reg, int status, Participant participant) {
+        Integer oldStatus = reg.getStatus();
+        if (Integer.valueOf(status).equals(oldStatus)) return;
+        if (status == 1 && !Integer.valueOf(0).equals(oldStatus)) {
+            throw new RuntimeException("仅已报名的参赛人员可以晋级");
         }
+        if (Integer.valueOf(1).equals(oldStatus)) removeNextScheduleRegistration(reg);
+        if (status == 0) {
+            checkRegisterLimit(participant, reg.getEventId(), reg.getScheduleId(), false, reg.getId());
+        }
+        registrationMapper.updateStatus(reg.getId(), status);
+        if (status == 1) autoRegisterNextSchedule(reg.getId());
     }
 
     private void autoRegisterNextSchedule(Long registrationId) {
@@ -262,14 +351,10 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         Registration existing = registrationMapper.selectByParticipantIdEventIdScheduleId(
                 reg.getParticipantId(), reg.getEventId(), nextScheduleId);
-        if (existing != null) return;
-
-        Registration newReg = new Registration();
-        newReg.setParticipantId(reg.getParticipantId());
-        newReg.setEventId(reg.getEventId());
-        newReg.setScheduleId(nextScheduleId);
-        newReg.setStatus(0);
-        registrationMapper.insert(newReg);
+        if (existing != null && !Integer.valueOf(2).equals(existing.getStatus())) return;
+        Participant participant = participantMapper.selectByIdWithUser(reg.getParticipantId());
+        checkRegisterLimit(participant, reg.getEventId(), nextScheduleId, false, null);
+        insertRegistration(reg.getParticipantId(), reg.getEventId(), nextScheduleId);
         log.info("晋级自动报名: participantId={}, eventId={}, nextScheduleId={}",
                 reg.getParticipantId(), reg.getEventId(), nextScheduleId);
     }
@@ -296,27 +381,41 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public void delete(Long id) {
-        registrationMapper.deleteById(id);
+        Registration snapshot = requireRegistration(id);
+        Participant p = participantMapper.selectByIdWithUser(snapshot.getParticipantId());
+        writeExecutor.execute(List.of(requireUserId(p)), snapshot.getEventId(), () -> {
+            requireSameRegistration(snapshot);
+            registrationMapper.deleteById(id);
+            return null;
+        });
     }
 
     @Override
     public int promoteTopN(Long eventId, Long scheduleId, int topN) {
+        if (topN <= 0) throw new RuntimeException("晋级人数必须大于 0");
         // 按成绩排序取前 topN 名（排序规则同 ResultMapper：径赛/团队赛时间ASC，田赛距离DESC）
         List<ResultVO> results = resultService.getByEventAndSchedule(eventId, scheduleId);
         List<Long> participantIds = results.stream()
                 .filter(r -> r.getScoreValue() != null)
                 .limit(topN)
                 .map(ResultVO::getParticipantId)
+                .distinct()
                 .collect(Collectors.toList());
-        int count = 0;
+        if (participantIds.isEmpty()) return 0;
+        Map<Long, Long> users = new HashMap<>();
         for (Long pid : participantIds) {
-            Registration reg = registrationMapper.selectByParticipantIdEventIdScheduleId(pid, eventId, scheduleId);
-            if (reg != null && reg.getStatus() != null && reg.getStatus() != 1) {
-                // 复用 update(id, 1) 触发 autoRegisterNextSchedule（下一赛次自动报名）
-                update(reg.getId(), 1);
-                count++;
-            }
+            users.put(pid, requireUserId(participantMapper.selectByIdWithUser(pid)));
         }
-        return count;
+        return writeExecutor.execute(users.values(), eventId, () -> {
+            int count = 0;
+            for (Long pid : participantIds) {
+                Registration reg = registrationMapper.selectByParticipantIdEventIdScheduleId(pid, eventId, scheduleId);
+                if (reg != null && Integer.valueOf(0).equals(reg.getStatus())) {
+                    updateLocked(reg, 1, requireParticipant(pid, users.get(pid)));
+                    count++;
+                }
+            }
+            return count;
+        });
     }
 }

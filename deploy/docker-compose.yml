@@ -7,6 +7,16 @@
 #   Web 管理端  http://<服务器IP>/
 #   后端 API    http://<服务器IP>:8080/api/...
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   mysql:
     image: mysql:8.0
     container_name: sport-mysql
@@ -43,11 +53,17 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/sport_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai"
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请先在 deploy/.env 中设置 MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_CONNECT_TIMEOUT: 2s
+      SPRING_DATA_REDIS_TIMEOUT: 2s
       WECHAT_APPID: ${WECHAT_APPID:-}
       WECHAT_SECRET: ${WECHAT_SECRET:-}
       TZ: Asia/Shanghai
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "8080:8080"

@@ -10,11 +10,13 @@
     <select id="selectByParticipantIdEventIdScheduleId" resultType="Registration">
         SELECT * FROM registration
         WHERE participant_id = #{participantId} AND event_id = #{eventId} AND schedule_id = #{scheduleId}
+        ORDER BY CASE WHEN status IN (0, 1) THEN 0 ELSE 1 END, id DESC LIMIT 1
     </select>
 
     <select id="selectByParticipantIdAndEventId" resultType="Registration">
         SELECT * FROM registration
         WHERE participant_id = #{participantId} AND event_id = #{eventId}
+        ORDER BY CASE WHEN status IN (0, 1) THEN 0 ELSE 1 END, id DESC LIMIT 1
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -25,6 +27,12 @@
     <select id="countByEventId" resultType="int">
         SELECT COUNT(*) FROM registration
         WHERE event_id = #{eventId} AND status = 0
+    </select>
+
+    <select id="countByEventExcluding" resultType="int">
+        SELECT COUNT(*) FROM registration
+        WHERE event_id = #{eventId} AND status = 0
+        <if test="excludeId != null">AND id != #{excludeId}</if>
     </select>
 
     <select id="countBySportsMeetingId" resultType="map">
@@ -106,6 +114,7 @@
     <select id="countDistinctEventByParticipantInEvents" resultType="int">
         SELECT COUNT(DISTINCT event_id) FROM registration
         WHERE participant_id = #{participantId}
+        <if test="excludeId != null">AND id != #{excludeId}</if>
         AND event_id IN
         <foreach collection="eventIds" item="eid" open="(" separator="," close=")">#{eid}</foreach>
         AND status IN
@@ -117,6 +126,7 @@
         FROM registration r
         JOIN participant p ON r.participant_id = p.id
         WHERE p.team_id = #{teamId}
+        <if test="excludeId != null">AND r.id != #{excludeId}</if>
         AND r.event_id = #{eventId}
         AND r.status IN
         <foreach collection="statuses" item="st" open="(" separator="," close=")">#{st}</foreach>

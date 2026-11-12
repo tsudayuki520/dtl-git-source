@@ -2,6 +2,14 @@ server:
   port: 8080
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      connect-timeout: 2s
+      timeout: 2s
   datasource:
     url: jdbc:mysql://localhost:3306/sport_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
@@ -25,3 +33,10 @@ mybatis:
 wechat:
   appid: 你的小程序AppID
   secret: 你的小程序AppSecret
+
+# Redis 仅做报名写入准入互斥；最终限报判断在 MySQL 悲观锁事务内进行。
+sport:
+  registration:
+    redis-key-prefix: 'sport:registration:'
+    lease-millis: 30000
+    wait-millis: 2000

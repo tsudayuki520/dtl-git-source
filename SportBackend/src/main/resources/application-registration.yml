@@ -1,0 +1,16 @@
+# 启动时添加 --spring.profiles.active=registration，无需改动本地凭证配置。
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      connect-timeout: 2s
+      timeout: 2s
+
+sport:
+  registration:
+    redis-key-prefix: 'sport:registration:'
+    lease-millis: 30000
+    wait-millis: 2000
